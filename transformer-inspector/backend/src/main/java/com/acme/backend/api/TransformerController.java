@@ -31,6 +31,10 @@ public class TransformerController {
         t.setCode(req.code());
         t.setLocation(req.location());
         t.setCapacityKVA(req.capacityKVA());
+        t.setRegion(req.region());
+        t.setPoleNo(req.poleNo());
+        t.setType(req.type());
+        t.setLocationDetails(req.locationDetails());
         repo.save(t);
         return toDTO(t);
     }
@@ -53,6 +57,10 @@ public class TransformerController {
         t.setCode(req.code());
         t.setLocation(req.location());
         t.setCapacityKVA(req.capacityKVA());
+        t.setRegion(req.region());
+        t.setPoleNo(req.poleNo());
+        t.setType(req.type());
+        t.setLocationDetails(req.locationDetails());
         repo.save(t);
         return toDTO(t);
     }
@@ -60,12 +68,15 @@ public class TransformerController {
     @DeleteMapping("/{id}")
     @Transactional
     public void delete(@PathVariable UUID id) {
-        // delete dependent images first to satisfy FK constraints
         imageRepo.deleteByTransformerId(id);
         repo.deleteById(id);
     }
 
     private TransformerDTO toDTO(Transformer t) {
-        return new TransformerDTO(t.getId(), t.getCode(), t.getLocation(), t.getCapacityKVA(), t.getCreatedAt());
+        return new TransformerDTO(
+                t.getId(), t.getCode(), t.getLocation(), t.getCapacityKVA(),
+                t.getRegion(), t.getPoleNo(), t.getType(), t.getLocationDetails(),
+                t.getCreatedAt()
+        );
     }
 }

@@ -1,8 +1,6 @@
 // src/api/images.ts
 import { api } from './client';
 
-// ---- Types ---------------------------------------------------------------
-
 export type ImageType = 'BASELINE' | 'MAINTENANCE';
 export type EnvCondition = 'SUNNY' | 'CLOUDY' | 'RAINY';
 
@@ -12,7 +10,7 @@ export type ThermalImage = {
   type: ImageType;
   envCondition?: EnvCondition;
   uploader: string;
-  uploadedAt: string;         // ISO string from backend
+  uploadedAt: string;       // ISO string
   publicUrl: string;
   originalFilename: string;
   sizeBytes: number;
@@ -27,29 +25,26 @@ export type PageResp<T> = {
   size?: number;
 };
 
-// ---- Helpers -------------------------------------------------------------
+// ---- helpers --------------------------------------------------------------
 
-function qs(params: Record<string, string | number | undefined>): string {
-  const p = new URLSearchParams();
+function qs(params: Record<string, string | number | undefined | null>) {
+  const sp = new URLSearchParams();
   Object.entries(params).forEach(([k, v]) => {
-    if (v !== undefined && v !== null && v !== '') p.set(k, String(v));
+    if (v !== undefined && v !== null && v !== '') sp.set(k, String(v));
   });
-  const s = p.toString();
+  const s = sp.toString();
   return s ? `?${s}` : '';
 }
 
-// ---- API ----------------------------------------------------------------
+// ---- API ------------------------------------------------------------------
 
-/**
- * Upload a thermal image for a specific transformer.
- * NOTE: Do NOT set Content-Type when sending FormData. The browser will set the boundary.
- */
+/** Upload a thermal image. Do NOT set Content-Type; the browser sets it for FormData. */
 export async function uploadImage(params: {
   transformerId: string;
   type: ImageType;
-  envCondition?: EnvCondition;     // required when type === 'BASELINE'
   uploader: string;
   file: File;
+  envCondition?: EnvCondition; // required when type === 'BASELINE'
 }) {
   const fd = new FormData();
   fd.set('transformerId', params.transformerId);
@@ -60,14 +55,10 @@ export async function uploadImage(params: {
   fd.set('uploader', params.uploader);
   fd.set('file', params.file);
 
-  // No headers here – fetch will add multipart/form-data with boundary automatically
-  return api<ThermalImage>(`/api/images`, { method: 'POST', body: fd });
+  return api<ThermalImage>('/api/images', { method: 'POST', body: fd });
 }
 
-/**
- * List images with optional filters and pagination.
- * If transformerId is provided, results are scoped to that transformer.
- */
+/** List images; supports filtering by transformerId and/or type. */
 export async function listImages(params: {
   transformerId?: string;
   type?: ImageType;
@@ -83,21 +74,15 @@ export async function listImages(params: {
   return api<PageResp<ThermalImage>>(`/api/images${query}`);
 }
 
-/**
- * Convenience: get the most recent BASELINE and/or MAINTENANCE images
- * for a transformer in a single call (client-side pick from a single page).
- * Falls back to empty if none.
- */
+/** Convenience helper used by the detail page if you want the latest pair. */
 export async function getLatestForTransformer(transformerId: string) {
   const page = await listImages({ transformerId, page: 0, size: 200 });
   const sorted = [...(page.content ?? [])].sort(
     (a, b) => +new Date(b.uploadedAt) - +new Date(a.uploadedAt)
   );
-
   const latestBaseline = sorted.find(i => i.type === 'BASELINE') ?? null;
   const latestMaintenance = sorted.find(i => i.type === 'MAINTENANCE') ?? null;
 
-  // If only one exists, return it twice to satisfy the Phase-1 UI requirement
   const pair: [ThermalImage | null, ThermalImage | null] =
     latestBaseline && latestMaintenance
       ? [latestBaseline, latestMaintenance]

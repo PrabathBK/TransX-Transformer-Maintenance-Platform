@@ -1,3 +1,4 @@
+// src/pages/TransformerDetail.tsx
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import Input from '../components/Input';
@@ -9,55 +10,50 @@ import { listImages, uploadImage } from '../api/images';
 import type { ThermalImage } from '../api/images';
 
 export default function TransformerDetail() {
-  const { id } = useParams();                 // expects an existing transformer ID
+  const { id } = useParams();
   const nav = useNavigate();
 
   const [t, setT] = useState<Transformer | null>(null);
   const [loadErr, setLoadErr] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
-  // basics form (editable)
+  // ------- editable basics -------
   const [code, setCode] = useState('');
   const [location, setLocation] = useState('');
   const [capacityKVA, setCapacity] = useState<number | ''>('');
+  const [region, setRegion] = useState<string>('');
+  const [poleNo, setPoleNo] = useState<string>('');
+  const [type, setType] = useState<string>(''); // "Bulk" | "Distribution"
+  const [locationDetails, setLocationDetails] = useState<string>('');
 
-  // images
+  // ------- images state -------
   const [images, setImages] = useState<ThermalImage[]>([]);
   const [imgErr, setImgErr] = useState<string | null>(null);
   const [imgLoading, setImgLoading] = useState(false);
 
   // upload panel
-  const [type, setType] = useState<'BASELINE'|'MAINTENANCE'>('BASELINE');
-  const [env, setEnv] = useState<'SUNNY'|'CLOUDY'|'RAINY'|' '>(' ');
+  const [imgType, setImgType] = useState<'BASELINE' | 'MAINTENANCE'>('BASELINE');
+  const [env, setEnv] = useState<'SUNNY' | 'CLOUDY' | 'RAINY' | ' '>(' ');
   const [uploader, setUploader] = useState('admin');
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
 
-  // -------------------------
-  // Load transformer + images
-  // -------------------------
   useEffect(() => {
     (async () => {
       try {
-        if (!id) throw new Error('No transformer id in route');
-
-        // RESET LOCAL STATE on route change to prevent bleed across transformers
-        setT(null);
         setLoadErr(null);
-        setImages([]);
-        setImgErr(null);
-        setImgLoading(false);
-        setFile(null);
-        setType('BASELINE');
-        setEnv(' ');
-        // don't reset uploader to keep user's name, but you can if you prefer:
-        // setUploader('admin');
-
+        if (!id) throw new Error('No transformer id in route');
         const data = await getTransformer(id);
         setT(data);
+
+        // populate form
         setCode(data.code);
         setLocation(data.location);
         setCapacity(data.capacityKVA);
+        setRegion(data.region ?? '');
+        setPoleNo(data.poleNo ?? '');
+        setType(data.type ?? '');
+        setLocationDetails(data.locationDetails ?? '');
 
         await refreshImages(id);
       } catch (e: any) {
@@ -82,14 +78,19 @@ export default function TransformerDetail() {
     }
   }
 
-  // -------------------------
-  // Save basics
-  // -------------------------
   async function saveBasics() {
     if (!t) return;
     try {
       setSaving(true);
-      await updateTransformer(t.id, { code, location, capacityKVA: Number(capacityKVA || 0) });
+      await updateTransformer(t.id, {
+        code,
+        location,
+        capacityKVA: Number(capacityKVA || 0),
+        region: region || undefined,
+        poleNo: poleNo || undefined,
+        type: type || undefined,
+        locationDetails: locationDetails || undefined,
+      });
       alert('Saved');
     } catch (e: any) {
       alert(e?.message || 'Save failed');
@@ -98,26 +99,20 @@ export default function TransformerDetail() {
     }
   }
 
-  // -------------------------
-  // Upload image
-  // -------------------------
   async function doUpload() {
     if (!t || !file) { alert('Select a file'); return; }
-    if (type === 'BASELINE' && env === ' ') { alert('Pick environmental condition'); return; }
-
+    if (imgType === 'BASELINE' && env === ' ') { alert('Pick environmental condition'); return; }
     try {
       setUploading(true);
       await uploadImage({
         transformerId: t.id,
-        type,
-        envCondition: type === 'BASELINE' ? (env as any) : undefined,
+        type: imgType,
+        envCondition: imgType === 'BASELINE' ? (env as any) : undefined,
         uploader,
         file
       });
       await refreshImages(t.id);
       setFile(null);
-      // keep current type/env for consecutive uploads, but you can reset if desired:
-      // setType('BASELINE'); setEnv(' ');
     } catch (e: any) {
       alert(e?.message || 'Upload failed');
     } finally {
@@ -125,32 +120,21 @@ export default function TransformerDetail() {
     }
   }
 
-  // -------------------------
-  // Side-by-side selection
-  // -------------------------
+  // choose two images to display side-by-side
   const latestBaseline = useMemo(
-    () => images
-      .filter(i => i.type === 'BASELINE')
-      .sort((a,b) => +new Date(b.uploadedAt) - +new Date(a.uploadedAt))[0],
+    () => images.filter(i => i.type === 'BASELINE').sort((a,b) => +new Date(b.uploadedAt) - +new Date(a.uploadedAt))[0],
     [images]
   );
-
   const latestMaintenance = useMemo(
-    () => images
-      .filter(i => i.type === 'MAINTENANCE')
-      .sort((a,b) => +new Date(b.uploadedAt) - +new Date(a.uploadedAt))[0],
+    () => images.filter(i => i.type === 'MAINTENANCE').sort((a,b) => +new Date(b.uploadedAt) - +new Date(a.uploadedAt))[0],
     [images]
   );
-
   const [leftImg, rightImg] = useMemo(() => {
     if (latestBaseline && latestMaintenance) return [latestBaseline, latestMaintenance];
     const one = latestBaseline || latestMaintenance || null;
-    return one ? [one, one] : [null, null];   // requirement: show same image twice if only one exists
+    return one ? [one, one] : [null, null];   // show same image twice if only one exists
   }, [latestBaseline, latestMaintenance]);
 
-  // -------------------------
-  // Render
-  // -------------------------
   return (
     <div style={{ maxWidth: 1200, margin: '0 auto' }}>
       <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
@@ -160,11 +144,50 @@ export default function TransformerDetail() {
 
       {loadErr && <div style={{ color:'#b00020', marginBottom: 12 }}>Error: {loadErr}</div>}
 
-      {/* Basics (optional edit) */}
-      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap: 12, background:'#fff', border:'1px solid #eee', borderRadius:12, padding:16, marginBottom:16 }}>
+      {/* Basics (all fields) */}
+      <div style={{
+        display:'grid',
+        gridTemplateColumns:'1fr 1fr 1fr',
+        gap: 12, background:'#fff', border:'1px solid #eee',
+        borderRadius:12, padding:16, marginBottom:16
+      }}>
         <Input label="Transformer Code" value={code} onChange={e=>setCode(e.target.value)} placeholder="TX-001" />
         <Input label="Location" value={location} onChange={e=>setLocation(e.target.value)} placeholder="Substation A" />
         <Input label="Capacity (kVA)" type="number" value={capacityKVA} onChange={e=>setCapacity(e.target.value as any)} />
+
+        <Select
+          label="Region"
+          value={region}
+          onChange={e=>setRegion(e.target.value)}
+          options={[
+            { value: '', label: 'Select region…' },
+            { value: 'Nugegoda', label: 'Nugegoda' },
+            { value: 'Maharagama', label: 'Maharagama' },
+            { value: 'Colombo', label: 'Colombo' },
+          ]}
+        />
+        <Input label="Pole No." value={poleNo} onChange={e=>setPoleNo(e.target.value)} placeholder="EN-122-A" />
+        <Select
+          label="Type"
+          value={type}
+          onChange={e=>setType(e.target.value)}
+          options={[
+            { value: '', label: 'Select type…' },
+            { value: 'Bulk', label: 'Bulk' },
+            { value: 'Distribution', label: 'Distribution' },
+          ]}
+        />
+
+        <div style={{ gridColumn:'1 / -1' }}>
+          <label style={{ display:'block', fontWeight:600, marginBottom:6 }}>Location Details</label>
+          <textarea
+            value={locationDetails}
+            onChange={e=>setLocationDetails(e.target.value)}
+            placeholder="Notes / directions"
+            style={{ width:'100%', minHeight: 80, padding:8, borderRadius:6, border:'1px solid #ccc', resize:'vertical' }}
+          />
+        </div>
+
         <div style={{ gridColumn:'1 / -1', display:'flex', gap:8 }}>
           <button onClick={saveBasics} disabled={saving} style={{ borderRadius:10, padding:'10px 14px' }}>
             {saving ? 'Saving…' : 'Save'}
@@ -172,7 +195,7 @@ export default function TransformerDetail() {
         </div>
       </div>
 
-      {/* Only show image section when transformer exists */}
+      {/* Image section */}
       {t && (
         <div style={{ display:'grid', gridTemplateColumns:'2fr 1fr', gap:16 }}>
           {/* Side-by-side comparison */}
@@ -214,11 +237,11 @@ export default function TransformerDetail() {
             <h3 style={{ marginTop:0 }}>Upload Image</h3>
             <Select
               label="Type"
-              value={type}
-              onChange={e=>setType(e.target.value as any)}
+              value={imgType}
+              onChange={e=>setImgType(e.target.value as any)}
               options={[{ value:'BASELINE', label:'Baseline' }, { value:'MAINTENANCE', label:'Maintenance' }]}
             />
-            {type === 'BASELINE' && (
+            {imgType === 'BASELINE' && (
               <Select
                 label="Environmental Condition"
                 value={env}

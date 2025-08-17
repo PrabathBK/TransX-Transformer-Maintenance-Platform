@@ -53,3 +53,5 @@ public class ThermalImage {
     public void setPublicUrl(String publicUrl) { this.publicUrl = publicUrl; }
     public Instant getUploadedAt() { return uploadedAt; }
 }
+
+

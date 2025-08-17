@@ -16,7 +16,7 @@ export default function TransformerDetail() {
   const [loadErr, setLoadErr] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
-  // form (edit basics if you want)
+  // basics form (editable)
   const [code, setCode] = useState('');
   const [location, setLocation] = useState('');
   const [capacityKVA, setCapacity] = useState<number | ''>('');
@@ -33,14 +33,32 @@ export default function TransformerDetail() {
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
 
+  // -------------------------
+  // Load transformer + images
+  // -------------------------
   useEffect(() => {
     (async () => {
       try {
-        setLoadErr(null);
         if (!id) throw new Error('No transformer id in route');
+
+        // RESET LOCAL STATE on route change to prevent bleed across transformers
+        setT(null);
+        setLoadErr(null);
+        setImages([]);
+        setImgErr(null);
+        setImgLoading(false);
+        setFile(null);
+        setType('BASELINE');
+        setEnv(' ');
+        // don't reset uploader to keep user's name, but you can if you prefer:
+        // setUploader('admin');
+
         const data = await getTransformer(id);
         setT(data);
-        setCode(data.code); setLocation(data.location); setCapacity(data.capacityKVA);
+        setCode(data.code);
+        setLocation(data.location);
+        setCapacity(data.capacityKVA);
+
         await refreshImages(id);
       } catch (e: any) {
         console.error('detail init failed:', e);
@@ -64,6 +82,9 @@ export default function TransformerDetail() {
     }
   }
 
+  // -------------------------
+  // Save basics
+  // -------------------------
   async function saveBasics() {
     if (!t) return;
     try {
@@ -77,9 +98,13 @@ export default function TransformerDetail() {
     }
   }
 
+  // -------------------------
+  // Upload image
+  // -------------------------
   async function doUpload() {
     if (!t || !file) { alert('Select a file'); return; }
     if (type === 'BASELINE' && env === ' ') { alert('Pick environmental condition'); return; }
+
     try {
       setUploading(true);
       await uploadImage({
@@ -91,6 +116,8 @@ export default function TransformerDetail() {
       });
       await refreshImages(t.id);
       setFile(null);
+      // keep current type/env for consecutive uploads, but you can reset if desired:
+      // setType('BASELINE'); setEnv(' ');
     } catch (e: any) {
       alert(e?.message || 'Upload failed');
     } finally {
@@ -98,21 +125,32 @@ export default function TransformerDetail() {
     }
   }
 
-  // choose two images to display side-by-side
+  // -------------------------
+  // Side-by-side selection
+  // -------------------------
   const latestBaseline = useMemo(
-    () => images.filter(i => i.type === 'BASELINE').sort((a,b) => +new Date(b.uploadedAt) - +new Date(a.uploadedAt))[0],
+    () => images
+      .filter(i => i.type === 'BASELINE')
+      .sort((a,b) => +new Date(b.uploadedAt) - +new Date(a.uploadedAt))[0],
     [images]
   );
+
   const latestMaintenance = useMemo(
-    () => images.filter(i => i.type === 'MAINTENANCE').sort((a,b) => +new Date(b.uploadedAt) - +new Date(a.uploadedAt))[0],
+    () => images
+      .filter(i => i.type === 'MAINTENANCE')
+      .sort((a,b) => +new Date(b.uploadedAt) - +new Date(a.uploadedAt))[0],
     [images]
   );
+
   const [leftImg, rightImg] = useMemo(() => {
     if (latestBaseline && latestMaintenance) return [latestBaseline, latestMaintenance];
     const one = latestBaseline || latestMaintenance || null;
     return one ? [one, one] : [null, null];   // requirement: show same image twice if only one exists
   }, [latestBaseline, latestMaintenance]);
 
+  // -------------------------
+  // Render
+  // -------------------------
   return (
     <div style={{ maxWidth: 1200, margin: '0 auto' }}>
       <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
@@ -145,7 +183,7 @@ export default function TransformerDetail() {
               <ImageBox title={rightImg?.type === 'MAINTENANCE' ? 'Current' : rightImg ? 'Baseline' : '—'} img={rightImg} />
             </div>
 
-            {/* Gallery (optional) */}
+            {/* Gallery */}
             <div style={{ marginTop: 18 }}>
               <h3>All Images</h3>
               {imgErr && <div style={{ color:'#b00020' }}>Error: {imgErr}</div>}

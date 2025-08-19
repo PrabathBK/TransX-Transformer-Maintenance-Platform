@@ -12,7 +12,7 @@ A full-stack application for managing electrical transformers and their thermal 
 - **Type-Safe APIs**: Full TypeScript support with defensive UI patterns
 - **Local File Storage**: Secure file uploads with organized storage structure
 
-## 🏗️ Architecture
+## 🏗️ Architecture design
 
 | Component | Technology |
 |-----------|------------|

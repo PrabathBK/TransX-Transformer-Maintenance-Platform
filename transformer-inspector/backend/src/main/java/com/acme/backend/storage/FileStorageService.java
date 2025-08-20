@@ -14,14 +14,19 @@ public class FileStorageService {
     @Value("${app.storage.root}") private String root;
     @Value("${app.server.public-base-url}") private String publicBase;
 
-    public StoredFile store(UUID transformerId, String type, MultipartFile file) throws IOException {
-        Path dir = Path.of(root, transformerId.toString(), type.toLowerCase());
+    // CHANGED: transformerId is String (Mongo @Id)
+    public StoredFile store(String transformerId, String type, MultipartFile file) throws IOException {
+        Path dir = Path.of(root, transformerId, type.toLowerCase());
         Files.createDirectories(dir);
-        String stored = UUID.randomUUID() + "_" + StringUtils.cleanPath(file.getOriginalFilename());
+
+        String original = StringUtils.cleanPath(file.getOriginalFilename());
+        String stored = UUID.randomUUID() + (original.isBlank() ? "" : "_" + original);
+
         Path dest = dir.resolve(stored);
         try (var in = file.getInputStream()) {
             Files.copy(in, dest, StandardCopyOption.REPLACE_EXISTING);
         }
+
         String publicUrl = publicBase + "/files/" + transformerId + "/" + type.toLowerCase() + "/" + stored;
         return new StoredFile(stored, publicUrl, file.getContentType(), file.getSize());
     }

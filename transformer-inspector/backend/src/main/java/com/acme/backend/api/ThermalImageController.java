@@ -15,7 +15,6 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
-import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/images")
@@ -37,22 +36,24 @@ public class ThermalImageController {
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ThermalImageDTO upload(
-            @RequestParam UUID transformerId,
+            @RequestParam String transformerId,                                 // CHANGED: String
             @RequestParam ThermalImage.Type type,
             @RequestParam(required = false) ThermalImage.EnvCondition envCondition,
             @RequestParam String uploader,
             @RequestPart("file") @NotNull MultipartFile file
     ) throws IOException {
+        // Ensure transformer exists (now String id)
         var transformer = transformerRepo.findById(transformerId).orElseThrow();
 
         if (type == ThermalImage.Type.BASELINE && envCondition == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Baseline requires envCondition");
         }
 
-        var stored = storage.store(transformerId, type.name(), file);
+        // File storage now takes String id
+        var stored = storage.store(transformer.getId(), type.name(), file);
 
         var img = new ThermalImage();
-        img.setTransformer(transformer);
+        img.setTransformerId(transformer.getId());                              // CHANGED: set FK as String
         img.setType(type);
         img.setEnvCondition(envCondition);
         img.setOriginalFilename(file.getOriginalFilename());
@@ -68,17 +69,16 @@ public class ThermalImageController {
 
     @GetMapping
     public Page<ThermalImageDTO> list(
-            @RequestParam(required = false) UUID transformerId,
+            @RequestParam(required = false) String transformerId,               // CHANGED: String
             @RequestParam(required = false) ThermalImage.Type type,
             Pageable pageable
     ) {
-        if (transformerId != null) {
+        if (transformerId != null && !transformerId.isBlank()) {
             if (type != null) {
                 return imageRepo
                         .findByTransformerIdAndType(transformerId, type, pageable)
                         .map(this::toDTO);
             }
-            // Only transformerId provided → filter by transformerId
             return imageRepo
                     .findByTransformerId(transformerId, pageable)
                     .map(this::toDTO);
@@ -96,7 +96,7 @@ public class ThermalImageController {
     private ThermalImageDTO toDTO(ThermalImage i) {
         return new ThermalImageDTO(
                 i.getId(),
-                i.getTransformer().getId(),
+                i.getTransformerId(),                                           // CHANGED: was i.getTransformer().getId()
                 i.getType(),
                 i.getEnvCondition(),
                 i.getUploader(),

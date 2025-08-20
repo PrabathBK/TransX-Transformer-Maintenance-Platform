@@ -1,47 +1,47 @@
 package com.acme.backend.domain;
 
-import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Positive;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.mongodb.core.index.Indexed;
+import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.Instant;
-import java.util.UUID;
 
-@Entity
-@Table(
-        name = "transformers",
-        uniqueConstraints = @UniqueConstraint(columnNames = "code")
-)
+@Document("transformers")                 // Mongo collection
 public class Transformer {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
+    private String id;                    // Mongo _id (String). Expose as String in DTOs.
 
     @NotBlank
-    private String code;                 // "Transformer No."
+    @Indexed(unique = true)               // replaces @UniqueConstraint(columnNames = "code")
+    private String code;                  // "Transformer No."
 
     // --- Existing Phase-1 fields ---
     @NotBlank
     private String location;
+
     @Positive
     private Integer capacityKVA;
 
-    // --- New optional fields to match your dialog ---
-    private String region;              // Regions (free text for now)
-    private String poleNo;              // Pole No.
-    private String type;                // e.g., "Bulk", "Distribution"
-    @Column(length = 2048)
-    private String locationDetails;     // Notes / details
+    // --- Optional fields ---
+    private String region;                // Regions (free text for now)
+    private String poleNo;                // Pole No.
+    private String type;                  // e.g., "Bulk", "Distribution"
+    private String locationDetails;       // Notes / details
 
-    @CreationTimestamp
+    @CreatedDate
     private Instant createdAt;
-    @UpdateTimestamp
+
+    @LastModifiedDate
     private Instant updatedAt;
 
-    public UUID getId() { return id; }
+    // getters/setters
+    public String getId() { return id; }
+
     public String getCode() { return code; }
     public void setCode(String code) { this.code = code; }
 

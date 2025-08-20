@@ -1,11 +1,11 @@
 package com.acme.backend.api.dto;
 
 import com.acme.backend.domain.ThermalImage;
-import java.time.Instant; import java.util.UUID;
+import java.time.Instant;
 
 public record ThermalImageDTO(
-        UUID id,
-        UUID transformerId,
+        String id,                                // CHANGED from UUID -> String
+        String transformerId,                     // CHANGED from UUID -> String
         ThermalImage.Type type,
         ThermalImage.EnvCondition envCondition,
         String uploader,

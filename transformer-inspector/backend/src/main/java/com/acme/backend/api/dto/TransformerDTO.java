@@ -1,10 +1,9 @@
 package com.acme.backend.api.dto;
 
 import java.time.Instant;
-import java.util.UUID;
 
 public record TransformerDTO(
-        UUID id,
+        String id,            // CHANGED from UUID -> String
         String code,
         String location,
         Integer capacityKVA,
@@ -13,4 +12,5 @@ public record TransformerDTO(
         String type,
         String locationDetails,
         Instant createdAt
+        // If you keep updatedAt in the entity and want it here, add: Instant updatedAt
 ) {}

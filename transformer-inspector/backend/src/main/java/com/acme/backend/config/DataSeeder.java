@@ -29,21 +29,24 @@ public class DataSeeder {
             if (transformerRepo.count() > 0) return;
 
             // Create 5 transformers
-            var t1 = make(transformerRepo, "TX-001", "Thannekumbura",   500, "Kandy",    "EN-122-A", "Bulk",         "Near substation");
-            var t2 = make(transformerRepo, "TX-002", "Hettipola", 300, "Matale",    "EN-122-B", "Distribution", "");
-            var t3 = make(transformerRepo, "TX-003", "Kuliyapitiya",  200, "Kurunagala", "EN-123-A", "Bulk",         "");
-            var t4 = make(transformerRepo, "TX-004", "Nugegoda",   400, "Colombo",   "EN-124-B", "Distribution", "");
-            var t5 = make(transformerRepo, "TX-005", "Mahiyanganaya",  250, "Badulla",   "EN-125-A", "Bulk",         "");
+            var t1 = make(transformerRepo, "TX-001", "Thannekumbura", 500, "Kandy", "EN-122-A", "Bulk", "Near substation");
+            var t2 = make(transformerRepo, "TX-002", "Hettipola",     300, "Matale", "EN-122-B", "Distribution", "");
+            var t3 = make(transformerRepo, "TX-003", "Kuliyapitiya",  200, "Kurunagala", "EN-123-A", "Bulk", "");
+            var t4 = make(transformerRepo, "TX-004", "Nugegoda",      400, "Colombo", "EN-124-B", "Distribution", "");
+            var t5 = make(transformerRepo, "TX-005", "Mahiyanganaya", 250, "Badulla", "EN-125-A", "Bulk", "");
             var transformers = List.of(t1, t2, t3, t4, t5);
 
             // Load all images under classpath:seed-images/*.jpg|jpeg|png
             var resolver = new PathMatchingResourcePatternResolver();
             var images = new ArrayList<Resource>();
-            for (var pattern : List.of("classpath:seed-images/*.jpg",
+            for (var pattern : List.of(
+                    "classpath:seed-images/*.jpg",
                     "classpath:seed-images/*.jpeg",
                     "classpath:seed-images/*.png")) {
                 try {
-                    for (Resource r : resolver.getResources(pattern)) if (r != null && r.exists()) images.add(r);
+                    for (Resource r : resolver.getResources(pattern)) {
+                        if (r != null && r.exists()) images.add(r);
+                    }
                 } catch (Exception ignored) {}
             }
             images.sort(Comparator.comparing(r -> {
@@ -61,8 +64,13 @@ public class DataSeeder {
     private Transformer make(TransformerRepo repo, String code, String location, int kva,
                              String region, String poleNo, String type, String details) {
         var t = new Transformer();
-        t.setCode(code); t.setLocation(location); t.setCapacityKVA(kva);
-        t.setRegion(region); t.setPoleNo(poleNo); t.setType(type); t.setLocationDetails(details);
+        t.setCode(code);
+        t.setLocation(location);
+        t.setCapacityKVA(kva);
+        t.setRegion(region);
+        t.setPoleNo(poleNo);
+        t.setType(type);
+        t.setLocationDetails(details);
         return repo.save(t);
     }
 
@@ -75,11 +83,11 @@ public class DataSeeder {
 
             MultipartFile mf = new SimpleMultipartFile(original, original, contentType, data);
 
-            // your storage signature: (UUID transformerId, String type, MultipartFile file)
+            // storage signature now uses String transformerId
             var stored = storage.store(t.getId(), "BASELINE", mf);
 
             var img = new ThermalImage();
-            img.setTransformer(t);
+            img.setTransformerId(t.getId());                       // ← set FK as String
             img.setType(ThermalImage.Type.BASELINE);
             img.setEnvCondition(ThermalImage.EnvCondition.SUNNY);
             img.setOriginalFilename(original);
@@ -88,6 +96,7 @@ public class DataSeeder {
             img.setSizeBytes(stored.size());
             img.setUploader("seed");
             img.setPublicUrl(stored.publicUrl());
+
             imageRepo.save(img);
         } catch (Exception e) {
             // seeding is best-effort; don't block startup

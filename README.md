@@ -154,7 +154,7 @@ curl "http://localhost:8080/api/transformers?page=0&size=10"
 
 ### Backend Configuration (`application.properties`)
 The backend uses **MySQL** as the relational database.  
-See the full setup guide here: [DATABASE-SETUP.md](./DATABASE-SETUP.md).
+See the full setup guide here: [DATABASE-SETUP.md](./transformer-inspector/backend/src/main/resources/DATABASE-SETUP.md).
 
 ```properties
 # --- MySQL (persistent DB) ---

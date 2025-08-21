@@ -18,7 +18,7 @@ A full-stack application for managing electrical transformers and their thermal 
 |-----------|------------|
 | **Frontend** | React 18, TypeScript, Vite, React Router |
 | **Backend** | Spring Boot 3.3, Java 21, Spring Data JPA |
-| **Database** | H2 (development) |
+| **Database** | MySQL (relational database) |
 | **File Storage** | Local disk storage with HTTP serving |
 | **CORS** | Configured for development environment |
 
@@ -153,24 +153,26 @@ curl "http://localhost:8080/api/transformers?page=0&size=10"
 ## ⚙️ Configuration
 
 ### Backend Configuration (`application.properties`)
+The backend uses **MySQL** as the relational database.  
+See the full setup guide here: [DATABASE-SETUP.md](./DATABASE-SETUP.md).
 
 ```properties
-# Database (H2 for development)
-spring.datasource.url=jdbc:h2:mem:ti;DB_CLOSE_DELAY=-1;MODE=PostgreSQL
-spring.datasource.driverClassName=org.h2.Driver
-spring.datasource.username=sa
-spring.datasource.password=
+# --- MySQL (persistent DB) ---
+spring.datasource.url=jdbc:mysql://localhost:3306/en3350_db
+spring.datasource.username=root
+spring.datasource.password=YourPasswordHere
+spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
 spring.jpa.hibernate.ddl-auto=update
-spring.jpa.show-sql=false
-spring.h2.console.enabled=true
-spring.h2.console.path=/h2
+spring.jpa.show-sql=true
+spring.jpa.database-platform=org.hibernate.dialect.MySQLDialect
 
-# File Storage Configuration
-app.storage.root=uploads
+# --- File storage ---
+app.storage.root=uploads   # make sure the folder exists in backend/
 app.server.public-base-url=http://localhost:8080
 
-# CORS Configuration (allows Vite dev server)
+# --- CORS (frontend) ---
 app.cors.allowed-origins=http://localhost:5173
+
 ```
 
 ## 🗂️ File Storage
@@ -188,14 +190,6 @@ app.cors.allowed-origins=http://localhost:5173
 | `/settings` | Settings page (placeholder) |
 
 ## 🛠️ Development Tools
-
-### Database Console
-
-Access H2 database console at: **http://localhost:8080/h2**
-
-- **JDBC URL**: `jdbc:h2:mem:ti`
-- **Username**: `sa`
-- **Password**: *(empty)*
 
 ### Hot Reload
 

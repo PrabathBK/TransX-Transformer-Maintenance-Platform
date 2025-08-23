@@ -1,73 +1,124 @@
-/* :root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
+/* Transformer Vision Core Design System */
 
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-a:hover {
-  color: #535bf2;
-}
-
-body {
-  margin: 0;
-  display: flex;
-  place-items: center;
-  min-width: 320px;
-  min-height: 100vh;
-}
-
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
-}
-
-button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  background-color: #1a1a1a;
-  cursor: pointer;
-  transition: border-color 0.25s;
-}
-button:hover {
-  border-color: #646cff;
-}
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
-}
-
-@media (prefers-color-scheme: light) {
+@layer base {
   :root {
-    color: #213547;
-    background-color: #ffffff;
+    /* Core brand colors - Industrial monitoring theme */
+    --background: 220 15% 8%;
+    --foreground: 210 40% 98%;
+
+    --card: 222 24% 12%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 222 24% 12%;
+    --popover-foreground: 210 40% 98%;
+
+    /* Primary brand - Deep industrial purple */
+    --primary: 258 90% 66%;
+    --primary-foreground: 210 40% 98%;
+    --primary-muted: 258 30% 25%;
+    --primary-glow: 258 90% 76%;
+
+    /* Secondary - Professional gray-blue */
+    --secondary: 217 32% 17%;
+    --secondary-foreground: 210 40% 98%;
+
+    /* Muted tones for subtle elements */
+    --muted: 217 19% 15%;
+    --muted-foreground: 215 20% 65%;
+
+    /* Accent - Bright tech blue for highlights */
+    --accent: 217 91% 60%;
+    --accent-foreground: 210 40% 98%;
+
+    /* Status colors */
+    --success: 142 76% 36%;
+    --success-foreground: 355 7% 97%;
+    --warning: 48 96% 53%;
+    --warning-foreground: 26 83% 14%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 210 40% 98%;
+
+    /* Interface elements */
+    --border: 217 19% 20%;
+    --input: 217 19% 15%;
+    --ring: 258 90% 66%;
+
+    --radius: 0.75rem;
+
+    /* Sidebar theming */
+    --sidebar-background: 222 24% 10%;
+    --sidebar-foreground: 210 40% 98%;
+    --sidebar-primary: 258 90% 66%;
+    --sidebar-primary-foreground: 210 40% 98%;
+    --sidebar-accent: 217 32% 17%;
+    --sidebar-accent-foreground: 210 40% 98%;
+    --sidebar-border: 217 19% 20%;
+    --sidebar-ring: 258 90% 66%;
+
+    /* Advanced design tokens */
+    --gradient-primary: linear-gradient(135deg, hsl(258 90% 66%), hsl(258 90% 76%));
+    --gradient-surface: linear-gradient(180deg, hsl(222 24% 12%), hsl(217 32% 10%));
+    --gradient-glow: radial-gradient(circle at center, hsl(258 90% 66% / 0.3), transparent 70%);
+    
+    /* Shadows and effects */
+    --shadow-primary: 0 10px 40px -10px hsl(258 90% 66% / 0.4);
+    --shadow-card: 0 4px 20px -2px hsl(0 0% 0% / 0.3);
+    --shadow-glow: 0 0 30px hsl(258 90% 66% / 0.3);
+    
+    /* Animation curves */
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-bounce: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
   }
-  a:hover {
-    color: #747bff;
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 210 40% 98%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 212.7 26.8% 83.9%;
+    --sidebar-background: 240 5.9% 10%;
+    --sidebar-foreground: 240 4.8% 95.9%;
+    --sidebar-primary: 224.3 76.3% 48%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 3.7% 15.9%;
+    --sidebar-accent-foreground: 240 4.8% 95.9%;
+    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
   }
-  button {
-    background-color: #f9f9f9;
+}
+
+@layer base {
+  * {
+    @apply border-border;
   }
-} */
-* { box-sizing: border-box; }
-body { margin: 0; font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; color: #222; }
-button { padding: 8px 12px; border-radius: 6px; border: 1px solid #ddd; background: #fff; cursor: pointer; }
-button:disabled { opacity: .6; cursor: default; }
-a { color: #2563eb; text-decoration: none; }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+}

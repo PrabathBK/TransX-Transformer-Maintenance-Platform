@@ -1,0 +1,19 @@
+[33mcommit cb42de455264041d50ade3eb3bcd9dd1bed9729f[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m
+Author: MeghanaWickramasinghe <wickramasinghemmm.21@uom.lk>
+Date:   Sat Aug 23 13:44:41 2025 +0530
+
+    new frontend code change
+
+[33mcommit 5e7f6e78f54db37a9718704b60b1a0517fe0c8ff[m
+Author: gpt-engineer-app[bot] <159125892+gpt-engineer-app[bot]@users.noreply.github.com>
+Date:   Thu Aug 21 09:14:49 2025 +0000
+
+    Implement Transformer Management
+    
+    Implement core functionalities for managing transformer records, including adding, viewing, editing, and deleting entries. This phase also includes the mechanism for uploading thermal images, tagging them as 'Baseline' or 'Maintenance', and associating them with metadata such as upload date/time, image type, and uploader. Additionally, baseline images will be categorized by environmental conditions (Sunny, Cloudy, Rainy) via a dropdown selection. The architecture will be modular and designed to support API connections to a backend.
+
+[33mcommit 4b6dc1c5c9c2a229426357f0574753a59e163a76[m
+Author: gpt-engineer-app[bot] <159125892+gpt-engineer-app[bot]@users.noreply.github.com>
+Date:   Thu Aug 21 09:09:02 2025 +0000
+
+    Use tech stack vite_react_shadcn_ts_20250728_minor

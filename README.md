@@ -156,7 +156,7 @@ curl "http://localhost:8080/api/transformers?page=0&size=10"
 The backend uses **MySQL** as the relational database.  
 
 We have already exported the schema and sample data into a single SQL file:
-[`Database-MYSQL/en3350_db.sql`](./transformer-inspector\Database-MYSQL\en3350_db.sql).
+[`Database-MYSQL/en3350_db.sql`](./transformer-inspector/Database-MYSQL/en3350_db.sql).
 
 #### Steps to set up the database:
 

@@ -169,9 +169,21 @@ export default function TransformerDetail() {
         </div>
       )}
       {warningMsg && (
-        <div className="warning-message">
-          <span className="message-icon">⚠</span>
-          {warningMsg}
+        <div style={{
+          position: 'fixed',
+          top: '20px',
+          right: '20px',
+          background: '#f59e0b',
+          color: 'white',
+          padding: '16px 24px',
+          borderRadius: '8px',
+          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+          zIndex: 1000,
+          fontSize: '14px',
+          fontWeight: '500',
+          animation: 'slideIn 0.3s ease-out'
+        }}>
+          ⚠ {warningMsg}
         </div>
       )}
 
@@ -371,21 +383,6 @@ export default function TransformerDetail() {
             )}
             
             <FileDrop onFile={setFile} />
-            {file && (
-              <div style={{ 
-                marginTop: 12, 
-                padding: 12, 
-                background: 'rgba(34, 197, 94, 0.1)', 
-                borderRadius: 8, 
-                border: '1px solid rgba(34, 197, 94, 0.2)',
-                fontSize: 14,
-                display: 'flex',
-                alignItems: 'center',
-                gap: 8
-              }}>
-                <span>✅</span> Selected: <strong>{file.name}</strong>
-              </div>
-            )}
             <div style={{ marginTop: 16 }}>
               <button 
                 onClick={doUpload} 

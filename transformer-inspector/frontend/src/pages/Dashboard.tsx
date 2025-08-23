@@ -140,7 +140,7 @@ export default function Dashboard() {
           fontFamily: 'Montserrat',
           fontWeight: '600'
         }}>
-          📊 Transformer Statistics
+          Transformer Statistics
         </h2>
         <div style={{ display: 'flex', gap: '1.5rem', flexWrap: 'wrap' }}>
           {[
@@ -148,43 +148,37 @@ export default function Dashboard() {
               label: 'TOTAL TRANSFORMERS', 
               value: stats.totalTransformers, 
               color: '#7c3aed',
-              bgColor: 'rgba(124, 58, 237, 0.1)',
-              icon: '⚡'
+              bgColor: 'rgba(124, 58, 237, 0.1)'
             },
             { 
               label: 'HEALTHY STATUS', 
               value: stats.healthyTransformers, 
               color: '#059669',
-              bgColor: 'rgba(5, 150, 105, 0.1)',
-              icon: '✅'
+              bgColor: 'rgba(5, 150, 105, 0.1)'
             },
             { 
               label: 'WARNING STATUS', 
               value: stats.warningTransformers, 
               color: '#d97706',
-              bgColor: 'rgba(217, 119, 6, 0.1)',
-              icon: '⚠️'
+              bgColor: 'rgba(217, 119, 6, 0.1)'
             },
             { 
               label: 'CRITICAL STATUS', 
               value: stats.criticalTransformers, 
               color: '#dc2626',
-              bgColor: 'rgba(220, 38, 38, 0.1)',
-              icon: '🚨'
+              bgColor: 'rgba(220, 38, 38, 0.1)'
             },
             { 
               label: 'TOTAL CAPACITY', 
               value: `${stats.totalCapacity} kVA`, 
               color: '#7c3aed',
-              bgColor: 'rgba(124, 58, 237, 0.1)',
-              icon: '⚡'
+              bgColor: 'rgba(124, 58, 237, 0.1)'
             },
             { 
               label: 'AVG CAPACITY', 
               value: `${stats.averageCapacity} kVA`, 
               color: '#0ea5e9',
-              bgColor: 'rgba(14, 165, 233, 0.1)',
-              icon: '📈'
+              bgColor: 'rgba(14, 165, 233, 0.1)'
             }
           ].map((card) => (
             <div key={card.label} style={{
@@ -225,13 +219,6 @@ export default function Dashboard() {
                 opacity: 0.6
               }} />
               
-              <div style={{ 
-                fontSize: '2rem', 
-                marginBottom: '0.5rem',
-                zIndex: 1
-              }}>
-                {card.icon}
-              </div>
               <div style={{ 
                 fontSize: '2rem', 
                 fontWeight: '900', 
@@ -278,7 +265,7 @@ export default function Dashboard() {
             alignItems: 'center',
             gap: '0.5rem'
           }}>
-            🔄 Recent Activity
+            Recent Activity
           </h3>
           
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
@@ -289,7 +276,7 @@ export default function Dashboard() {
               border: '1px solid rgba(34, 197, 94, 0.2)'
             }}>
               <div style={{ fontWeight: '600', color: '#059669', fontSize: '0.9rem' }}>
-                📸 Recent Uploads
+                Recent Uploads
               </div>
               <div style={{ color: '#374151', marginTop: '0.25rem' }}>
                 {stats.recentUploads} thermal images uploaded this week
@@ -303,7 +290,7 @@ export default function Dashboard() {
               border: '1px solid rgba(124, 58, 237, 0.2)'
             }}>
               <div style={{ fontWeight: '600', color: '#7c3aed', fontSize: '0.9rem' }}>
-                ⚡ System Status
+                System Status
               </div>
               <div style={{ color: '#374151', marginTop: '0.25rem' }}>
                 All monitoring systems operational
@@ -318,7 +305,7 @@ export default function Dashboard() {
                 border: '1px solid rgba(14, 165, 233, 0.2)'
               }}>
                 <div style={{ fontWeight: '600', color: '#0ea5e9', fontSize: '0.9rem' }}>
-                  🏗️ Recent Additions
+                  Recent Additions
                 </div>
                 <div style={{ color: '#374151', marginTop: '0.25rem' }}>
                   Latest: {recentActivity.recentTransformers[0]?.code} in {recentActivity.recentTransformers[0]?.location}
@@ -347,7 +334,7 @@ export default function Dashboard() {
             alignItems: 'center',
             gap: '0.5rem'
           }}>
-            🚨 Alert Summary
+            Alert Summary
           </h3>
           
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
@@ -359,7 +346,7 @@ export default function Dashboard() {
                 border: '1px solid rgba(220, 38, 38, 0.2)'
               }}>
                 <div style={{ fontWeight: '600', color: '#dc2626', fontSize: '0.9rem' }}>
-                  🔴 Critical Issues
+                  Critical Issues
                 </div>
                 <div style={{ color: '#374151', marginTop: '0.25rem' }}>
                   {stats.criticalTransformers} transformers require immediate attention
@@ -373,7 +360,7 @@ export default function Dashboard() {
                 border: '1px solid rgba(34, 197, 94, 0.2)'
               }}>
                 <div style={{ fontWeight: '600', color: '#059669', fontSize: '0.9rem' }}>
-                  ✅ All Clear
+                  All Clear
                 </div>
                 <div style={{ color: '#374151', marginTop: '0.25rem' }}>
                   No critical issues detected
@@ -389,7 +376,7 @@ export default function Dashboard() {
                 border: '1px solid rgba(217, 119, 6, 0.2)'
               }}>
                 <div style={{ fontWeight: '600', color: '#d97706', fontSize: '0.9rem' }}>
-                  ⚠️ Monitor Required
+                  Monitor Required
                 </div>
                 <div style={{ color: '#374151', marginTop: '0.25rem' }}>
                   {stats.warningTransformers} transformers showing warning signs
@@ -404,7 +391,7 @@ export default function Dashboard() {
               border: '1px solid rgba(124, 58, 237, 0.2)'
             }}>
               <div style={{ fontWeight: '600', color: '#7c3aed', fontSize: '0.9rem' }}>
-                📋 Maintenance Schedule
+                Maintenance Schedule
               </div>
               <div style={{ color: '#374151', marginTop: '0.25rem' }}>
                 Next scheduled maintenance in 3 days

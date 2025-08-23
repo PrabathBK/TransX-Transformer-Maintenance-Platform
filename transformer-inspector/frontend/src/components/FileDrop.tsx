@@ -34,7 +34,7 @@ export default function FileDrop({ onFile }: Props) {
         marginBottom: 16,
         color: hover ? '#7c3aed' : '#a855f7'
       }}>
-        ☁️
+        ☁
       </div>
       
       {/* Main Text */}

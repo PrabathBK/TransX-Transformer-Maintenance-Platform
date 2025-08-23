@@ -745,32 +745,46 @@ input:focus, select:focus, textarea:focus {
 
 /* Action Buttons */
 .actions-cell {
-  text-align: right;
+  text-align: right !important;
   white-space: nowrap;
+  opacity: 1 !important;
+  visibility: visible !important;
+  min-width: 80px !important;
+  padding: 8px !important;
 }
 
 .action-buttons {
   display: flex;
   gap: 0.5rem;
   justify-content: flex-end;
+  opacity: 1;
+  visibility: visible;
 }
 
 .action-btn {
-  width: 32px;
-  height: 32px;
+  width: 32px !important;
+  height: 32px !important;
   border-radius: 6px;
-  border: none;
+  border: none !important;
   cursor: pointer;
-  display: flex;
+  display: flex !important;
   align-items: center;
   justify-content: center;
   transition: all 0.2s ease;
   font-size: 0.8rem;
+  opacity: 1 !important;
+  visibility: visible !important;
+  position: relative !important;
+  z-index: 10 !important;
 }
 
 .view-btn {
-  background: #3b82f6;
-  color: white;
+  background: #3b82f6 !important;
+  color: white !important;
+  border: 2px solid #3b82f6 !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  display: flex !important;
 }
 
 .view-btn:hover {
@@ -780,8 +794,12 @@ input:focus, select:focus, textarea:focus {
 }
 
 .delete-btn {
-  background: #ef4444;
-  color: white;
+  background: #ef4444 !important;
+  color: white !important;
+  border: 2px solid #ef4444 !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  display: flex !important;
 }
 
 .delete-btn:hover {
@@ -792,6 +810,35 @@ input:focus, select:focus, textarea:focus {
 
 .btn-icon {
   font-size: 0.9rem;
+}
+
+/* Ensure action buttons are always visible */
+.transformer-table .actions-cell,
+.transformer-table .action-buttons,
+.transformer-table .action-btn {
+  opacity: 1 !important;
+  visibility: visible !important;
+  display: flex !important;
+}
+
+/* Force button visibility with specific selectors */
+.transformer-table tbody tr td.actions-cell {
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+.transformer-table tbody tr td.actions-cell .action-buttons {
+  opacity: 1 !important;
+  visibility: visible !important;
+  display: flex !important;
+}
+
+.transformer-table tbody tr td.actions-cell .action-btn {
+  opacity: 1 !important;
+  visibility: visible !important;
+  display: flex !important;
+  width: 32px !important;
+  height: 32px !important;
 }
 
 .transformer-table td.empty-state {

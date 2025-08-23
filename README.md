@@ -2,17 +2,17 @@
 
 > **Phase 1:** Transformer and Baseline Image Management
 
-A full-stack application for managing electrical transformers and their thermal images, built with React, TypeScript, and Spring Boot.
+A full-stack application for managing electrical transformers and their thermal images, built with React, TypeScript, Spring Boot, and MySQL.
 
-## 🚀 Features
+## Features
 
-- **Transformer Management**: Create, update, and manage transformers with code, location, and capacity information
-- **Thermal Image Upload**: Upload thermal images tagged as **Baseline** (with environmental conditions: SUNNY/CLOUDY/RAINY) or **Maintenance**
-- **Side-by-Side Comparison**: Compare images on transformer detail page with intelligent fallback display
-- **Type-Safe APIs**: Full TypeScript support with defensive UI patterns
-- **Local File Storage**: Secure file uploads with organized storage structure
+- **Transformer Management** - Create, update, and manage transformers with code, location, and capacity information
+- **Thermal Image Upload** - Upload thermal images tagged as **Baseline** (with environmental conditions: SUNNY/CLOUDY/RAINY) or **Maintenance**
+- **Side-by-Side Comparison** - Compare images on transformer detail page with intelligent fallback display
+- **Type-Safe APIs** - Full TypeScript support with defensive UI patterns
+- **Local File Storage** - Secure file uploads with organized storage structure
 
-## 🏗️ Architecture design
+## Technology Stack
 
 | Component | Technology |
 |-----------|------------|
@@ -22,15 +22,19 @@ A full-stack application for managing electrical transformers and their thermal 
 | **File Storage** | Local disk storage with HTTP serving |
 | **CORS** | Configured for development environment |
 
-## 📋 Prerequisites
+## Prerequisites
+
+Before you begin, ensure you have the following installed:
 
 - **Node.js** ≥ 18 and npm
-- **Java** 21 (or 17) 
+- **Java** 21 (or 17)
 - **Gradle** (handled by wrapper)
+- **MySQL Community Server** ≥ 8.0 (version 9.4.0 recommended)
+- **MySQL Workbench** (for database management)
 - **IDE**: IntelliJ IDEA (recommended) or any Java IDE
 - **curl** (optional, for API testing)
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 transformer-inspector/
@@ -58,49 +62,101 @@ transformer-inspector/
 │   │   └── application.properties
 │   └── build.gradle
 │
-└── frontend/                              # React + TypeScript Application
-    ├── src/
-    │   ├── api/                          # API Client Layer
-    │   │   ├── client.ts
-    │   │   ├── transformers.ts
-    │   │   └── images.ts
-    │   ├── components/                   # Reusable Components
-    │   │   ├── FileDrop.tsx
-    │   │   ├── Input.tsx
-    │   │   ├── Layout.tsx
-    │   │   └── Select.tsx
-    │   ├── pages/                        # Page Components
-    │   │   ├── TransformersList.tsx
-    │   │   └── TransformerDetail.tsx
-    │   ├── App.tsx
-    │   └── main.tsx
-    ├── .env
-    └── package.json
+├── frontend/
+│   ├── src/
+│   │   ├── api/                           # API Client Layer
+│   │   │   ├── client.ts
+│   │   │   ├── images.ts
+│   │   │   └── transformers.ts
+│   │   ├── components/                    # Reusable UI Components
+│   │   │   ├── ErrorBoundary.tsx
+│   │   │   ├── FileDrop.tsx
+│   │   │   ├── Input.tsx
+│   │   │   ├── Layout.tsx
+│   │   │   ├── Modal.tsx
+│   │   │   ├── Select.tsx
+│   │   │   └── Table.tsx
+│   │   ├── pages/                         # Page Components
+│   │   │   ├── Dashboard.tsx
+│   │   │   ├── ImagesList.tsx
+│   │   │   ├── ImageUpload.tsx
+│   │   │   ├── TransformerDetail.tsx
+│   │   │   ├── TransformerForm.tsx
+│   │   │   └── TransformersList.tsx
+│   │   ├── App.tsx
+│   │   └── main.tsx
+│   └── package.json
+│
+└── Database-MYSQL/
+    └── en3350_db.sql                      # Database schema and sample data
 ```
 
-## 🚀 Quick Start
+## Quick Start
 
-### Option 1: Step-by-step Setup
+### Database Setup
 
-#### Backend Setup
+1. **Install MySQL Community Server**
+   - Install **MySQL Community Server** (version **9.4.0** recommended, but ≥ 8.0 works)
+   - Install **MySQL Workbench** during setup
+   - During installation, set your own **root username and password** (keep these safe for later configuration)
 
-1. **Open the backend project**
+2. **Verify MySQL Server is running**
+   - Open **MySQL Workbench**
+   - Check that your MySQL instance (e.g., *Local instance MySQL94*) is **running**
+   - If stopped, start it using the **Server Start/Stop** button
+
+3. **Create the database schema**
+   ```sql
+   CREATE DATABASE en3350_db;
+   ```
+
+4. **Import the SQL dump**
+   - In Workbench, go to **Server > Data Import**
+   - Select **Import from Self-Contained File**
+   - File path: `transformer-inspector/Database-MYSQL/en3350_db.sql`
+   - Set **Default Target Schema** to `en3350_db`
+   - Set **Import Options** to **Dump Structure and Data**
+   - Click **Start Import**
+
+5. **Verify the import**
+   - Refresh the **Schemas** panel
+   - Expand `en3350_db` → **Tables**
+   - You should see tables: `transformers`, `thermal_images`, and `users`
+
+### Backend Configuration
+
+1. **Navigate to backend directory**
    ```bash
    cd transformer-inspector/backend
    ```
 
-2. **Configure your IDE** (IntelliJ)
-   - Set **Project SDK** to Java 21 (or 17)
-   - Set **Gradle JVM** to the same Java version
+2. **Configure `application.properties`**
+   ```properties
+   # MySQL Database Configuration
+   spring.datasource.url=jdbc:mysql://localhost:3306/en3350_db
+   spring.datasource.username=YOUR_MYSQL_USERNAME
+   spring.datasource.password=YOUR_MYSQL_PASSWORD
+   spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
+   spring.jpa.hibernate.ddl-auto=update
+   spring.jpa.show-sql=true
+   spring.jpa.database-platform=org.hibernate.dialect.MySQLDialect
 
-3. **Run the application**
+   # File Storage Configuration
+   app.server.public-base-url=http://localhost:8080
+   app.storage.root=backend/uploads
+
+   # CORS Configuration
+   app.cors.allowed-origins=http://localhost:5173
+   ```
+
+3. **Start the backend server**
    ```bash
    ./gradlew bootRun
    ```
    
-   Server will start at **http://localhost:8080**
+   🟢 Server will start at **http://localhost:8080**
 
-#### Frontend Setup
+### Frontend Setup
 
 1. **Navigate to frontend directory**
    ```bash
@@ -112,124 +168,86 @@ transformer-inspector/
    npm install
    ```
 
-3. **Start development server**
+3. **Start the development server**
    ```bash
    npm run dev
    ```
    
-   Application will be available at **http://localhost:5173**
+   🟢 Application will be available at **http://localhost:5173**
 
-### Option 2: Quick Start (TL;DR)
-
-```bash
-# Terminal 1: Backend
-cd transformer-inspector/backend
-./gradlew bootRun
-
-# Terminal 2: Frontend  
-cd transformer-inspector/frontend
-cp .env.example .env
-npm install
-npm run dev
-```
-
-## 🌐 API Testing
-
-Test the backend API with curl:
+### One-Line Setup (TL;DR)
 
 ```bash
-# List transformers (initially empty)
-curl "http://localhost:8080/api/transformers?page=0&size=10"
+# Terminal 1: Start Backend
+cd transformer-inspector/backend && ./gradlew bootRun
 
-# Create a new transformer
-curl -X POST "http://localhost:8080/api/transformers" \
-  -H "Content-Type: application/json" \
-  -d '{"code":"TX-001","location":"Kandy","capacityKVA":1000}'
-
-# List transformers again
-curl "http://localhost:8080/api/transformers?page=0&size=10"
+# Terminal 2: Start Frontend  
+cd transformer-inspector/frontend && npm install && npm run dev
 ```
 
-## ⚙️ Configuration
+## Application URLs
 
-### Database Configuration 
-The backend uses **MySQL** as the relational database.  
+### Frontend Routes
+| URL | Description |
+|-----|-------------|
+| `http://localhost:5173` | Dashboard |
+| `http://localhost:5173/transformers` | Transformer Overview |
+| `http://localhost:5173/transformers/{ID}` | Transformer Details |
 
-We have already exported the schema and sample data into a single SQL file:
-[`Database-MYSQL/en3350_db.sql`](./transformer-inspector/Database-MYSQL/en3350_db.sql).
+### API Endpoints
 
-1. **Install MySQL Community Server**
-   - Install **MySQL Community Server** (version **9.4.0** recommended, but ≥ 8.0 works).  
-   - Install **MySQL Workbench** during setup.  
-   - During installation, set your own **root username and password** → keep these safe, you’ll need them for configuration later.
+#### Transformer Management
+- `GET /api/transformers` - List all transformers
+- `POST /api/transformers` - Create new transformer
+- `GET /api/transformers/{id}` - Get transformer details
+- `PUT /api/transformers/{id}` - Update transformer
+- `DELETE /api/transformers/{id}` - Delete transformer
 
-2. **Verify MySQL Server is running**
-   - Open **MySQL Workbench**.  
-   - Check that your MySQL instance (e.g., *Local instance MySQL94*) is **running**.  
-   - If it’s stopped, start it using the **Server Start/Stop** button.
+#### Thermal Image Management
+- `GET /api/images` - List all thermal images
+- `POST /api/images` - Upload thermal image
 
-3. **Create a new schema**
-   - In Workbench, open a new query tab and run:  
-     ```sql
-     CREATE DATABASE en3350_db;
-     ```
-   - Or: Right-click inside the **Schemas** panel → *Create Schema* → enter `en3350_db`.  
-   - Refresh schemas to confirm `en3350_db` is created.
+#### File Serving
+- `GET /files/**` - Serve uploaded files
 
-4. **Import the SQL dump**
-   - In Workbench, go to **Server > Data Import**.  
-   - Select **Import from Self-Contained File**.  
-     - File path:  
-       ```
-       transformer-inspector/Database-MYSQL/en3350_db.sql 
-       ```
-       
-   - Set **Default Target Schema** to `en3350_db`.  
-   - Set **Import Options** to **Dump Structure and Data**.  
-   - Click **Start Import**.
+## File Storage Structure
 
-5. **Verify imported tables**
-   - Refresh the **Schemas** panel.  
-   - Expand `en3350_db` → **Tables**.  
-   - You should see tables such as `transformers`, `thermal_images`, and `users`.
-
-```properties
-# --- MySQL (persistent DB) ---
-spring.datasource.url=jdbc:mysql://localhost:3306/en3350_db
-spring.datasource.username=#YOUR_MYSQL_USERNAME
-spring.datasource.password=#YOUR_MYSQL_PASSWORD
-spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
-spring.jpa.hibernate.ddl-auto=update
-spring.jpa.show-sql=true
-spring.jpa.database-platform=org.hibernate.dialect.MySQLDialect
-
-# --- File storage ---
-app.server.public-base-url=http://localhost:8080
-app.storage.root=backend//uploads #Put the relative path, works across machines
-
-# --- CORS (frontend) ---
-app.cors.allowed-origins=http://localhost:5173
-
+Files are organized as follows:
 ```
-Then you can run the backend
-
-## 🗂️ File Storage
+uploads/
+├── {transformerId}/
+│   ├── baseline/
+│   │   └── filename.jpg
+│   └── maintenance/
+│       └── filename.jpg
+```
 
 - **Storage Path**: `<working-directory>/uploads/{transformerId}/{type}/filename`
 - **Public Access**: Files served via `/files/**` endpoint
 - **Organization**: Files organized by transformer ID and image type (baseline/maintenance)
 
-## 🧭 Application Routes
-
-| Route | Description |
-|-------|-------------|
-| `/transformers` | List and create transformers |
-| `/transformers/:id` | Transformer details, image upload, and comparison |
-| `/settings` | Settings page (placeholder) |
-
-## 🛠️ Development Tools
+## Development
 
 ### Hot Reload
-
 - **Frontend**: Automatic reload via Vite HMR
 - **Backend**: Use Spring Boot DevTools or manual restart
+
+### Environment Variables
+Create a `.env` file in the frontend directory:
+```env
+VITE_API_BASE_URL=http://localhost:8080
+```
+
+### Testing the API
+```bash
+# Get all transformers
+curl http://localhost:8080/api/transformers
+
+# Get transformer by ID
+curl http://localhost:8080/api/transformers/1
+```
+
+
+---
+
+**Built with ❤️ for electrical transformer management and thermal analysis**

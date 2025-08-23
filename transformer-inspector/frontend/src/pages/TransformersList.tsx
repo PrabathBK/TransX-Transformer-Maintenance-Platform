@@ -153,7 +153,11 @@ export default function TransformersList() {
           </thead>
           <tbody>
           {loading && <tr><td colSpan={7} className="loading-cell">Loading transformers...</td></tr>}
-          {!loading && items.map(t => (
+          {!loading && (() => {
+            // Calculate the maximum capacity from all transformers for dynamic scaling
+            const maxCapacity = Math.max(...items.map(item => item.capacityKVA || 0), 1);
+            
+            return items.map(t => (
             <tr key={t.id}>
               <td className="transformer-code" onClick={() => nav(`/transformers/${t.id}`)}>
                 <div className="code-wrapper">
@@ -180,12 +184,41 @@ export default function TransformersList() {
                 <div className="capacity-wrapper">
                   <div className="capacity-info">
                     <span className="capacity-value">{t.capacityKVA} kVA</span>
-                    <span className="capacity-percentage">{Math.min(100, (t.capacityKVA / 500) * 100).toFixed(0)}%</span>
+                    <span 
+                      className="capacity-percentage"
+                      style={{
+                        color: (() => {
+                          const percentage = (t.capacityKVA / maxCapacity) * 100;
+                          if (percentage <= 50) {
+                            return '#059669'; // Green
+                          } else if (percentage <= 80) {
+                            return '#d97706'; // Orange
+                          } else {
+                            return '#dc2626'; // Red
+                          }
+                        })(),
+                        fontWeight: '600'
+                      }}
+                    >
+                      {((t.capacityKVA / maxCapacity) * 100).toFixed(0)}%
+                    </span>
                   </div>
                   <div className="capacity-bar">
                     <div 
                       className="capacity-fill" 
-                      style={{ width: `${Math.min(100, (t.capacityKVA / 500) * 100)}%` }}
+                      style={{ 
+                        width: `${(t.capacityKVA / maxCapacity) * 100}%`,
+                        background: (() => {
+                          const percentage = (t.capacityKVA / maxCapacity) * 100;
+                          if (percentage <= 50) {
+                            return 'linear-gradient(90deg, #10b981 0%, #34d399 100%)'; // Green
+                          } else if (percentage <= 80) {
+                            return 'linear-gradient(90deg, #f59e0b 0%, #fbbf24 100%)'; // Yellow/Orange
+                          } else {
+                            return 'linear-gradient(90deg, #ef4444 0%, #f87171 100%)'; // Red
+                          }
+                        })()
+                      }}
                     ></div>
                   </div>
                 </div>
@@ -212,7 +245,8 @@ export default function TransformersList() {
                 </div>
               </td>
             </tr>
-          ))}
+            ));
+          })()}
           {!loading && items.length === 0 && !loadErr && (
             <tr><td colSpan={7} className="empty-state">No transformers yet.</td></tr>
           )}

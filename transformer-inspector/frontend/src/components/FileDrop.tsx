@@ -8,6 +8,7 @@ export default function FileDrop({ onFile }: Props) {
   const [showError, setShowError] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string>('');
   const [isUploading, setIsUploading] = useState(false);
+  const [filePreview, setFilePreview] = useState<string | null>(null);
 
   const validateFile = (file: File): { isValid: boolean; error?: string } => {
     // Check file type
@@ -37,6 +38,22 @@ export default function FileDrop({ onFile }: Props) {
     setErrorMessage(message);
     setShowError(true);
     setTimeout(() => setShowError(false), 4000); // Show error for 4 seconds
+  };
+
+  const removeFile = () => {
+    // Clean up preview URL to prevent memory leaks
+    if (filePreview) {
+      URL.revokeObjectURL(filePreview);
+    }
+    
+    setSelectedFile(null);
+    setFilePreview(null);
+    
+    // Clear any file input values
+    const fileInputs = document.querySelectorAll('input[type="file"]');
+    fileInputs.forEach(input => {
+      (input as HTMLInputElement).value = '';
+    });
   };
 
   const checkEnvironmentConditions = (): { isValid: boolean; error?: string } => {
@@ -97,6 +114,10 @@ export default function FileDrop({ onFile }: Props) {
       onFile(file);
       setSelectedFile(file.name);
       
+      // Create preview URL for the uploaded image
+      const previewUrl = URL.createObjectURL(file);
+      setFilePreview(previewUrl);
+      
     } catch (error) {
       // Handle upload errors
       const errorMsg = error instanceof Error ? error.message : 'Upload failed. Please try again.';
@@ -117,10 +138,15 @@ export default function FileDrop({ onFile }: Props) {
         return;
       }
       
+      // Clean up previous preview URL to prevent memory leaks
+      if (filePreview) {
+        URL.revokeObjectURL(filePreview);
+      }
+      
       // Use the new upload process with environment checks
       handleUploadProcess(file);
     }
-  }, []);
+  }, [filePreview]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];
@@ -133,6 +159,11 @@ export default function FileDrop({ onFile }: Props) {
         return;
       }
       
+      // Clean up previous preview URL to prevent memory leaks
+      if (filePreview) {
+        URL.revokeObjectURL(filePreview);
+      }
+      
       // Use the new upload process with environment checks
       handleUploadProcess(f);
     }
@@ -140,72 +171,121 @@ export default function FileDrop({ onFile }: Props) {
 
   return (
     <>
-      {/* Selected File Display */}
-      {selectedFile && (
-        <div style={{
-          backgroundColor: '#f0f9ff',
-          border: '1px solid #0ea5e9',
-          borderRadius: '8px',
-          padding: '12px 16px',
-          marginBottom: '16px',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '8px',
-          fontSize: '14px',
-          color: '#0369a1'
-        }}>
-          <span style={{ color: '#059669', fontSize: '16px' }}>✅</span>
-          <strong>Selected:</strong> {selectedFile}
+      {/* Drag & Drop Area - always visible */}
+      <div
+        onDragOver={e => { e.preventDefault(); setHover(true); }}
+        onDragLeave={() => setHover(false)}
+        onDrop={onDrop}
+        style={{
+          padding: selectedFile ? 16 : 48,
+          border: `2px dashed ${hover ? '#1e40af' : selectedFile ? '#10b981' : '#60a5fa'}`,
+          borderRadius: 12,
+          textAlign: 'center',
+          background: hover ? 'rgba(30, 64, 175, 0.05)' : selectedFile ? 'rgba(16, 185, 129, 0.05)' : 'rgba(248, 250, 252, 0.5)',
+          transition: 'all 0.3s ease',
+          cursor: isUploading ? 'wait' : 'pointer',
+          position: 'relative',
+          opacity: isUploading ? 0.7 : 1
+        }}
+      >
+      {/* Content based on file state */}
+      {selectedFile && filePreview ? (
+        // Show uploaded image preview
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }}>
+          <div style={{ position: 'relative', display: 'inline-block' }}>
+            <img 
+              src={filePreview} 
+              alt="Uploaded preview" 
+              style={{ 
+                maxWidth: '200px', 
+                maxHeight: '150px', 
+                borderRadius: '8px',
+                objectFit: 'cover',
+                border: '2px solid #10b981'
+              }} 
+            />
+            {/* Remove button */}
+            <button
+              onClick={(e) => {
+                e.stopPropagation(); // Prevent triggering file input
+                removeFile();
+              }}
+              style={{
+                position: 'absolute',
+                top: '-8px',
+                right: '-8px',
+                width: '24px',
+                height: '24px',
+                borderRadius: '50%',
+                background: '#ef4444',
+                color: 'white',
+                border: 'none',
+                cursor: 'pointer',
+                fontSize: '14px',
+                fontWeight: 'bold',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',
+                zIndex: 10
+              }}
+              title="Remove file"
+            >
+              ×
+            </button>
+          </div>
+          <div style={{ textAlign: 'center' }}>
+            <p style={{ 
+              margin: '0 0 4px 0', 
+              fontSize: 14, 
+              fontWeight: 600,
+              color: '#10b981'
+            }}>
+              ✅ {selectedFile}
+            </p>
+            <p style={{ 
+              margin: 0, 
+              fontSize: 12, 
+              color: '#6b7280'
+            }}>
+              Click or drag to change file
+            </p>
+          </div>
         </div>
+      ) : (
+        // Show upload prompt
+        <>
+          {/* Cloud Upload Icon */}
+          <div style={{ 
+            fontSize: 64, 
+            marginBottom: 16,
+            color: hover ? '#1e40af' : '#3b82f6'
+          }}>
+            ☁
+          </div>
+          
+          {/* Main Text */}
+          <p style={{ 
+            margin: '0 0 8px 0', 
+            fontSize: 16, 
+            fontWeight: 600,
+            color: hover ? '#1e40af' : '#475569'
+          }}>
+            {isUploading ? 'Uploading...' : 'Drag & drop to upload'}
+          </p>
+          
+          {/* Secondary Text */}
+          <p style={{ 
+            margin: '0 0 20px 0', 
+            fontSize: 14, 
+            color: '#60a5fa',
+            fontWeight: 500
+          }}>
+            {isUploading ? 'Please wait' : 'or browse'}
+          </p>
+        </>
       )}
 
-      {/* Drag & Drop Area - only show when no file is selected */}
-      {!selectedFile && (
-        <div
-          onDragOver={e => { e.preventDefault(); setHover(true); }}
-          onDragLeave={() => setHover(false)}
-          onDrop={onDrop}
-          style={{
-            padding: 48,
-            border: `2px dashed ${hover ? '#1e40af' : '#60a5fa'}`,
-            borderRadius: 12,
-            textAlign: 'center',
-            background: hover ? 'rgba(30, 64, 175, 0.05)' : 'rgba(248, 250, 252, 0.5)',
-            transition: 'all 0.3s ease',
-            cursor: isUploading ? 'wait' : 'pointer',
-            position: 'relative',
-            opacity: isUploading ? 0.7 : 1
-          }}
-        >
-      {/* Cloud Upload Icon */}
-      <div style={{ 
-        fontSize: 64, 
-        marginBottom: 16,
-        color: hover ? '#1e40af' : '#3b82f6'
-      }}>
-        ☁
-      </div>
-      
-      {/* Main Text */}
-      <p style={{ 
-        margin: '0 0 8px 0', 
-        fontSize: 16, 
-        fontWeight: 600,
-        color: hover ? '#1e40af' : '#475569'
-      }}>
-        {isUploading ? 'Uploading...' : 'Drag & drop to upload'}
-      </p>
-      
-      {/* Secondary Text */}
-      <p style={{ 
-        margin: '0 0 20px 0', 
-        fontSize: 14, 
-        color: '#60a5fa',
-        fontWeight: 500
-      }}>
-        {isUploading ? 'Please wait' : 'or browse'}
-      </p>
-      
       {/* Hidden File Input */}
       <input
         type="file"
@@ -222,10 +302,7 @@ export default function FileDrop({ onFile }: Props) {
           cursor: isUploading ? 'wait' : 'pointer'
         }}
       />
-        </div>
-      )}
-
-      {/* Error Popup */}
+      </div>      {/* Error Popup */}
       {showError && (
         <div style={{
           position: 'fixed',

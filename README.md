@@ -158,27 +158,40 @@ The backend uses **MySQL** as the relational database.
 We have already exported the schema and sample data into a single SQL file:
 [`Database-MYSQL/en3350_db.sql`](./transformer-inspector/Database-MYSQL/en3350_db.sql).
 
-#### Steps to set up the database:
-
 1. **Install MySQL Community Server**
-   - Version: **9.4.0** (recommended, but ≥ 8.0 works).
-   - Ensure you also install **MySQL Workbench**.
+   - Install **MySQL Community Server** (version **9.4.0** recommended, but ≥ 8.0 works).  
+   - Install **MySQL Workbench** during setup.  
+   - During installation, set your own **root username and password** → keep these safe, you’ll need them for configuration later.
 
-2. **Create a new schema**
-   - Open Workbench.
-   - Run:
+2. **Verify MySQL Server is running**
+   - Open **MySQL Workbench**.  
+   - Check that your MySQL instance (e.g., *Local instance MySQL94*) is **running**.  
+   - If it’s stopped, start it using the **Server Start/Stop** button.
+
+3. **Create a new schema**
+   - In Workbench, open a new query tab and run:  
      ```sql
      CREATE DATABASE en3350_db;
      ```
+   - Or: Right-click inside the **Schemas** panel → *Create Schema* → enter `en3350_db`.  
+   - Refresh schemas to confirm `en3350_db` is created.
 
-3. **Import the SQL dump**
-   - Navigate to `transformer-inspector/Database-MYSQL/`.
-   - Import `en3350_db.sql` into your MySQL server using:
-     - Workbench “Data Import” → Import from Self-Contained File, OR  
-     - CLI:
-       ```bash
-       mysql -u root -p en3350_db < en3350_db.sql
+4. **Import the SQL dump**
+   - In Workbench, go to **Server > Data Import**.  
+   - Select **Import from Self-Contained File**.  
+     - File path:  
+       ```
+       transformer-inspector/Database-MYSQL/en3350_db.sql 
+       ```
+       
+   - Set **Default Target Schema** to `en3350_db`.  
+   - Set **Import Options** to **Dump Structure and Data**.  
+   - Click **Start Import**.
 
+5. **Verify imported tables**
+   - Refresh the **Schemas** panel.  
+   - Expand `en3350_db` → **Tables**.  
+   - You should see tables such as `transformers`, `thermal_images`, and `users`.
 
 ```properties
 # --- MySQL (persistent DB) ---
@@ -191,7 +204,6 @@ spring.jpa.show-sql=true
 spring.jpa.database-platform=org.hibernate.dialect.MySQLDialect
 
 # --- File storage ---
-app.storage.root=uploads   # make sure the folder exists in backend/
 app.server.public-base-url=http://localhost:8080
 app.storage.root=backend//uploads #Put the relative path, works across machines
 

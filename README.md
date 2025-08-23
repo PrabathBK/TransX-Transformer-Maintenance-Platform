@@ -152,7 +152,7 @@ curl "http://localhost:8080/api/transformers?page=0&size=10"
 
 ## ⚙️ Configuration
 
-### Database Configuration (`application.properties`)
+### Database Configuration 
 The backend uses **MySQL** as the relational database.  
 
 We have already exported the schema and sample data into a single SQL file:

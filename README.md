@@ -246,8 +246,4 @@ curl http://localhost:8080/api/transformers
 # Get transformer by ID
 curl http://localhost:8080/api/transformers/1
 ```
-
-
 ---
-
-**Built with ❤️ for electrical transformer management and thermal analysis**

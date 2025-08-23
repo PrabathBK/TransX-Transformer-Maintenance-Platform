@@ -152,15 +152,39 @@ curl "http://localhost:8080/api/transformers?page=0&size=10"
 
 ## ⚙️ Configuration
 
-### Backend Configuration (`application.properties`)
+### Database Configuration (`application.properties`)
 The backend uses **MySQL** as the relational database.  
-See the full setup guide here: [DATABASE-SETUP.md](./transformer-inspector/backend/src/main/resources/DATABASE-SETUP.md).
+
+We have already exported the schema and sample data into a single SQL file:
+[`Database-MYSQL/en3350_db.sql`](./transformer-inspector\Database-MYSQL\en3350_db.sql).
+
+#### Steps to set up the database:
+
+1. **Install MySQL Community Server**
+   - Version: **9.4.0** (recommended, but ≥ 8.0 works).
+   - Ensure you also install **MySQL Workbench**.
+
+2. **Create a new schema**
+   - Open Workbench.
+   - Run:
+     ```sql
+     CREATE DATABASE en3350_db;
+     ```
+
+3. **Import the SQL dump**
+   - Navigate to `transformer-inspector/Database-MYSQL/`.
+   - Import `en3350_db.sql` into your MySQL server using:
+     - Workbench “Data Import” → Import from Self-Contained File, OR  
+     - CLI:
+       ```bash
+       mysql -u root -p en3350_db < en3350_db.sql
+
 
 ```properties
 # --- MySQL (persistent DB) ---
 spring.datasource.url=jdbc:mysql://localhost:3306/en3350_db
-spring.datasource.username=root
-spring.datasource.password=YourPasswordHere
+spring.datasource.username=#YOUR_MYSQL_USERNAME
+spring.datasource.password=#YOUR_MYSQL_PASSWORD
 spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
 spring.jpa.hibernate.ddl-auto=update
 spring.jpa.show-sql=true
@@ -169,11 +193,13 @@ spring.jpa.database-platform=org.hibernate.dialect.MySQLDialect
 # --- File storage ---
 app.storage.root=uploads   # make sure the folder exists in backend/
 app.server.public-base-url=http://localhost:8080
+app.storage.root=backend//uploads #Put the relative path, works across machines
 
 # --- CORS (frontend) ---
 app.cors.allowed-origins=http://localhost:5173
 
 ```
+Then you can run the backend
 
 ## 🗂️ File Storage
 

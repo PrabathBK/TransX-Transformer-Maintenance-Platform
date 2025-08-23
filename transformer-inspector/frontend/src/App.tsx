@@ -1,5 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import './App.css';
 import Layout from './components/Layout';
+import Dashboard from './pages/Dashboard';
 import TransformersList from './pages/TransformersList';
 import TransformerDetail from './pages/TransformerDetail';
 
@@ -9,7 +11,7 @@ export default function App() {
       <Routes>
         {/* Shell with sidebar */}
         <Route element={<Layout />}>
-          <Route path="/" element={<Navigate to="/transformers" replace />} />
+          <Route path="/" element={<Dashboard />} />
           <Route path="/transformers" element={<TransformersList />} />
           {/* use "new" for create mode; otherwise :id of an existing transformer */}
           <Route path="/transformers/:id" element={<TransformerDetail />} />

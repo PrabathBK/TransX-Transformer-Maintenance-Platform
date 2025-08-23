@@ -33,6 +33,8 @@ export default function TransformersList() {
   const size = 10;
   const [loading, setLoading] = useState(false);
   const [loadErr, setLoadErr] = useState<string | null>(null);
+  const [successMsg, setSuccessMsg] = useState<string | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState<CreateForm>({
@@ -87,6 +89,8 @@ export default function TransformersList() {
       resetForm();
       setPage(0);
       await load();
+      setSuccessMsg(`Transformer ${form.code} created successfully!`);
+      setTimeout(() => setSuccessMsg(null), 5000); // Auto-hide after 5 seconds
     } catch (e: any) {
       const message = String(e?.message || '');
       if (message.toLowerCase().includes('already exists') || message.includes('409')) {
@@ -100,68 +104,165 @@ export default function TransformersList() {
   }
 
   return (
-    <div style={{ maxWidth: 1200, margin: '0 auto' }}>
-      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:16 }}>
-        <h1 style={{ margin:0 }}>Transformers</h1>
-        <button onClick={() => { resetForm(); setOpen(true); }} style={{ padding:'10px 14px', borderRadius: 10, border:'1px solid #ddd' }}>
-          + Add Transformer
+    <div className="page-container">
+      <div className="page-header">
+        <h1 className="page-title">Transformers</h1>
+        <button className="primary-button add-button" onClick={() => { resetForm(); setOpen(true); }}>
+          <span className="button-icon">+</span>
+          Add Transformer
         </button>
       </div>
 
       {/* Search toolbar */}
-      <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
-        <Input placeholder="Search by transformer code or location" value={q} onChange={e => setQ(e.target.value)} />
-        <button onClick={() => { setPage(0); load(); }}>Search</button>
-        <button onClick={() => { setQ(''); setPage(0); load(); }}>Reset</button>
+      <div className="search-section">
+        <div className="search-inputs">
+          <input 
+            className="search-input"
+            placeholder="Search by transformer code or location..." 
+            value={q} 
+            onChange={e => setQ(e.target.value)} 
+          />
+          <button className="search-button" onClick={() => { setPage(0); load(); }}>
+            <span>🔍</span> Search
+          </button>
+          <button className="reset-button" onClick={() => { setQ(''); setPage(0); load(); }}>
+            Reset
+          </button>
+        </div>
       </div>
 
-      {loadErr && <div style={{ color: '#b00020', marginBottom: 12 }}>Error: {loadErr}</div>}
+      {/* Notifications */}
+      {successMsg && <div className="success-message">{successMsg}</div>}
+      {deleteError && <div className="error-message">{deleteError}</div>}
+      {loadErr && <div className="error-message">{loadErr}</div>}
+      {loading && <div className="loading-message">Loading transformers...</div>}
 
       {/* List */}
-      <div style={{ overflowX: 'auto', background: '#fff', border: '1px solid #eee', borderRadius: 12 }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+      <div className="table-container">
+        <table className="transformer-table">
           <thead>
-          <tr style={{ background: '#f8f8ff' }}>
-            <th style={{ textAlign: 'left', padding: 12 }}>Transformer No.</th>
-            <th style={{ textAlign: 'left', padding: 12 }}>Pole No.</th>
-            <th style={{ textAlign: 'left', padding: 12 }}>Region</th>
-            <th style={{ textAlign: 'left', padding: 12 }}>Type</th>
-            <th style={{ textAlign: 'left', padding: 12 }}>Location</th>
-            <th style={{ textAlign: 'left', padding: 12 }}>Capacity (kVA)</th>
-            <th style={{ padding: 12 }} />
+          <tr>
+            <th>Transformer No.</th>
+            <th>Pole No.</th>
+            <th>Region</th>
+            <th>Type</th>
+            <th>Location</th>
+            <th>Capacity (kVA)</th>
+            <th></th>
           </tr>
           </thead>
           <tbody>
-          {loading && <tr><td colSpan={7} style={{ padding: 24 }}>Loading…</td></tr>}
-          {!loading && items.map(t => (
-            <tr key={t.id} style={{ borderTop: '1px solid #eee' }}>
-              <td style={{ padding: 12, cursor: 'pointer' }} onClick={() => nav(`/transformers/${t.id}`)}>{t.code}</td>
-              <td style={{ padding: 12 }}>{t.poleNo ?? '-'}</td>
-              <td style={{ padding: 12 }}>{t.region ?? '-'}</td>
-              <td style={{ padding: 12 }}>{t.type ?? '-'}</td>
-              <td style={{ padding: 12 }}>{t.location}</td>
-              <td style={{ padding: 12 }}>{t.capacityKVA}</td>
-              <td style={{ padding: 12, textAlign: 'right' }}>
-                <button onClick={() => nav(`/transformers/${t.id}`)}>View</button>
-                <button style={{ marginLeft: 8 }} onClick={async () => {
-                  if (!confirm('Delete this transformer?')) return;
-                  try { await deleteTransformer(t.id); load(); } catch (e:any) { alert(e?.message || 'Delete failed'); }
-                }}>Delete</button>
+          {loading && <tr><td colSpan={7} className="loading-cell">Loading transformers...</td></tr>}
+          {!loading && (() => {
+            // Calculate the maximum capacity from all transformers for dynamic scaling
+            const maxCapacity = Math.max(...items.map(item => item.capacityKVA || 0), 1);
+            
+            return items.map(t => (
+            <tr key={t.id}>
+              <td className="transformer-code" onClick={() => nav(`/transformers/${t.id}`)}>
+                <div className="code-wrapper">
+                  <span className="code-text">{t.code}</span>
+                  <span className="status-badge active">Active</span>
+                </div>
+              </td>
+              <td className="pole-data">
+                <span className="pole-number">{t.poleNo ?? '-'}</span>
+              </td>
+              <td className="region-data">
+                <div className="region-wrapper">
+                  <span className="region-dot"></span>
+                  <span>{t.region ?? '-'}</span>
+                </div>
+              </td>
+              <td className="type-data">
+                <span className={`type-badge ${t.type?.toLowerCase() || 'default'}`}>
+                  {t.type ?? '-'}
+                </span>
+              </td>
+              <td className="location-data">{t.location}</td>
+              <td className="capacity-data">
+                <div className="capacity-wrapper">
+                  <div className="capacity-info">
+                    <span className="capacity-value">{t.capacityKVA} kVA</span>
+                    <span 
+                      className="capacity-percentage"
+                      style={{
+                        color: (() => {
+                          const percentage = (t.capacityKVA / maxCapacity) * 100;
+                          if (percentage <= 50) {
+                            return '#059669'; // Green
+                          } else if (percentage <= 80) {
+                            return '#d97706'; // Orange
+                          } else {
+                            return '#dc2626'; // Red
+                          }
+                        })(),
+                        fontWeight: '600'
+                      }}
+                    >
+                      {((t.capacityKVA / maxCapacity) * 100).toFixed(0)}%
+                    </span>
+                  </div>
+                  <div className="capacity-bar">
+                    <div 
+                      className="capacity-fill" 
+                      style={{ 
+                        width: `${(t.capacityKVA / maxCapacity) * 100}%`,
+                        background: (() => {
+                          const percentage = (t.capacityKVA / maxCapacity) * 100;
+                          if (percentage <= 50) {
+                            return 'linear-gradient(90deg, #10b981 0%, #34d399 100%)'; // Green
+                          } else if (percentage <= 80) {
+                            return 'linear-gradient(90deg, #f59e0b 0%, #fbbf24 100%)'; // Yellow/Orange
+                          } else {
+                            return 'linear-gradient(90deg, #ef4444 0%, #f87171 100%)'; // Red
+                          }
+                        })()
+                      }}
+                    ></div>
+                  </div>
+                </div>
+              </td>
+              <td className="actions-cell">
+                <div className="action-buttons">
+                  <button className="action-btn view-btn" onClick={() => nav(`/transformers/${t.id}`)}>
+                    <span className="btn-icon">👁️</span>
+                  </button>
+                  <button className="action-btn delete-btn" onClick={async () => {
+                    if (!confirm('Delete this transformer?')) return;
+                    try { 
+                      await deleteTransformer(t.id); 
+                      await load(); 
+                      setSuccessMsg(`Transformer ${t.code} deleted successfully!`);
+                      setTimeout(() => setSuccessMsg(null), 5000);
+                    } catch (e:any) { 
+                      setDeleteError(e?.message || 'Delete failed');
+                      setTimeout(() => setDeleteError(null), 5000);
+                    }
+                  }}>
+                    <span className="btn-icon">🗑️</span>
+                  </button>
+                </div>
               </td>
             </tr>
-          ))}
+            ));
+          })()}
           {!loading && items.length === 0 && !loadErr && (
-            <tr><td colSpan={7} style={{ padding: 24, textAlign: 'center', color: '#666' }}>No transformers yet.</td></tr>
+            <tr><td colSpan={7} className="empty-state">No transformers yet.</td></tr>
           )}
           </tbody>
         </table>
       </div>
 
       {/* Pager */}
-      <div style={{ marginTop: 12, display:'flex', gap:8, alignItems:'center' }}>
-        <button disabled={page === 0} onClick={() => setPage(p => Math.max(0, p - 1))}>Prev</button>
-        <span>Page {page + 1} / {totalPages}</span>
-        <button disabled={(page + 1) >= totalPages} onClick={() => setPage(p => p + 1)}>Next</button>
+      <div className="pagination-section">
+        <button className="pagination-button" disabled={page === 0} onClick={() => setPage(p => Math.max(0, p - 1))}>
+          ← Prev
+        </button>
+        <span className="pagination-info">Page {page + 1} of {totalPages}</span>
+        <button className="pagination-button" disabled={(page + 1) >= totalPages} onClick={() => setPage(p => p + 1)}>
+          Next →
+        </button>
       </div>
 
       {/* Modal: Add Transformer */}
@@ -201,11 +302,13 @@ export default function TransformersList() {
                    value={form.locationDetails} onChange={e => setForm(f => ({ ...f, locationDetails: e.target.value }))} />
           </div>
 
-          {createErr && <div style={{ gridColumn:'1 / -1', color:'#b00020' }}>{createErr}</div>}
+          {createErr && <div className="modal-error" style={{ gridColumn:'1 / -1' }}>{createErr}</div>}
 
           <div style={{ gridColumn: '1 / -1', display:'flex', gap:8, justifyContent:'flex-end', marginTop: 4 }}>
             <button type="button" onClick={() => setOpen(false)}>Cancel</button>
-            <button type="submit" disabled={createBusy}>{createBusy ? 'Saving…' : 'Confirm'}</button>
+            <button type="submit" disabled={createBusy}>
+              {createBusy ? 'Saving…' : 'Confirm'}
+            </button>
           </div>
         </form>
       </Modal>

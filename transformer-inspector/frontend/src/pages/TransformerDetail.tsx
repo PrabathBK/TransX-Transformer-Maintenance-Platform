@@ -38,6 +38,11 @@ export default function TransformerDetail() {
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
 
+  // notification states
+  const [successMsg, setSuccessMsg] = useState<string>('');
+  const [errorMsg, setErrorMsg] = useState<string>('');
+  const [warningMsg, setWarningMsg] = useState<string>('');
+
   useEffect(() => {
     (async () => {
       try {
@@ -91,17 +96,27 @@ export default function TransformerDetail() {
         type: type || undefined,
         locationDetails: locationDetails || undefined,
       });
-      alert('Saved');
+      setSuccessMsg('Transformer details saved successfully!');
+      setTimeout(() => setSuccessMsg(''), 4000);
     } catch (e: any) {
-      alert(e?.message || 'Save failed');
+      setErrorMsg(e?.message || 'Failed to save transformer details');
+      setTimeout(() => setErrorMsg(''), 4000);
     } finally {
       setSaving(false);
     }
   }
 
   async function doUpload() {
-    if (!t || !file) { alert('Select a file'); return; }
-    if (imgType === 'BASELINE' && env === ' ') { alert('Pick environmental condition'); return; }
+    if (!t || !file) { 
+      setWarningMsg('Please select a file');
+      setTimeout(() => setWarningMsg(''), 4000);
+      return; 
+    }
+    if (imgType === 'BASELINE' && env === ' ') { 
+      setWarningMsg('Please pick environmental condition');
+      setTimeout(() => setWarningMsg(''), 4000);
+      return; 
+    }
     try {
       setUploading(true);
       await uploadImage({
@@ -113,8 +128,11 @@ export default function TransformerDetail() {
       });
       await refreshImages(t.id);
       setFile(null);
+      setSuccessMsg('Image uploaded successfully!');
+      setTimeout(() => setSuccessMsg(''), 4000);
     } catch (e: any) {
-      alert(e?.message || 'Upload failed');
+      setErrorMsg(e?.message || 'Upload failed');
+      setTimeout(() => setErrorMsg(''), 4000);
     } finally {
       setUploading(false);
     }
@@ -136,7 +154,28 @@ export default function TransformerDetail() {
   }, [latestBaseline, latestMaintenance]);
 
   return (
-    <div style={{ maxWidth: 1200, margin: '0 auto' }}>
+    <div className="page-container">
+      {/* Notifications */}
+      {successMsg && (
+        <div className="success-message">
+          <span className="message-icon">✓</span>
+          {successMsg}
+        </div>
+      )}
+      {errorMsg && (
+        <div className="error-message">
+          <span className="message-icon">✕</span>
+          {errorMsg}
+        </div>
+      )}
+      {warningMsg && (
+        <div className="warning-message">
+          <span className="message-icon">⚠</span>
+          {warningMsg}
+        </div>
+      )}
+
+      <div style={{ maxWidth: 1200, margin: '0 auto' }}>
       <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
         <h1 style={{ marginTop: 0 }}>{t ? `Transformer ${t.code}` : 'Transformer'}</h1>
         <button onClick={() => nav('/transformers')} style={{ borderRadius: 10, padding: '8px 12px' }}>Back to list</button>
@@ -197,74 +236,123 @@ export default function TransformerDetail() {
 
       {/* Image section */}
       {t && (
-        <div style={{ display:'grid', gridTemplateColumns:'2fr 1fr', gap:16 }}>
+        <div>
           {/* Side-by-side comparison */}
-          <div>
+          <div style={{ marginBottom: 24 }}>
             <h3 style={{ margin:'12px 0' }}>Thermal Image Comparison</h3>
             <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12 }}>
               <ImageBox title={leftImg?.type === 'BASELINE' ? 'Baseline' : leftImg ? 'Current' : '—'} img={leftImg} />
               <ImageBox title={rightImg?.type === 'MAINTENANCE' ? 'Current' : rightImg ? 'Baseline' : '—'} img={rightImg} />
             </div>
+          </div>
 
-            {/* Gallery */}
-            <div style={{ marginTop: 18 }}>
-              <h3>All Images</h3>
-              {imgErr && <div style={{ color:'#b00020' }}>Error: {imgErr}</div>}
-              {imgLoading && <div>Loading images…</div>}
-              {!imgLoading && images.length === 0 && <div style={{ color:'#666' }}>No images yet.</div>}
-              {!imgLoading && images.length > 0 && (
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px,1fr))', gap: 12 }}>
-                  {images.map(img => (
-                    <div key={img.id} style={{ border: '1px solid #eee', borderRadius: 8, padding: 8 }}>
-                      <div style={{ height: 160, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#fafafa', borderRadius: 6 }}>
-                        <img src={img.publicUrl} alt={img.originalFilename} style={{ maxHeight: '100%', maxWidth: '100%', objectFit: 'contain' }} />
-                      </div>
-                      <div style={{ fontSize: 12, marginTop: 6 }}>
-                        <div><strong>{img.type}</strong>{img.envCondition ? ` • ${img.envCondition}` : ''}</div>
-                        <div>{new Date(img.uploadedAt).toLocaleString()}</div>
-                        <div>{(img.sizeBytes/1024).toFixed(1)} KB</div>
-                        <div>{img.uploader}</div>
-                      </div>
+          {/* Gallery */}
+          <div style={{ marginBottom: 32 }}>
+            <h3>All Images</h3>
+            {imgErr && <div style={{ color:'#b00020' }}>Error: {imgErr}</div>}
+            {imgLoading && <div>Loading images…</div>}
+            {!imgLoading && images.length === 0 && <div style={{ color:'#666' }}>No images yet.</div>}
+            {!imgLoading && images.length > 0 && (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px,1fr))', gap: 12 }}>
+                {images.map(img => (
+                  <div key={img.id} style={{ border: '1px solid #eee', borderRadius: 8, padding: 8 }}>
+                    <div style={{ height: 160, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#fafafa', borderRadius: 6 }}>
+                      <img src={img.publicUrl} alt={img.originalFilename} style={{ maxHeight: '100%', maxWidth: '100%', objectFit: 'contain' }} />
                     </div>
-                  ))}
-                </div>
-              )}
-            </div>
+                    <div style={{ fontSize: 12, marginTop: 6 }}>
+                      <div><strong>{img.type}</strong>{img.envCondition ? ` • ${img.envCondition}` : ''}</div>
+                      <div>{new Date(img.uploadedAt).toLocaleString()}</div>
+                      <div>{(img.sizeBytes/1024).toFixed(1)} KB</div>
+                      <div>{img.uploader}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Upload panel */}
-          <div style={{ background:'#fff', border:'1px solid #eee', borderRadius:12, padding:16 }}>
-            <h3 style={{ marginTop:0 }}>Upload Image</h3>
-            <Select
-              label="Type"
-              value={imgType}
-              onChange={e=>setImgType(e.target.value as any)}
-              options={[{ value:'BASELINE', label:'Baseline' }, { value:'MAINTENANCE', label:'Maintenance' }]}
-            />
-            {imgType === 'BASELINE' && (
+          <div style={{ 
+            background: 'linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)', 
+            border: '1px solid rgba(124, 58, 237, 0.1)', 
+            borderRadius: 16, 
+            padding: 24,
+            boxShadow: '0 4px 20px rgba(124, 58, 237, 0.08)'
+          }}>
+            <h3 style={{ marginTop: 0, marginBottom: 20, fontFamily: 'Montserrat', color: '#7c3aed', display: 'flex', alignItems: 'center', gap: 8 }}>
+              Upload New Image
+            </h3>
+            
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 20 }}>
               <Select
-                label="Environmental Condition"
-                value={env}
-                onChange={e=>setEnv(e.target.value as any)}
-                options={[
-                  { value:' ', label:'Select condition…' },
-                  { value:'SUNNY', label:'Sunny' },
-                  { value:'CLOUDY', label:'Cloudy' },
-                  { value:'RAINY', label:'Rainy' },
-                ]}
+                label="Image Type"
+                value={imgType}
+                onChange={e=>setImgType(e.target.value as any)}
+                options={[{ value:'BASELINE', label:'📊 Baseline' }, { value:'MAINTENANCE', label:'🔧 Maintenance' }]}
               />
+              <Input label="Uploader Name" value={uploader} onChange={e=>setUploader(e.target.value)} />
+            </div>
+            
+            {imgType === 'BASELINE' && (
+              <div style={{ marginBottom: 20 }}>
+                <Select
+                  label="Environmental Condition"
+                  value={env}
+                  onChange={e=>setEnv(e.target.value as any)}
+                  options={[
+                    { value:' ', label:'Select weather condition…' },
+                    { value:'SUNNY', label:'☀️ Sunny' },
+                    { value:'CLOUDY', label:'☁️ Cloudy' },
+                    { value:'RAINY', label:'🌧️ Rainy' },
+                  ]}
+                />
+              </div>
             )}
-            <Input label="Uploader" value={uploader} onChange={e=>setUploader(e.target.value)} />
+            
             <FileDrop onFile={setFile} />
-            {file && <div style={{ marginTop: 6, fontSize: 12 }}>Selected: <strong>{file.name}</strong></div>}
-            <div style={{ marginTop: 10 }}>
-              <button onClick={doUpload} disabled={uploading} style={{ borderRadius: 10, padding: '10px 14px' }}>
-                {uploading ? 'Uploading…' : 'Upload'}
+            {file && (
+              <div style={{ 
+                marginTop: 12, 
+                padding: 12, 
+                background: 'rgba(34, 197, 94, 0.1)', 
+                borderRadius: 8, 
+                border: '1px solid rgba(34, 197, 94, 0.2)',
+                fontSize: 14,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 8
+              }}>
+                <span>✅</span> Selected: <strong>{file.name}</strong>
+              </div>
+            )}
+            <div style={{ marginTop: 16 }}>
+              <button 
+                onClick={doUpload} 
+                disabled={uploading}
+                style={{ 
+                  background: 'linear-gradient(135deg, #7c3aed 0%, #a855f7 100%)',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: 12,
+                  padding: '12px 24px',
+                  fontSize: 16,
+                  fontWeight: 600,
+                  cursor: uploading ? 'not-allowed' : 'pointer',
+                  opacity: uploading ? 0.7 : 1,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 8,
+                  boxShadow: '0 4px 12px rgba(124, 58, 237, 0.25)',
+                  transition: 'all 0.3s ease'
+                }}
+              >
+                {uploading ? 'Uploading…' : 'Upload Image'}
               </button>
             </div>
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 }

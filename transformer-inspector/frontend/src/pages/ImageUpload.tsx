@@ -14,6 +14,8 @@ export default function ImageUpload() {
   const [uploader, setUploader] = useState('admin');
   const [file, setFile] = useState<File | null>(null);
   const [busy, setBusy] = useState(false);
+  const [successMsg, setSuccessMsg] = useState<string | null>(null);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -24,55 +26,78 @@ export default function ImageUpload() {
   }, []);
 
   async function submit() {
-    if (!transformerId || !file) { alert('Select transformer and file'); return; }
-    if (type === 'BASELINE' && env === ' ') { alert('Choose environmental condition'); return; }
+    if (!transformerId || !file) { 
+      setErrorMsg('Please select transformer and file'); 
+      setTimeout(() => setErrorMsg(null), 5000);
+      return; 
+    }
+    if (type === 'BASELINE' && env === ' ') { 
+      setErrorMsg('Please choose environmental condition for baseline images'); 
+      setTimeout(() => setErrorMsg(null), 5000);
+      return; 
+    }
     try {
       setBusy(true);
+      setErrorMsg(null);
       await uploadImage({
         transformerId, type,
         envCondition: type === 'BASELINE' ? (env as any) : undefined,
         uploader, file
       });
-      alert('Uploaded');
+      setSuccessMsg('Image uploaded successfully!');
+      setTimeout(() => setSuccessMsg(null), 5000);
       setFile(null);
     } catch (e: any) {
-      alert(e.message || 'Upload failed');
+      setErrorMsg(e.message || 'Upload failed');
+      setTimeout(() => setErrorMsg(null), 5000);
     } finally { setBusy(false); }
   }
 
   return (
-    <div style={{ maxWidth: 720, margin: '24px auto', padding: 16 }}>
-      <h2>Upload Thermal Image</h2>
-      <Select
-        label="Transformer"
-        value={transformerId}
-        onChange={e => setTransformerId(e.target.value)}
-        options={transformers.map(t => ({ value: t.id, label: `${t.code} – ${t.location}` }))}
-      />
-      <Select
-        label="Type"
-        value={type}
-        onChange={e => setType(e.target.value as any)}
-        options={[{ value: 'BASELINE', label: 'Baseline' }, { value: 'MAINTENANCE', label: 'Maintenance' }]}
-      />
-      {type === 'BASELINE' && (
+    <div className="page-container">
+      <div className="page-header">
+        <h1 className="page-title">Upload Thermal Image</h1>
+      </div>
+
+      {/* Notifications */}
+      {successMsg && <div className="success-message">{successMsg}</div>}
+      {errorMsg && <div className="error-message">{errorMsg}</div>}
+      {busy && <div className="loading-message">Uploading image...</div>}
+
+      <div className="search-section">
         <Select
-          label="Environmental Condition"
-          value={env}
-          onChange={e => setEnv(e.target.value as any)}
-          options={[
-            { value: ' ', label: 'Select condition…' },
-            { value: 'SUNNY', label: 'Sunny' },
-            { value: 'CLOUDY', label: 'Cloudy' },
-            { value: 'RAINY', label: 'Rainy' },
-          ]}
+          label="Transformer"
+          value={transformerId}
+          onChange={e => setTransformerId(e.target.value)}
+          options={transformers.map(t => ({ value: t.id, label: `${t.code} – ${t.location}` }))}
         />
-      )}
-      <Input label="Uploader" value={uploader} onChange={e => setUploader(e.target.value)} />
-      <FileDrop onFile={setFile} />
-      {file && <div style={{ marginTop: 8 }}>Selected: <strong>{file.name}</strong></div>}
-      <div style={{ marginTop: 12 }}>
-        <button onClick={submit} disabled={busy}>{busy ? 'Uploading…' : 'Upload'}</button>
+        <Select
+          label="Type"
+          value={type}
+          onChange={e => setType(e.target.value as any)}
+          options={[{ value: 'BASELINE', label: 'Baseline' }, { value: 'MAINTENANCE', label: 'Maintenance' }]}
+        />
+        {type === 'BASELINE' && (
+          <Select
+            label="Environmental Condition"
+            value={env}
+            onChange={e => setEnv(e.target.value as any)}
+            options={[
+              { value: ' ', label: 'Select condition…' },
+              { value: 'SUNNY', label: 'Sunny' },
+              { value: 'CLOUDY', label: 'Cloudy' },
+              { value: 'RAINY', label: 'Rainy' },
+            ]}
+          />
+        )}
+        <Input label="Uploader" value={uploader} onChange={e => setUploader(e.target.value)} />
+        <FileDrop onFile={setFile} />
+        {file && <div style={{ marginTop: 8, fontWeight: 600, color: '#7c3aed' }}>Selected: <strong>{file.name}</strong></div>}
+        <div style={{ marginTop: 12 }}>
+          <button className="search-button" onClick={submit} disabled={busy}>
+            {busy ? 'Uploading…' : 'Upload Image'}
+          </button>
+        </div>
       </div>
     </div>
   );

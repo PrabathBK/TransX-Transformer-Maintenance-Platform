@@ -178,7 +178,36 @@ export default function TransformerDetail() {
       <div style={{ maxWidth: 1200, margin: '0 auto' }}>
       <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
         <h1 style={{ marginTop: 0 }}>{t ? `Transformer ${t.code}` : 'Transformer'}</h1>
-        <button onClick={() => nav('/transformers')} style={{ borderRadius: 10, padding: '8px 12px' }}>Back to list</button>
+        <button 
+          onClick={() => nav('/transformers')} 
+          style={{ 
+            borderRadius: 10, 
+            padding: '8px 16px',
+            background: 'linear-gradient(135deg, #1e40af 0%, #3b82f6 100%)',
+            color: 'white',
+            border: 'none',
+            cursor: 'pointer',
+            fontWeight: '600',
+            fontSize: '14px',
+            opacity: 1,
+            visibility: 'visible',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+            boxShadow: '0 2px 8px rgba(124, 58, 237, 0.3)',
+            transition: 'all 0.2s ease'
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.transform = 'translateY(-1px)';
+            e.currentTarget.style.boxShadow = '0 4px 12px rgba(124, 58, 237, 0.4)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.transform = 'translateY(0)';
+            e.currentTarget.style.boxShadow = '0 2px 8px rgba(124, 58, 237, 0.3)';
+          }}
+        >
+          Back to list
+        </button>
       </div>
 
       {loadErr && <div style={{ color:'#b00020', marginBottom: 12 }}>Error: {loadErr}</div>}
@@ -228,7 +257,39 @@ export default function TransformerDetail() {
         </div>
 
         <div style={{ gridColumn:'1 / -1', display:'flex', gap:8 }}>
-          <button onClick={saveBasics} disabled={saving} style={{ borderRadius:10, padding:'10px 14px' }}>
+          <button 
+            onClick={saveBasics} 
+            disabled={saving} 
+            style={{ 
+              borderRadius: 10, 
+              padding: '12px 20px',
+              background: saving ? '#94a3b8' : 'linear-gradient(135deg, #1e40af 0%, #3b82f6 100%)',
+              color: 'white',
+              border: 'none',
+              cursor: saving ? 'not-allowed' : 'pointer',
+              fontWeight: '600',
+              fontSize: '14px',
+              opacity: 1,
+              visibility: 'visible',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              boxShadow: '0 2px 8px rgba(124, 58, 237, 0.3)',
+              transition: 'all 0.2s ease'
+            }}
+            onMouseEnter={(e) => {
+              if (!saving) {
+                e.currentTarget.style.transform = 'translateY(-1px)';
+                e.currentTarget.style.boxShadow = '0 4px 12px rgba(124, 58, 237, 0.4)';
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (!saving) {
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.boxShadow = '0 2px 8px rgba(124, 58, 237, 0.3)';
+              }
+            }}
+          >
             {saving ? 'Saving…' : 'Save'}
           </button>
         </div>
@@ -277,9 +338,9 @@ export default function TransformerDetail() {
             border: '1px solid rgba(124, 58, 237, 0.1)', 
             borderRadius: 16, 
             padding: 24,
-            boxShadow: '0 4px 20px rgba(124, 58, 237, 0.08)'
+            boxShadow: '0 4px 20px rgba(30, 64, 175, 0.08)'
           }}>
-            <h3 style={{ marginTop: 0, marginBottom: 20, fontFamily: 'Montserrat', color: '#7c3aed', display: 'flex', alignItems: 'center', gap: 8 }}>
+            <h3 style={{ marginTop: 0, marginBottom: 20, fontFamily: 'Montserrat', color: '#1e40af', display: 'flex', alignItems: 'center', gap: 8 }}>
               Upload New Image
             </h3>
             
@@ -288,7 +349,7 @@ export default function TransformerDetail() {
                 label="Image Type"
                 value={imgType}
                 onChange={e=>setImgType(e.target.value as any)}
-                options={[{ value:'BASELINE', label:'📊 Baseline' }, { value:'MAINTENANCE', label:'🔧 Maintenance' }]}
+                options={[{ value:'BASELINE', label:'Baseline' }, { value:'MAINTENANCE', label:'Maintenance' }]}
               />
               <Input label="Uploader Name" value={uploader} onChange={e=>setUploader(e.target.value)} />
             </div>
@@ -301,9 +362,9 @@ export default function TransformerDetail() {
                   onChange={e=>setEnv(e.target.value as any)}
                   options={[
                     { value:' ', label:'Select weather condition…' },
-                    { value:'SUNNY', label:'☀️ Sunny' },
-                    { value:'CLOUDY', label:'☁️ Cloudy' },
-                    { value:'RAINY', label:'🌧️ Rainy' },
+                    { value:'SUNNY', label:'Sunny' },
+                    { value:'CLOUDY', label:'Cloudy' },
+                    { value:'RAINY', label:'Rainy' },
                   ]}
                 />
               </div>
@@ -330,7 +391,7 @@ export default function TransformerDetail() {
                 onClick={doUpload} 
                 disabled={uploading}
                 style={{ 
-                  background: 'linear-gradient(135deg, #7c3aed 0%, #a855f7 100%)',
+                  background: 'linear-gradient(135deg, #1e40af 0%, #3b82f6 100%)',
                   color: 'white',
                   border: 'none',
                   borderRadius: 12,

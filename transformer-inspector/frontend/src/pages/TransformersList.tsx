@@ -123,7 +123,7 @@ export default function TransformersList() {
             onChange={e => setQ(e.target.value)} 
           />
           <button className="search-button" onClick={() => { setPage(0); load(); }}>
-            <span>🔍</span> Search
+            Search
           </button>
           <button className="reset-button" onClick={() => { setQ(''); setPage(0); load(); }}>
             Reset
@@ -162,7 +162,6 @@ export default function TransformersList() {
               <td className="transformer-code" onClick={() => nav(`/transformers/${t.id}`)}>
                 <div className="code-wrapper">
                   <span className="code-text">{t.code}</span>
-                  <span className="status-badge active">Active</span>
                 </div>
               </td>
               <td className="pole-data">
@@ -184,24 +183,6 @@ export default function TransformersList() {
                 <div className="capacity-wrapper">
                   <div className="capacity-info">
                     <span className="capacity-value">{t.capacityKVA} kVA</span>
-                    <span 
-                      className="capacity-percentage"
-                      style={{
-                        color: (() => {
-                          const percentage = (t.capacityKVA / maxCapacity) * 100;
-                          if (percentage <= 50) {
-                            return '#059669'; // Green
-                          } else if (percentage <= 80) {
-                            return '#d97706'; // Orange
-                          } else {
-                            return '#dc2626'; // Red
-                          }
-                        })(),
-                        fontWeight: '600'
-                      }}
-                    >
-                      {((t.capacityKVA / maxCapacity) * 100).toFixed(0)}%
-                    </span>
                   </div>
                   <div className="capacity-bar">
                     <div 
@@ -224,23 +205,57 @@ export default function TransformersList() {
                 </div>
               </td>
               <td className="actions-cell">
-                <div className="action-buttons">
-                  <button className="action-btn view-btn" onClick={() => nav(`/transformers/${t.id}`)}>
-                    <span className="btn-icon">👁️</span>
+                <div className="action-buttons" style={{ display: 'flex', gap: '0.5rem', opacity: 1, visibility: 'visible' }}>
+                  <button 
+                    className="action-btn view-btn" 
+                    onClick={() => nav(`/transformers/${t.id}`)}
+                    style={{ 
+                      display: 'flex', 
+                      opacity: 1, 
+                      visibility: 'visible',
+                      width: '32px',
+                      height: '32px',
+                      background: '#3b82f6',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '6px',
+                      cursor: 'pointer',
+                      alignItems: 'center',
+                      justifyContent: 'center'
+                    }}
+                  >
+                    <span className="btn-icon" style={{ fontSize: '0.9rem' }}>👁️</span>
                   </button>
-                  <button className="action-btn delete-btn" onClick={async () => {
-                    if (!confirm('Delete this transformer?')) return;
-                    try { 
-                      await deleteTransformer(t.id); 
-                      await load(); 
-                      setSuccessMsg(`Transformer ${t.code} deleted successfully!`);
-                      setTimeout(() => setSuccessMsg(null), 5000);
-                    } catch (e:any) { 
-                      setDeleteError(e?.message || 'Delete failed');
-                      setTimeout(() => setDeleteError(null), 5000);
-                    }
-                  }}>
-                    <span className="btn-icon">🗑️</span>
+                  <button 
+                    className="action-btn delete-btn" 
+                    onClick={async () => {
+                      if (!confirm('Delete this transformer?')) return;
+                      try { 
+                        await deleteTransformer(t.id); 
+                        await load(); 
+                        setSuccessMsg(`Transformer ${t.code} deleted successfully!`);
+                        setTimeout(() => setSuccessMsg(null), 5000);
+                      } catch (e:any) { 
+                        setDeleteError(e?.message || 'Delete failed');
+                        setTimeout(() => setDeleteError(null), 5000);
+                      }
+                    }}
+                    style={{ 
+                      display: 'flex', 
+                      opacity: 1, 
+                      visibility: 'visible',
+                      width: '32px',
+                      height: '32px',
+                      background: '#ef4444',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '6px',
+                      cursor: 'pointer',
+                      alignItems: 'center',
+                      justifyContent: 'center'
+                    }}
+                  >
+                    <span className="btn-icon" style={{ fontSize: '0.9rem' }}>🗑️</span>
                   </button>
                 </div>
               </td>
@@ -305,8 +320,70 @@ export default function TransformersList() {
           {createErr && <div className="modal-error" style={{ gridColumn:'1 / -1' }}>{createErr}</div>}
 
           <div style={{ gridColumn: '1 / -1', display:'flex', gap:8, justifyContent:'flex-end', marginTop: 4 }}>
-            <button type="button" onClick={() => setOpen(false)}>Cancel</button>
-            <button type="submit" disabled={createBusy}>
+            <button 
+              type="button" 
+              onClick={() => setOpen(false)}
+              style={{ 
+                borderRadius: 10, 
+                padding: '12px 20px',
+                background: 'linear-gradient(135deg, #1e40af 0%, #3b82f6 100%)',
+                color: 'white',
+                border: 'none',
+                cursor: 'pointer',
+                fontWeight: '600',
+                fontSize: '14px',
+                opacity: 1,
+                visibility: 'visible',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                boxShadow: '0 2px 8px rgba(124, 58, 237, 0.3)',
+                transition: 'all 0.2s ease'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = 'translateY(-1px)';
+                e.currentTarget.style.boxShadow = '0 4px 12px rgba(124, 58, 237, 0.4)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.boxShadow = '0 2px 8px rgba(124, 58, 237, 0.3)';
+              }}
+            >
+              Cancel
+            </button>
+            <button 
+              type="submit" 
+              disabled={createBusy}
+              style={{ 
+                borderRadius: 10, 
+                padding: '12px 20px',
+                background: createBusy ? '#94a3b8' : 'linear-gradient(135deg, #1e40af 0%, #3b82f6 100%)',
+                color: 'white',
+                border: 'none',
+                cursor: createBusy ? 'not-allowed' : 'pointer',
+                fontWeight: '600',
+                fontSize: '14px',
+                opacity: 1,
+                visibility: 'visible',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                boxShadow: '0 2px 8px rgba(124, 58, 237, 0.3)',
+                transition: 'all 0.2s ease'
+              }}
+              onMouseEnter={(e) => {
+                if (!createBusy) {
+                  e.currentTarget.style.transform = 'translateY(-1px)';
+                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(124, 58, 237, 0.4)';
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!createBusy) {
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = '0 2px 8px rgba(124, 58, 237, 0.3)';
+                }
+              }}
+            >
               {createBusy ? 'Saving…' : 'Confirm'}
             </button>
           </div>

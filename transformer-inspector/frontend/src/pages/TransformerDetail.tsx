@@ -38,6 +38,11 @@ export default function TransformerDetail() {
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
 
+  // notification states
+  const [successMsg, setSuccessMsg] = useState<string>('');
+  const [errorMsg, setErrorMsg] = useState<string>('');
+  const [warningMsg, setWarningMsg] = useState<string>('');
+
   useEffect(() => {
     (async () => {
       try {
@@ -91,17 +96,27 @@ export default function TransformerDetail() {
         type: type || undefined,
         locationDetails: locationDetails || undefined,
       });
-      alert('Saved');
+      setSuccessMsg('Transformer details saved successfully!');
+      setTimeout(() => setSuccessMsg(''), 4000);
     } catch (e: any) {
-      alert(e?.message || 'Save failed');
+      setErrorMsg(e?.message || 'Failed to save transformer details');
+      setTimeout(() => setErrorMsg(''), 4000);
     } finally {
       setSaving(false);
     }
   }
 
   async function doUpload() {
-    if (!t || !file) { alert('Select a file'); return; }
-    if (imgType === 'BASELINE' && env === ' ') { alert('Pick environmental condition'); return; }
+    if (!t || !file) { 
+      setWarningMsg('Please select a file');
+      setTimeout(() => setWarningMsg(''), 4000);
+      return; 
+    }
+    if (imgType === 'BASELINE' && env === ' ') { 
+      setWarningMsg('Please pick environmental condition');
+      setTimeout(() => setWarningMsg(''), 4000);
+      return; 
+    }
     try {
       setUploading(true);
       await uploadImage({
@@ -113,8 +128,11 @@ export default function TransformerDetail() {
       });
       await refreshImages(t.id);
       setFile(null);
+      setSuccessMsg('Image uploaded successfully!');
+      setTimeout(() => setSuccessMsg(''), 4000);
     } catch (e: any) {
-      alert(e?.message || 'Upload failed');
+      setErrorMsg(e?.message || 'Upload failed');
+      setTimeout(() => setErrorMsg(''), 4000);
     } finally {
       setUploading(false);
     }
@@ -136,7 +154,28 @@ export default function TransformerDetail() {
   }, [latestBaseline, latestMaintenance]);
 
   return (
-    <div style={{ maxWidth: 1200, margin: '0 auto' }}>
+    <div className="page-container">
+      {/* Notifications */}
+      {successMsg && (
+        <div className="success-message">
+          <span className="message-icon">✓</span>
+          {successMsg}
+        </div>
+      )}
+      {errorMsg && (
+        <div className="error-message">
+          <span className="message-icon">✕</span>
+          {errorMsg}
+        </div>
+      )}
+      {warningMsg && (
+        <div className="warning-message">
+          <span className="message-icon">⚠</span>
+          {warningMsg}
+        </div>
+      )}
+
+      <div style={{ maxWidth: 1200, margin: '0 auto' }}>
       <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
         <h1 style={{ marginTop: 0 }}>{t ? `Transformer ${t.code}` : 'Transformer'}</h1>
         <button onClick={() => nav('/transformers')} style={{ borderRadius: 10, padding: '8px 12px' }}>Back to list</button>
@@ -265,6 +304,7 @@ export default function TransformerDetail() {
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 }

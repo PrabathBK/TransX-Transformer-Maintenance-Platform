@@ -162,7 +162,6 @@ export default function TransformersList() {
               <td className="transformer-code" onClick={() => nav(`/transformers/${t.id}`)}>
                 <div className="code-wrapper">
                   <span className="code-text">{t.code}</span>
-                  <span className="status-badge active">Active</span>
                 </div>
               </td>
               <td className="pole-data">
@@ -327,7 +326,7 @@ export default function TransformersList() {
               style={{ 
                 borderRadius: 10, 
                 padding: '12px 20px',
-                background: 'linear-gradient(135deg, #7c3aed 0%, #a855f7 100%)',
+                background: 'linear-gradient(135deg, #1e40af 0%, #3b82f6 100%)',
                 color: 'white',
                 border: 'none',
                 cursor: 'pointer',
@@ -358,7 +357,7 @@ export default function TransformersList() {
               style={{ 
                 borderRadius: 10, 
                 padding: '12px 20px',
-                background: createBusy ? '#94a3b8' : 'linear-gradient(135deg, #7c3aed 0%, #a855f7 100%)',
+                background: createBusy ? '#94a3b8' : 'linear-gradient(135deg, #1e40af 0%, #3b82f6 100%)',
                 color: 'white',
                 border: 'none',
                 cursor: createBusy ? 'not-allowed' : 'pointer',

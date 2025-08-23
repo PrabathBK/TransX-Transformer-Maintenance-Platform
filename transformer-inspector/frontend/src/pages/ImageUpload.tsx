@@ -92,7 +92,7 @@ export default function ImageUpload() {
         )}
         <Input label="Uploader" value={uploader} onChange={e => setUploader(e.target.value)} />
         <FileDrop onFile={setFile} />
-        {file && <div style={{ marginTop: 8, fontWeight: 600, color: '#7c3aed' }}>Selected: <strong>{file.name}</strong></div>}
+        {file && <div style={{ marginTop: 8, fontWeight: 600, color: '#1e40af' }}>Selected: <strong>{file.name}</strong></div>}
         <div style={{ marginTop: 12 }}>
           <button className="search-button" onClick={submit} disabled={busy}>
             {busy ? 'Uploading…' : 'Upload Image'}

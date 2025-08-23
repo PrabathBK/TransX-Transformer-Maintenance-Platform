@@ -183,7 +183,7 @@ export default function TransformerDetail() {
           style={{ 
             borderRadius: 10, 
             padding: '8px 16px',
-            background: 'linear-gradient(135deg, #7c3aed 0%, #a855f7 100%)',
+            background: 'linear-gradient(135deg, #1e40af 0%, #3b82f6 100%)',
             color: 'white',
             border: 'none',
             cursor: 'pointer',
@@ -263,7 +263,7 @@ export default function TransformerDetail() {
             style={{ 
               borderRadius: 10, 
               padding: '12px 20px',
-              background: saving ? '#94a3b8' : 'linear-gradient(135deg, #7c3aed 0%, #a855f7 100%)',
+              background: saving ? '#94a3b8' : 'linear-gradient(135deg, #1e40af 0%, #3b82f6 100%)',
               color: 'white',
               border: 'none',
               cursor: saving ? 'not-allowed' : 'pointer',
@@ -338,9 +338,9 @@ export default function TransformerDetail() {
             border: '1px solid rgba(124, 58, 237, 0.1)', 
             borderRadius: 16, 
             padding: 24,
-            boxShadow: '0 4px 20px rgba(124, 58, 237, 0.08)'
+            boxShadow: '0 4px 20px rgba(30, 64, 175, 0.08)'
           }}>
-            <h3 style={{ marginTop: 0, marginBottom: 20, fontFamily: 'Montserrat', color: '#7c3aed', display: 'flex', alignItems: 'center', gap: 8 }}>
+            <h3 style={{ marginTop: 0, marginBottom: 20, fontFamily: 'Montserrat', color: '#1e40af', display: 'flex', alignItems: 'center', gap: 8 }}>
               Upload New Image
             </h3>
             
@@ -391,7 +391,7 @@ export default function TransformerDetail() {
                 onClick={doUpload} 
                 disabled={uploading}
                 style={{ 
-                  background: 'linear-gradient(135deg, #7c3aed 0%, #a855f7 100%)',
+                  background: 'linear-gradient(135deg, #1e40af 0%, #3b82f6 100%)',
                   color: 'white',
                   border: 'none',
                   borderRadius: 12,

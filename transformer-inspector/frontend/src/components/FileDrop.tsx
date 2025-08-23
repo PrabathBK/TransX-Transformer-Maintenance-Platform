@@ -19,10 +19,10 @@ export default function FileDrop({ onFile }: Props) {
       onDrop={onDrop}
       style={{
         padding: 48,
-        border: `2px dashed ${hover ? '#7c3aed' : '#e879f9'}`,
+        border: `2px dashed ${hover ? '#1e40af' : '#60a5fa'}`,
         borderRadius: 12,
         textAlign: 'center',
-        background: hover ? 'rgba(124, 58, 237, 0.05)' : 'rgba(248, 250, 252, 0.5)',
+        background: hover ? 'rgba(30, 64, 175, 0.05)' : 'rgba(248, 250, 252, 0.5)',
         transition: 'all 0.3s ease',
         cursor: 'pointer',
         position: 'relative'
@@ -32,7 +32,7 @@ export default function FileDrop({ onFile }: Props) {
       <div style={{ 
         fontSize: 64, 
         marginBottom: 16,
-        color: hover ? '#7c3aed' : '#a855f7'
+        color: hover ? '#1e40af' : '#3b82f6'
       }}>
         ☁
       </div>
@@ -42,7 +42,7 @@ export default function FileDrop({ onFile }: Props) {
         margin: '0 0 8px 0', 
         fontSize: 16, 
         fontWeight: 600,
-        color: hover ? '#7c3aed' : '#475569'
+        color: hover ? '#1e40af' : '#475569'
       }}>
         Drag & drop to upload
       </p>
@@ -51,7 +51,7 @@ export default function FileDrop({ onFile }: Props) {
       <p style={{ 
         margin: '0 0 20px 0', 
         fontSize: 14, 
-        color: '#e879f9',
+        color: '#60a5fa',
         fontWeight: 500
       }}>
         or browse

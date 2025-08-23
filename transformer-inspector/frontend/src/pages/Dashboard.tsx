@@ -92,7 +92,7 @@ export default function Dashboard() {
         alignItems: 'center', 
         height: '400px',
         fontSize: '18px',
-        color: '#7c3aed'
+        color: '#1e40af'
       }}>
         Loading dashboard...
       </div>
@@ -147,8 +147,8 @@ export default function Dashboard() {
             { 
               label: 'TOTAL TRANSFORMERS', 
               value: stats.totalTransformers, 
-              color: '#7c3aed',
-              bgColor: 'rgba(124, 58, 237, 0.1)'
+              color: '#1e40af',
+              bgColor: 'rgba(30, 64, 175, 0.1)'
             },
             { 
               label: 'HEALTHY STATUS', 
@@ -171,8 +171,8 @@ export default function Dashboard() {
             { 
               label: 'TOTAL CAPACITY', 
               value: `${stats.totalCapacity} kVA`, 
-              color: '#7c3aed',
-              bgColor: 'rgba(124, 58, 237, 0.1)'
+              color: '#1e40af',
+              bgColor: 'rgba(30, 64, 175, 0.1)'
             },
             { 
               label: 'AVG CAPACITY', 
@@ -287,9 +287,9 @@ export default function Dashboard() {
               padding: '1rem',
               background: 'rgba(124, 58, 237, 0.1)',
               borderRadius: '8px',
-              border: '1px solid rgba(124, 58, 237, 0.2)'
+              border: '1px solid rgba(30, 64, 175, 0.2)'
             }}>
-              <div style={{ fontWeight: '600', color: '#7c3aed', fontSize: '0.9rem' }}>
+              <div style={{ fontWeight: '600', color: '#1e40af', fontSize: '0.9rem' }}>
                 System Status
               </div>
               <div style={{ color: '#374151', marginTop: '0.25rem' }}>
@@ -388,9 +388,9 @@ export default function Dashboard() {
               padding: '1rem',
               background: 'rgba(124, 58, 237, 0.1)',
               borderRadius: '8px',
-              border: '1px solid rgba(124, 58, 237, 0.2)'
+              border: '1px solid rgba(30, 64, 175, 0.2)'
             }}>
-              <div style={{ fontWeight: '600', color: '#7c3aed', fontSize: '0.9rem' }}>
+              <div style={{ fontWeight: '600', color: '#1e40af', fontSize: '0.9rem' }}>
                 Maintenance Schedule
               </div>
               <div style={{ color: '#374151', marginTop: '0.25rem' }}>

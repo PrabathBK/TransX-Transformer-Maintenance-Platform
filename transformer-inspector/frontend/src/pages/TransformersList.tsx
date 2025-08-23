@@ -58,6 +58,22 @@ export default function TransformersList() {
       setItems([]); setTotal(0);
     } finally { setLoading(false); }
   }
+
+  async function resetAndLoad() {
+    try {
+      setLoading(true); setLoadErr(null);
+      setQ(''); // Clear search query
+      setPage(0); // Reset to first page
+      // Load with empty query to get all transformers
+      const res = await listTransformers('', 0, size);
+      setItems((res.content ?? []) as unknown as UITransformer[]);
+      setTotal(res.totalElements ?? 0);
+    } catch (e: any) {
+      console.error(e);
+      setLoadErr(e?.message || 'Failed to load transformers');
+      setItems([]); setTotal(0);
+    } finally { setLoading(false); }
+  }
   useEffect(() => { load(); /* eslint-disable-next-line */ }, [page]);
 
   const totalPages = useMemo(() => Math.max(1, Math.ceil(total / size)), [total, size]);
@@ -125,7 +141,7 @@ export default function TransformersList() {
           <button className="search-button" onClick={() => { setPage(0); load(); }}>
             Search
           </button>
-          <button className="reset-button" onClick={() => { setQ(''); setPage(0); load(); }}>
+          <button className="reset-button" onClick={resetAndLoad}>
             Reset
           </button>
         </div>

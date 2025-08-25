@@ -93,6 +93,12 @@ transformer-inspector/
 
 ## Quick Start
 
+### Clone 
+1. **Clone the repo**
+   ```sql
+   git clone https://github.com/PrabathBK/TransX-Transformer-Maintenance-Platform.git
+   ```
+
 ### Database Setup
 
 1. **Install MySQL Community Server**

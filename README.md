@@ -42,18 +42,24 @@ transformer-inspector/
 │   ├── src/main/java/com/acme/backend/
 │   │   ├── api/                           # REST Controllers
 │   │   │   ├── TransformerController.java
+│   │   │   ├── InspectionController.java
 │   │   │   └── ThermalImageController.java
 │   │   ├── api/dto/                       # Data Transfer Objects
 │   │   │   ├── CreateTransformerReq.java
 │   │   │   ├── TransformerDTO.java
+│   │   │   ├── createInspectionReq.java
+│   │   │   ├── InspectionDTO.java
 │   │   │   └── ThermalImageDTO.java
 │   │   ├── config/                        # Configuration Classes
 │   │   │   ├── CorsConfig.java
+│   │   │   ├── DataSeeder.java
 │   │   │   └── StaticFileConfig.java
 │   │   ├── domain/                        # Entity Models
+│   │   │   ├── Inspection.java
 │   │   │   ├── Transformer.java
 │   │   │   └── ThermalImage.java
 │   │   ├── repo/                          # JPA Repositories
+│   │   │   ├── InspectionRepo.java
 │   │   │   ├── TransformerRepo.java
 │   │   │   └── ThermalImageRepo.java
 │   │   └── storage/                       # File Storage Service
@@ -67,6 +73,7 @@ transformer-inspector/
 │   │   ├── api/                           # API Client Layer
 │   │   │   ├── client.ts
 │   │   │   ├── images.ts
+│   │   │   ├── inspections.ts
 │   │   │   └── transformers.ts
 │   │   ├── components/                    # Reusable UI Components
 │   │   │   ├── ErrorBoundary.tsx
@@ -80,6 +87,8 @@ transformer-inspector/
 │   │   │   ├── Dashboard.tsx
 │   │   │   ├── ImagesList.tsx
 │   │   │   ├── ImageUpload.tsx
+│   │   │   ├── InspectionDetail.tsx
+│   │   │   ├── InspectionList.tsx
 │   │   │   ├── TransformerDetail.tsx
 │   │   │   ├── TransformerForm.tsx
 │   │   │   └── TransformersList.tsx

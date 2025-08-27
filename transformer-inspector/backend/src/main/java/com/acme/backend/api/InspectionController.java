@@ -5,6 +5,7 @@ import com.acme.backend.api.dto.InspectionDTO;
 import com.acme.backend.domain.Inspection;
 import com.acme.backend.repo.InspectionRepo;
 import com.acme.backend.repo.TransformerRepo;
+import com.acme.backend.repo.ThermalImageRepo;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -19,10 +20,12 @@ public class InspectionController {
 
     private final InspectionRepo inspectionRepo;
     private final TransformerRepo transformerRepo;
+    private final ThermalImageRepo thermalImageRepo;
 
-    public InspectionController(InspectionRepo inspectionRepo, TransformerRepo transformerRepo) {
+    public InspectionController(InspectionRepo inspectionRepo, TransformerRepo transformerRepo, ThermalImageRepo thermalImageRepo) {
         this.inspectionRepo = inspectionRepo;
         this.transformerRepo = transformerRepo;
+        this.thermalImageRepo = thermalImageRepo;
     }
 
     @PostMapping
@@ -97,6 +100,12 @@ public class InspectionController {
     @DeleteMapping("/{id}")
     @Transactional
     public void delete(@PathVariable UUID id) {
+        // Set inspection_id to null for all related images before deleting inspection
+        var images = thermalImageRepo.findByInspectionId(id, Pageable.unpaged()).getContent();
+        for (var img : images) {
+            img.setInspection(null);
+            thermalImageRepo.save(img);
+        }
         inspectionRepo.deleteById(id);
     }
 

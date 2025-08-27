@@ -139,19 +139,30 @@ export default function TransformerDetail() {
   }
 
   // choose two images to display side-by-side
+  // Only show baseline images that do NOT belong to any inspection (true baseline)
   const latestBaseline = useMemo(
-    () => images.filter(i => i.type === 'BASELINE').sort((a,b) => +new Date(b.uploadedAt) - +new Date(a.uploadedAt))[0],
+    () => images.filter(i => i.type === 'BASELINE' && !i.inspectionId).sort((a,b) => +new Date(b.uploadedAt) - +new Date(a.uploadedAt))[0],
     [images]
   );
-  const latestMaintenance = useMemo(
-    () => images.filter(i => i.type === 'MAINTENANCE').sort((a,b) => +new Date(b.uploadedAt) - +new Date(a.uploadedAt))[0],
+  // Show the latest inspection image (not fallback)
+  const latestInspection = useMemo(
+    () => images.filter(i => i.type === 'INSPECTION').sort((a,b) => +new Date(b.uploadedAt) - +new Date(a.uploadedAt))[0],
     [images]
   );
+  // Only show maintenance if needed elsewhere
   const [leftImg, rightImg] = useMemo(() => {
-    if (latestBaseline && latestMaintenance) return [latestBaseline, latestMaintenance];
-    const one = latestBaseline || latestMaintenance || null;
-    return one ? [one, one] : [null, null];   // show same image twice if only one exists
-  }, [latestBaseline, latestMaintenance]);
+    // If baseline exists, always show it on the left
+    // Only show inspection image on the right if it exists
+    if (latestBaseline && latestInspection) {
+      return [latestBaseline, latestInspection];
+    }
+    // If only baseline exists, show blank on right
+    if (latestBaseline && !latestInspection) {
+      return [latestBaseline, null];
+    }
+    // If neither exists, show blanks
+    return [null, null];
+  }, [latestBaseline, latestInspection]);
 
   return (
     <div className="page-container">
@@ -314,8 +325,8 @@ export default function TransformerDetail() {
           <div style={{ marginBottom: 24 }}>
             <h3 style={{ margin:'12px 0' }}>Thermal Image Comparison</h3>
             <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12 }}>
-              <ImageBox title={leftImg?.type === 'BASELINE' ? 'Baseline' : leftImg ? 'Current' : '—'} img={leftImg} />
-              <ImageBox title={rightImg?.type === 'MAINTENANCE' ? 'Current' : rightImg ? 'Baseline' : '—'} img={rightImg} />
+              <ImageBox title={leftImg ? 'Baseline' : '—'} img={leftImg} />
+              <ImageBox title={rightImg ? 'Inspection' : '—'} img={rightImg} />
             </div>
           </div>
 

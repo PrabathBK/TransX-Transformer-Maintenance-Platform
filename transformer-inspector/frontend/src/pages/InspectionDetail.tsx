@@ -22,31 +22,34 @@ export default function InspectionDetail() {
   const [uploading, setUploading] = useState(false);
   const [uploadErr, setUploadErr] = useState<string | null>(null);
 
+  // 1) Load the inspection when the route id changes
   useEffect(() => {
     if (!id) return;
-    loadInspection();
-    loadImages();
+    (async () => {
+      try {
+        setLoadErr(null);
+        const data = await getInspection(id);
+        setInspection(data);
+      } catch (e: any) {
+        setLoadErr(e?.message || 'Failed to load inspection');
+      }
+    })();
   }, [id]);
 
-  async function loadInspection() {
-    try {
-      setLoadErr(null);
-      const data = await getInspection(id!);
-      setInspection(data);
-    } catch (e: any) {
-      setLoadErr(e?.message || 'Failed to load inspection');
-    }
-  }
+  // 2) After the inspection is available, load images for that transformer & inspection
+  useEffect(() => {
+    if (!inspection) return;
+    loadImagesFor(inspection);
+  }, [inspection]);
 
-  async function loadImages() {
+  async function loadImagesFor(ins: Inspection) {
     try {
       setImgErr(null);
-      // Load both baseline and inspection images for this transformer
       const [baselineRes, inspectionRes] = await Promise.all([
-        listImages({ transformerId: inspection?.transformerId, type: 'BASELINE' }),
-        listImages({ inspectionId: id, type: 'INSPECTION' }) // inspection images for this specific inspection
+        listImages({ transformerId: ins.transformerId, type: 'BASELINE' }),
+        listImages({ inspectionId: String(ins.id), type: 'INSPECTION' })
       ]);
-      
+
       const allImages = [
         ...(baselineRes.content || []),
         ...(inspectionRes.content || [])
@@ -63,16 +66,16 @@ export default function InspectionDetail() {
     try {
       setUploading(true);
       setUploadErr(null);
-      
+
       await uploadImage({
         transformerId: inspection.transformerId,
         type: 'INSPECTION',
         uploader: inspection.inspectedBy,
-        file: file,
+        file,
         inspectionId: inspection.id
       });
-      
-      await loadImages();
+
+      await loadImagesFor(inspection);
     } catch (e: any) {
       setUploadErr(e?.message || 'Upload failed');
     } finally {
@@ -82,7 +85,7 @@ export default function InspectionDetail() {
 
   async function handleStatusUpdate(status: 'IN_PROGRESS' | 'PENDING' | 'COMPLETED') {
     if (!inspection) return;
-    
+
     try {
       const updated = await updateInspectionStatus(inspection.id, status);
       setInspection(updated);
@@ -103,9 +106,18 @@ export default function InspectionDetail() {
     return <span className={`status-badge ${statusClass}`}>{status.replace('_', ' ')}</span>;
   }
 
-  // Group images by type
-  const baselineImage = images.find(img => img.type === 'BASELINE') || null;
-  const inspectionImage = images.find(img => img.type === 'INSPECTION') || null;
+  // --- Image selection logic ---
+  // Latest true-baseline (no inspectionId) for the transformer
+  const baselineImage =
+    images
+      .filter(img => img.type === 'BASELINE' && !img.inspectionId && img.publicUrl && img.originalFilename)
+      .sort((a, b) => +new Date(b.uploadedAt) - +new Date(a.uploadedAt))[0] || null;
+
+  // Latest inspection image for this inspection
+  const inspectionImage =
+    images
+      .filter(img => img.type === 'INSPECTION' && img.inspectionId === inspection?.id)
+      .sort((a, b) => +new Date(b.uploadedAt) - +new Date(a.uploadedAt))[0] || null;
 
   if (!inspection && !loadErr) {
     return <div className="loading-message">Loading inspection...</div>;
@@ -232,7 +244,7 @@ export default function InspectionDetail() {
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
                 <ImageBox title="Baseline" img={baselineImage} />
                 <ImageBox 
-                  title="Current" 
+                  title="Inspection Image" 
                   img={inspectionImage}
                   onUpload={handleUpload}
                   uploading={uploading}
@@ -262,6 +274,19 @@ function ImageBox({
   uploading?: boolean;
   uploadErr?: string | null;
 }) {
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+
+  const handleFileDrop = (file: File) => {
+    setSelectedFile(file);
+  };
+
+  const handleUploadClick = () => {
+    if (selectedFile && onUpload) {
+      onUpload(selectedFile);
+      setSelectedFile(null);
+    }
+  };
+
   return (
     <div style={{
       border: '2px solid #e5e7eb',
@@ -271,9 +296,8 @@ function ImageBox({
       background: '#f9fafb'
     }}>
       <h3 style={{ margin: '0 0 12px 0', fontSize: 16, fontWeight: 600 }}>{title}</h3>
-      
-      {img ? (
-        <div style={{ textAlign: 'center' }}>
+      {img && (
+        <div style={{ textAlign: 'center', marginBottom: 16 }}>
           <img 
             src={img.publicUrl} 
             alt={img.originalFilename}
@@ -289,15 +313,38 @@ function ImageBox({
             {img.envCondition && ` (${img.envCondition})`}
           </div>
         </div>
-      ) : onUpload ? (
+      )}
+      {onUpload && (
         <div>
-          <FileDrop 
-            onFile={onUpload}
-          />
+          <FileDrop onFile={handleFileDrop} />
+          {selectedFile && (
+            <div style={{ marginTop: 12, display: 'flex', alignItems: 'center', gap: 12 }}>
+              <span style={{ fontSize: 14, color: '#1e40af', fontWeight: 500 }}>Selected: {selectedFile.name}</span>
+              <button
+                onClick={handleUploadClick}
+                disabled={uploading}
+                style={{
+                  background: uploading ? '#94a3b8' : 'linear-gradient(135deg, #1e40af 0%, #3b82f6 100%)',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: 8,
+                  padding: '8px 18px',
+                  fontSize: 15,
+                  fontWeight: 600,
+                  cursor: uploading ? 'not-allowed' : 'pointer',
+                  boxShadow: '0 2px 8px rgba(124, 58, 237, 0.15)',
+                  transition: 'all 0.2s ease'
+                }}
+              >
+                {uploading ? 'Uploading…' : 'Upload Image'}
+              </button>
+            </div>
+          )}
           {uploading && <div style={{ textAlign: 'center', color: '#6b7280', marginTop: 8 }}>Uploading...</div>}
           {uploadErr && <div style={{ color: '#b00020', marginTop: 8, fontSize: 14 }}>{uploadErr}</div>}
         </div>
-      ) : (
+      )}
+      {!img && !onUpload && (
         <div style={{
           display: 'flex',
           alignItems: 'center',

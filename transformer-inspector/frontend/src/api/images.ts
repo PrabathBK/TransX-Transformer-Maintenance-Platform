@@ -1,12 +1,13 @@
 // src/api/images.ts
 import { api } from './client';
 
-export type ImageType = 'BASELINE' | 'MAINTENANCE';
+export type ImageType = 'BASELINE' | 'MAINTENANCE' | 'INSPECTION';
 export type EnvCondition = 'SUNNY' | 'CLOUDY' | 'RAINY';
 
 export type ThermalImage = {
   id: string;
   transformerId: string;
+  inspectionId?: string | null;
   type: ImageType;
   envCondition?: EnvCondition;
   uploader: string;
@@ -45,12 +46,16 @@ export async function uploadImage(params: {
   uploader: string;
   file: File;
   envCondition?: EnvCondition; // required when type === 'BASELINE'
+  inspectionId?: string; // required when type === 'INSPECTION'
 }) {
   const fd = new FormData();
   fd.set('transformerId', params.transformerId);
   fd.set('type', params.type);
   if (params.type === 'BASELINE' && params.envCondition) {
     fd.set('envCondition', params.envCondition);
+  }
+  if (params.type === 'INSPECTION' && params.inspectionId) {
+    fd.set('inspectionId', params.inspectionId);
   }
   fd.set('uploader', params.uploader);
   fd.set('file', params.file);
@@ -61,12 +66,14 @@ export async function uploadImage(params: {
 /** List images; supports filtering by transformerId and/or type. */
 export async function listImages(params: {
   transformerId?: string;
+  inspectionId?: string;
   type?: ImageType;
   page?: number;
   size?: number;
 } = {}) {
   const query = qs({
     transformerId: params.transformerId,
+    inspectionId: params.inspectionId,
     type: params.type,
     page: params.page ?? 0,
     size: params.size ?? 20,

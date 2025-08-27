@@ -17,6 +17,11 @@ public interface ThermalImageRepo extends JpaRepository<ThermalImage, UUID> {
 
     Page<ThermalImage> findByType(ThermalImage.Type type, Pageable pageable);       // ← optional, handy
 
+    Page<ThermalImage> findByInspectionId(UUID inspectionId, Pageable pageable);    // ← NEW for inspections
+
     @Transactional
     void deleteByTransformerId(UUID transformerId);
+    
+    @Transactional
+    void deleteByInspectionId(UUID inspectionId);
 }

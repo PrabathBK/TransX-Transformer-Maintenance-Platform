@@ -2,6 +2,7 @@ package com.acme.backend.api;
 
 import com.acme.backend.api.dto.ThermalImageDTO;
 import com.acme.backend.domain.ThermalImage;
+import com.acme.backend.repo.InspectionRepo;
 import com.acme.backend.repo.ThermalImageRepo;
 import com.acme.backend.repo.TransformerRepo;
 import com.acme.backend.storage.FileStorageService;
@@ -22,15 +23,18 @@ import java.util.UUID;
 public class ThermalImageController {
 
     private final TransformerRepo transformerRepo;
+    private final InspectionRepo inspectionRepo;
     private final ThermalImageRepo imageRepo;
     private final FileStorageService storage;
 
     public ThermalImageController(
             TransformerRepo transformerRepo,
+            InspectionRepo inspectionRepo,
             ThermalImageRepo imageRepo,
             FileStorageService storage
     ) {
         this.transformerRepo = transformerRepo;
+        this.inspectionRepo = inspectionRepo;
         this.imageRepo = imageRepo;
         this.storage = storage;
     }
@@ -40,6 +44,7 @@ public class ThermalImageController {
             @RequestParam UUID transformerId,
             @RequestParam ThermalImage.Type type,
             @RequestParam(required = false) ThermalImage.EnvCondition envCondition,
+            @RequestParam(required = false) UUID inspectionId,
             @RequestParam String uploader,
             @RequestPart("file") @NotNull MultipartFile file
     ) throws IOException {
@@ -49,12 +54,22 @@ public class ThermalImageController {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Baseline requires envCondition");
         }
 
+        if (type == ThermalImage.Type.INSPECTION && inspectionId == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Inspection images require inspectionId");
+        }
+
         var stored = storage.store(transformerId, type.name(), file);
 
         var img = new ThermalImage();
         img.setTransformer(transformer);
         img.setType(type);
         img.setEnvCondition(envCondition);
+        
+        if (inspectionId != null) {
+            var inspection = inspectionRepo.findById(inspectionId).orElseThrow();
+            img.setInspection(inspection);
+        }
+        
         img.setOriginalFilename(file.getOriginalFilename());
         img.setStoredFilename(stored.storedName());
         img.setContentType(stored.contentType());
@@ -69,9 +84,14 @@ public class ThermalImageController {
     @GetMapping
     public Page<ThermalImageDTO> list(
             @RequestParam(required = false) UUID transformerId,
+            @RequestParam(required = false) UUID inspectionId,
             @RequestParam(required = false) ThermalImage.Type type,
             Pageable pageable
     ) {
+        if (inspectionId != null) {
+            return imageRepo.findByInspectionId(inspectionId, pageable).map(this::toDTO);
+        }
+        
         if (transformerId != null) {
             if (type != null) {
                 return imageRepo
@@ -97,6 +117,7 @@ public class ThermalImageController {
         return new ThermalImageDTO(
                 i.getId(),
                 i.getTransformer().getId(),
+                i.getInspection() != null ? i.getInspection().getId() : null,
                 i.getType(),
                 i.getEnvCondition(),
                 i.getUploader(),

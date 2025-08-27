@@ -628,6 +628,21 @@ input:focus, select:focus, textarea:focus {
   color: #166534;
 }
 
+.status-badge.in-progress {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.status-badge.pending {
+  background: #fef3c7;
+  color: #d97706;
+}
+
+.status-badge.completed {
+  background: #dcfce7;
+  color: #166534;
+}
+
 /* Pole Data */
 .pole-data {
   color: #64748b;

@@ -6,6 +6,7 @@ import java.time.Instant; import java.util.UUID;
 public record ThermalImageDTO(
         UUID id,
         UUID transformerId,
+        UUID inspectionId,
         ThermalImage.Type type,
         ThermalImage.EnvCondition envCondition,
         String uploader,

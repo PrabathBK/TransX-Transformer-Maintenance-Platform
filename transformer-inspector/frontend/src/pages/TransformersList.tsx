@@ -123,10 +123,32 @@ export default function TransformersList() {
     <div className="page-container">
       <div className="page-header">
         <h1 className="page-title">Transformers</h1>
-        <button className="primary-button add-button" onClick={() => { resetForm(); setOpen(true); }}>
-          <span className="button-icon">+</span>
-          Add Transformer
-        </button>
+        <div style={{ display: 'flex', gap: 12 }}>
+          <button 
+            className="secondary-button" 
+            onClick={() => nav('/inspections')}
+            style={{
+              borderRadius: 10,
+              padding: '12px 20px',
+              background: 'linear-gradient(135deg, #6b7280 0%, #9ca3af 100%)',
+              color: 'white',
+              border: 'none',
+              cursor: 'pointer',
+              fontWeight: '600',
+              fontSize: '14px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px'
+            }}
+          >
+            <span>🔍</span>
+            View Inspections
+          </button>
+          <button className="primary-button add-button" onClick={() => { resetForm(); setOpen(true); }}>
+            <span className="button-icon">+</span>
+            Add Transformer
+          </button>
+        </div>
       </div>
 
       {/* Search toolbar */}

@@ -44,6 +44,23 @@ export default function Layout() {
           })}>
             <span>⚡</span> Transformers
           </NavLink>
+          <NavLink to="/inspections" style={({isActive}) => ({
+            display: 'flex',
+            alignItems: 'center',
+            gap: 12,
+            padding: '14px 20px',
+            borderRadius: 12,
+            textDecoration: 'none',
+            color: isActive ? '#1e40af' : '#fff',
+            background: isActive ? '#fff' : 'transparent',
+            fontWeight: 700,
+            fontFamily: 'Montserrat',
+            fontSize: 18,
+            boxShadow: isActive ? '0 2px 12px #a18cd122' : 'none',
+            transition: 'all 0.18s',
+          })}>
+            <span>🔍</span> Inspections
+          </NavLink>
           <NavLink to="/settings" style={({isActive}) => ({
             display: 'flex',
             alignItems: 'center',

@@ -3,6 +3,7 @@ package com.acme.backend.api;
 import com.acme.backend.api.dto.CreateTransformerReq;
 import com.acme.backend.api.dto.TransformerDTO;
 import com.acme.backend.domain.Transformer;
+import com.acme.backend.repo.InspectionRepo;
 import com.acme.backend.repo.ThermalImageRepo;
 import com.acme.backend.repo.TransformerRepo;
 import jakarta.validation.Valid;
@@ -19,10 +20,12 @@ public class TransformerController {
 
     private final TransformerRepo repo;
     private final ThermalImageRepo imageRepo;
+    private final InspectionRepo inspectionRepo;
 
-    public TransformerController(TransformerRepo repo, ThermalImageRepo imageRepo) {
+    public TransformerController(TransformerRepo repo, ThermalImageRepo imageRepo, InspectionRepo inspectionRepo) {
         this.repo = repo;
         this.imageRepo = imageRepo;
+        this.inspectionRepo = inspectionRepo;
     }
 
     @PostMapping
@@ -69,6 +72,7 @@ public class TransformerController {
     @Transactional
     public void delete(@PathVariable UUID id) {
         imageRepo.deleteByTransformerId(id);
+        inspectionRepo.deleteByTransformerId(id);
         repo.deleteById(id);
     }
 

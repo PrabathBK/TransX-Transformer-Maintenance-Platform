@@ -7,7 +7,7 @@ import java.util.UUID;
 
 @Entity @Table(name = "thermal_images")
 public class ThermalImage {
-    public enum Type { BASELINE, MAINTENANCE }
+    public enum Type { BASELINE, MAINTENANCE, INSPECTION }
     public enum EnvCondition { SUNNY, CLOUDY, RAINY }
 
     @Id @GeneratedValue(strategy = GenerationType.UUID)
@@ -15,6 +15,10 @@ public class ThermalImage {
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     private Transformer transformer;
+
+    @ManyToOne(optional = true, fetch = FetchType.LAZY)
+    @JoinColumn(name = "inspection_id")
+    private Inspection inspection;
 
     @Enumerated(EnumType.STRING) @Column(nullable = false)
     private Type type;
@@ -35,6 +39,8 @@ public class ThermalImage {
     public UUID getId() { return id; }
     public Transformer getTransformer() { return transformer; }
     public void setTransformer(Transformer transformer) { this.transformer = transformer; }
+    public Inspection getInspection() { return inspection; }
+    public void setInspection(Inspection inspection) { this.inspection = inspection; }
     public Type getType() { return type; }
     public void setType(Type type) { this.type = type; }
     public EnvCondition getEnvCondition() { return envCondition; }

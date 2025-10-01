@@ -1,5 +1,5 @@
 
-import { Outlet, NavLink } from 'react-router-dom';
+import { Outlet } from 'react-router-dom';
 
 export default function Layout() {
   return (
@@ -9,74 +9,98 @@ export default function Layout() {
           TransX
         </div>
         <nav style={{ display: 'flex', flexDirection: 'column', gap: 18, width: '100%' }}>
-          <NavLink to="/" style={({isActive}) => ({
-            display: 'flex',
-            alignItems: 'center',
-            gap: 12,
-            padding: '14px 20px',
-            borderRadius: 12,
-            textDecoration: 'none',
-            color: isActive ? '#1e40af' : '#fff',
-            background: isActive ? '#fff' : 'transparent',
-            fontWeight: 700,
-            fontFamily: 'Montserrat',
-            fontSize: 18,
-            boxShadow: isActive ? '0 2px 12px #a18cd122' : 'none',
-            transition: 'all 0.18s',
-          })}>
+          <button 
+            onClick={() => window.location.href = '/'}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 12,
+              padding: '14px 20px',
+              borderRadius: 12,
+              textDecoration: 'none',
+              color: window.location.pathname === '/' ? '#1e40af' : '#fff',
+              background: window.location.pathname === '/' ? '#fff' : 'transparent',
+              fontWeight: 700,
+              fontFamily: 'Montserrat',
+              fontSize: 18,
+              boxShadow: window.location.pathname === '/' ? '0 2px 12px #a18cd122' : 'none',
+              transition: 'all 0.18s',
+              border: 'none',
+              cursor: 'pointer',
+              width: '100%'
+            }}
+          >
             <span>🏠</span> Dashboard
-          </NavLink>
-          <NavLink to="/transformers" style={({isActive}) => ({
-            display: 'flex',
-            alignItems: 'center',
-            gap: 12,
-            padding: '14px 20px',
-            borderRadius: 12,
-            textDecoration: 'none',
-            color: isActive ? '#1e40af' : '#fff',
-            background: isActive ? '#fff' : 'transparent',
-            fontWeight: 700,
-            fontFamily: 'Montserrat',
-            fontSize: 18,
-            boxShadow: isActive ? '0 2px 12px #a18cd122' : 'none',
-            transition: 'all 0.18s',
-          })}>
+          </button>
+          <button 
+            onClick={() => window.location.href = '/transformers'}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 12,
+              padding: '14px 20px',
+              borderRadius: 12,
+              textDecoration: 'none',
+              color: window.location.pathname === '/transformers' ? '#1e40af' : '#fff',
+              background: window.location.pathname === '/transformers' ? '#fff' : 'transparent',
+              fontWeight: 700,
+              fontFamily: 'Montserrat',
+              fontSize: 18,
+              boxShadow: window.location.pathname === '/transformers' ? '0 2px 12px #a18cd122' : 'none',
+              transition: 'all 0.18s',
+              border: 'none',
+              cursor: 'pointer',
+              width: '100%'
+            }}
+          >
             <span>⚡</span> Transformers
-          </NavLink>
-          <NavLink to="/inspections" style={({isActive}) => ({
-            display: 'flex',
-            alignItems: 'center',
-            gap: 12,
-            padding: '14px 20px',
-            borderRadius: 12,
-            textDecoration: 'none',
-            color: isActive ? '#1e40af' : '#fff',
-            background: isActive ? '#fff' : 'transparent',
-            fontWeight: 700,
-            fontFamily: 'Montserrat',
-            fontSize: 18,
-            boxShadow: isActive ? '0 2px 12px #a18cd122' : 'none',
-            transition: 'all 0.18s',
-          })}>
+          </button>
+          <button 
+            onClick={() => window.location.href = '/inspections'}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 12,
+              padding: '14px 20px',
+              borderRadius: 12,
+              textDecoration: 'none',
+              color: window.location.pathname === '/inspections' ? '#1e40af' : '#fff',
+              background: window.location.pathname === '/inspections' ? '#fff' : 'transparent',
+              fontWeight: 700,
+              fontFamily: 'Montserrat',
+              fontSize: 18,
+              boxShadow: window.location.pathname === '/inspections' ? '0 2px 12px #a18cd122' : 'none',
+              transition: 'all 0.18s',
+              border: 'none',
+              cursor: 'pointer',
+              width: '100%'
+            }}
+          >
             <span>🔍</span> Inspections
-          </NavLink>
-          <NavLink to="/settings" style={({isActive}) => ({
-            display: 'flex',
-            alignItems: 'center',
-            gap: 12,
-            padding: '14px 20px',
-            borderRadius: 12,
-            textDecoration: 'none',
-            color: isActive ? '#1e40af' : '#fff',
-            background: isActive ? '#fff' : 'transparent',
-            fontWeight: 700,
-            fontFamily: 'Montserrat',
-            fontSize: 18,
-            boxShadow: isActive ? '0 2px 12px #a18cd122' : 'none',
-            transition: 'all 0.18s',
-          })}>
+          </button>
+          <button 
+            onClick={() => window.location.href = '/settings'}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 12,
+              padding: '14px 20px',
+              borderRadius: 12,
+              textDecoration: 'none',
+              color: window.location.pathname === '/settings' ? '#1e40af' : '#fff',
+              background: window.location.pathname === '/settings' ? '#fff' : 'transparent',
+              fontWeight: 700,
+              fontFamily: 'Montserrat',
+              fontSize: 18,
+              boxShadow: window.location.pathname === '/settings' ? '0 2px 12px #a18cd122' : 'none',
+              transition: 'all 0.18s',
+              border: 'none',
+              cursor: 'pointer',
+              width: '100%'
+            }}
+          >
             <span>⚙️</span> Settings
-          </NavLink>
+          </button>
         </nav>
         <div style={{ flex: 1 }} />
         <button className="btn" style={{ marginTop: 12, width: '100%', background: 'none', color: '#fff', fontWeight: 700, fontSize: 16, border: '1.5px solid #fff', borderRadius: 12 }}>Log out</button>

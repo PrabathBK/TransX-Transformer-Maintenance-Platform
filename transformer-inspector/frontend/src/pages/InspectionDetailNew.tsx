@@ -329,8 +329,8 @@ export default function InspectionDetailNew() {
       // Show success message
       alert('Inspection completed successfully! Redirecting to transformer page...');
       
-      // Navigate to transformer detail page
-      nav(`/transformers/${inspection.transformerId}`);
+      // Navigate to transformer detail page with reliable navigation
+      window.location.href = `/transformers/${inspection.transformerId}`;
     } catch (e: any) {
       alert('Failed to complete inspection: ' + (e?.message || 'Unknown error'));
     } finally {
@@ -350,7 +350,7 @@ export default function InspectionDetailNew() {
     return (
       <div className="page-container">
         <div className="error-message">{error}</div>
-        <button onClick={() => nav('/inspections')} className="primary-button">
+        <button onClick={() => window.location.href = '/inspections'} className="primary-button">
           Back to Inspections
         </button>
       </div>
@@ -361,7 +361,7 @@ export default function InspectionDetailNew() {
     return (
       <div className="page-container">
         <div className="error-message">Inspection not found</div>
-        <button onClick={() => nav('/inspections')} className="primary-button">
+        <button onClick={() => window.location.href = '/inspections'} className="primary-button">
           Back to Inspections
         </button>
       </div>
@@ -387,7 +387,10 @@ export default function InspectionDetailNew() {
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
           <button 
-            onClick={() => nav('/inspections')} 
+            onClick={() => {
+              // Force navigation with page refresh for reliability
+              window.location.href = '/inspections';
+            }} 
             style={{
               background: 'rgba(255, 255, 255, 0.2)',
               border: '1px solid rgba(255, 255, 255, 0.3)',

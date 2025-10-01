@@ -3,6 +3,8 @@ import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import AnnotationCanvas from '../components/AnnotationCanvas';
 import AnnotationToolbar from '../components/AnnotationToolbar';
+import AnnotationLegend from '../components/AnnotationLegend';
+import NotesSection from '../components/NotesSection';
 import FileDrop from '../components/FileDrop';
 import {
   getInspection,
@@ -191,16 +193,27 @@ export default function InspectionDetailNew() {
     }
   }
 
+  // Zoom control functions - will be set by canvas component
+  const [zoomFunctions, setZoomFunctions] = useState<{
+    zoomIn: () => void;
+    zoomOut: () => void;
+    resetView: () => void;
+  } | null>(null);
+
   const handleZoomIn = () => {
-    // Implemented in canvas component
+    zoomFunctions?.zoomIn();
   };
 
   const handleZoomOut = () => {
-    // Implemented in canvas component
+    zoomFunctions?.zoomOut();
   };
 
   const handleResetView = () => {
-    // Implemented in canvas component
+    zoomFunctions?.resetView();
+  };
+
+  const handleZoomChange = (zoomIn: () => void, zoomOut: () => void, resetView: () => void) => {
+    setZoomFunctions({ zoomIn, zoomOut, resetView });
   };
 
   async function handleImageUpload(file: File) {
@@ -361,32 +374,68 @@ export default function InspectionDetailNew() {
   return (
     <div className="page-container">
       {/* Header */}
-      <div className="page-header">
-        <div>
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        marginBottom: '24px',
+        padding: '20px',
+        background: 'linear-gradient(135deg, #1e40af 0%, #3b82f6 100%)',
+        borderRadius: '12px',
+        boxShadow: '0 4px 12px rgba(30, 64, 175, 0.2)',
+        border: 'none'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
           <button 
             onClick={() => nav('/inspections')} 
             style={{
-              background: 'transparent',
-              border: 'none',
-              color: '#3b82f6',
+              background: 'rgba(255, 255, 255, 0.2)',
+              border: '1px solid rgba(255, 255, 255, 0.3)',
+              color: 'white',
               fontSize: '14px',
               cursor: 'pointer',
-              marginBottom: '8px',
+              padding: '8px 12px',
+              borderRadius: '6px',
               display: 'flex',
               alignItems: 'center',
-              gap: '4px'
+              gap: '6px',
+              transition: 'all 0.2s',
+              backdropFilter: 'blur(10px)'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.3)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)';
             }}
           >
-            ← Back to Inspections
+            ← Back
           </button>
-          <h1 className="page-title">Inspection {inspection.inspectionNumber}</h1>
-          <div style={{ color: '#6b7280', fontSize: '14px', marginTop: '4px' }}>
-            Transformer: {inspection.transformerCode} | Weather: {inspection.weatherCondition || 'N/A'}
+          <div>
+            <h1 style={{ 
+              margin: 0, 
+              fontSize: '20px', 
+              fontWeight: '600', 
+              color: 'white' 
+            }}>
+              Inspection {inspection.inspectionNumber}
+            </h1>
+            <div style={{ color: 'rgba(255, 255, 255, 0.8)', fontSize: '14px', marginTop: '2px' }}>
+              {inspection.transformerCode} • {inspection.weatherCondition || 'Weather N/A'}
+            </div>
           </div>
         </div>
-        <span className={`status-badge ${inspection.status.toLowerCase().replace('_', '-')}`}>
+        <div style={{
+          padding: '6px 12px',
+          background: 'rgba(255, 255, 255, 0.9)',
+          color: inspection.status === 'COMPLETED' ? '#166534' : inspection.status === 'IN_PROGRESS' ? '#92400e' : '#374151',
+          borderRadius: '6px',
+          fontSize: '13px',
+          fontWeight: '600',
+          boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)'
+        }}>
           {inspection.status.replace('_', ' ')}
-        </span>
+        </div>
       </div>
 
       {/* Main Content */}
@@ -409,42 +458,45 @@ export default function InspectionDetailNew() {
           {!inspection.inspectionImageId && (
             <div style={{
               marginBottom: '16px',
-              padding: '16px',
-              background: '#fef3c7',
-              border: '2px solid #fbbf24',
-              borderRadius: '10px',
+              padding: '20px',
+              background: 'white',
+              border: '2px dashed #d1d5db',
+              borderRadius: '12px',
+              textAlign: 'center',
             }}>
-              <div style={{ marginBottom: '12px', color: '#92400e', fontWeight: '600', fontSize: '14px' }}>
-                ⚠️ No inspection image uploaded. Please upload a thermal image to enable detection.
+              <div style={{ marginBottom: '16px', color: '#374151', fontWeight: '600', fontSize: '16px' }}>
+                📸 Upload Thermal Image
+              </div>
+              <div style={{ marginBottom: '16px', color: '#6b7280', fontSize: '14px' }}>
+                Upload an inspection image to start annotation and detection
               </div>
               <FileDrop onFile={setSelectedFile} />
               {selectedFile && (
-                <div style={{ marginTop: '12px', display: 'flex', alignItems: 'center', gap: '12px' }}>
-                  <span style={{ fontSize: '14px', color: '#1e40af', fontWeight: '500' }}>
-                    Selected: {selectedFile.name}
+                <div style={{ marginTop: '16px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
+                  <span style={{ fontSize: '14px', color: '#374151', fontWeight: '500' }}>
+                    📎 {selectedFile.name}
                   </span>
                   <button
                     onClick={() => handleImageUpload(selectedFile)}
                     disabled={uploading}
                     style={{
-                      background: uploading ? '#94a3b8' : 'linear-gradient(135deg, #1e40af 0%, #3b82f6 100%)',
+                      background: uploading ? '#9ca3af' : '#3b82f6',
                       color: 'white',
                       border: 'none',
                       borderRadius: '8px',
-                      padding: '10px 20px',
+                      padding: '12px 24px',
                       fontSize: '14px',
                       fontWeight: '600',
                       cursor: uploading ? 'not-allowed' : 'pointer',
-                      boxShadow: '0 2px 8px rgba(30, 64, 175, 0.2)',
                     }}
                   >
-                    {uploading ? '⏳ Uploading...' : '📤 Upload Image'}
+                    {uploading ? 'Uploading...' : 'Upload Image'}
                   </button>
                 </div>
               )}
               {uploadError && (
-                <div style={{ marginTop: '8px', color: '#b91c1c', fontSize: '14px' }}>
-                  Error: {uploadError}
+                <div style={{ marginTop: '12px', color: '#dc2626', fontSize: '14px' }}>
+                  ❌ {uploadError}
                 </div>
               )}
             </div>
@@ -459,24 +511,24 @@ export default function InspectionDetailNew() {
             onAnnotationUpdate={handleAnnotationUpdate}
             onAnnotationDelete={handleAnnotationDelete}
             onCaptureReady={handleCaptureReady}
+            onZoomChange={handleZoomChange}
           />
 
-          {/* Instructions */}
+          {/* Quick Help */}
           <div style={{
             marginTop: '16px',
-            padding: '12px',
-            background: '#f0f9ff',
-            border: '1px solid #bfdbfe',
+            padding: '10px 16px',
+            background: '#f8fafc',
+            border: '1px solid #e2e8f0',
             borderRadius: '8px',
-            fontSize: '14px',
-            color: '#1e40af'
+            fontSize: '13px',
+            color: '#64748b'
           }}>
-            <strong>Instructions:</strong>
-            <ul style={{ marginTop: '8px', marginBottom: '0', paddingLeft: '20px' }}>
-              <li><strong>View:</strong> Pan with mouse drag, zoom with scroll wheel</li>
-              <li><strong>Edit:</strong> Click to select, drag to move, drag corners to resize, Delete key to remove</li>
-              <li><strong>Draw:</strong> Click and drag to draw new bounding box</li>
-            </ul>
+            <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
+              <span><strong>View:</strong> Drag to pan, scroll to zoom</span>
+              <span><strong>Edit:</strong> Click to select, drag corners to resize</span>
+              <span><strong>Draw:</strong> Click and drag to create</span>
+            </div>
           </div>
         </div>
 
@@ -516,19 +568,15 @@ export default function InspectionDetailNew() {
             </div>
           </div>
 
+          {/* Fault Types Legend */}
+          <AnnotationLegend layout="vertical" />
+
           {/* Inspector Notes */}
-          <div style={{
-            background: 'white',
-            borderRadius: '12px',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-            padding: '20px',
-            marginTop: '16px'
-          }}>
-            <h3 style={{ margin: '0 0 12px 0', fontSize: '16px', fontWeight: '600' }}>Notes</h3>
-            <p style={{ fontSize: '14px', color: '#6b7280', lineHeight: '1.6' }}>
-              {inspection.notes || 'No notes provided.'}
-            </p>
-          </div>
+          <NotesSection 
+            inspectionId={inspection.id}
+            initialNotes={inspection.notes || ''}
+            onNotesUpdate={() => loadData()}
+          />
 
           {/* Save Annotated Image Button */}
           {inspection.status !== 'COMPLETED' && annotations.length > 0 && (

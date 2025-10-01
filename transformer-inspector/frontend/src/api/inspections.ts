@@ -67,10 +67,18 @@ export async function updateInspection(id: string, body: CreateInspectionBody) {
 }
 
 export async function updateInspectionStatus(id: string, status: 'PENDING' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED') {
-  return api<Inspection>(`/api/inspections/${id}`, {
+  return api<Inspection>(`/api/inspections/${id}/status`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ status }),
+  });
+}
+
+export async function updateInspectionNotes(id: string, notes: string) {
+  return api<Inspection>(`/api/inspections/${id}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ notes }),
   });
 }
 

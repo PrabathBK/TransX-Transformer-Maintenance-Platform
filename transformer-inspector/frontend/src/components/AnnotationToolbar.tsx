@@ -32,121 +32,113 @@ export default function AnnotationToolbar({
   return (
     <div style={{
       display: 'flex',
-      alignItems: 'center',
-      gap: '12px',
-      padding: '12px 16px',
-      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-      borderRadius: '10px',
-      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+      flexDirection: 'column',
+      gap: '16px',
+      padding: '20px',
+      background: '#ffffff',
+      borderRadius: '12px',
+      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
       marginBottom: '16px',
+      border: '1px solid #e5e7eb'
     }}>
-      {/* Mode Buttons */}
-      <div style={{ display: 'flex', gap: '8px', borderRight: '1px solid rgba(255,255,255,0.3)', paddingRight: '12px' }}>
-        <ToolButton
-          active={mode === 'view'}
-          onClick={() => onModeChange('view')}
-          icon="👁️"
-          label="View"
-        />
-        <ToolButton
-          active={mode === 'edit'}
-          onClick={() => onModeChange('edit')}
-          icon="✏️"
-          label="Edit"
-        />
-        <ToolButton
-          active={mode === 'draw'}
-          onClick={() => onModeChange('draw')}
-          icon="➕"
-          label="Draw"
-        />
-      </div>
+      {/* Top Row: Mode Controls and AI Detection */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <span style={{ fontSize: '14px', fontWeight: '600', color: '#374151', marginRight: '8px' }}>
+            Mode:
+          </span>
+          <div style={{ display: 'flex', gap: '6px' }}>
+            <ToolButton
+              active={mode === 'view'}
+              onClick={() => onModeChange('view')}
+              icon="👁️"
+              label="View"
+            />
+            <ToolButton
+              active={mode === 'edit'}
+              onClick={() => onModeChange('edit')}
+              icon="✏️"
+              label="Edit"
+            />
+            <ToolButton
+              active={mode === 'draw'}
+              onClick={() => onModeChange('draw')}
+              icon="➕"
+              label="Draw"
+            />
+          </div>
+        </div>
 
-      {/* Class Selector (only visible in draw mode) */}
-      {mode === 'draw' && (
-        <div style={{ display: 'flex', gap: '8px', borderRight: '1px solid rgba(255,255,255,0.3)', paddingRight: '12px' }}>
-          <label style={{ color: 'white', fontSize: '14px', fontWeight: '600', alignSelf: 'center' }}>
-            Class:
-          </label>
-          <select
-            value={selectedClass}
-            onChange={(e) => onClassChange(e.target.value)}
+        {/* AI Detection Button */}
+        {onDetectAnomalies && (
+          <button
+            onClick={onDetectAnomalies}
+            disabled={isDetecting}
             style={{
-              padding: '6px 12px',
-              borderRadius: '6px',
-              border: '1px solid rgba(255,255,255,0.3)',
-              background: 'rgba(255,255,255,0.2)',
+              padding: '10px 20px',
+              borderRadius: '8px',
+              border: 'none',
+              background: isDetecting 
+                ? '#9ca3af' 
+                : 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
               color: 'white',
               fontSize: '14px',
-              cursor: 'pointer',
+              fontWeight: '600',
+              cursor: isDetecting ? 'not-allowed' : 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              transition: 'all 0.2s',
+              boxShadow: isDetecting ? 'none' : '0 2px 8px rgba(59, 130, 246, 0.3)',
             }}
           >
-            {DETECTION_CLASSES.map((cls) => (
-              <option key={cls.value} value={cls.value} style={{ background: '#1f2937', color: 'white' }}>
-                {cls.label}
-              </option>
-            ))}
-          </select>
-        </div>
-      )}
-
-      {/* Zoom Controls */}
-      <div style={{ display: 'flex', gap: '8px', borderRight: '1px solid rgba(255,255,255,0.3)', paddingRight: '12px' }}>
-        <ToolButton onClick={onZoomIn} icon="🔍+" label="Zoom In" />
-        <ToolButton onClick={onZoomOut} icon="🔍-" label="Zoom Out" />
-        <ToolButton onClick={onResetView} icon="🔄" label="Reset" />
+            <span>{isDetecting ? '⏳' : '🤖'}</span>
+            {isDetecting ? 'Detecting...' : 'Detect Anomalies'}
+          </button>
+        )}
       </div>
 
-      {/* AI Detection Button */}
-      {onDetectAnomalies && (
-        <button
-          onClick={onDetectAnomalies}
-          disabled={isDetecting}
-          style={{
-            padding: '8px 16px',
-            borderRadius: '8px',
-            border: 'none',
-            background: isDetecting 
-              ? 'rgba(156, 163, 175, 0.5)' 
-              : 'linear-gradient(135deg, #f59e0b 0%, #ef4444 100%)',
-            color: 'white',
-            fontSize: '14px',
-            fontWeight: '600',
-            cursor: isDetecting ? 'not-allowed' : 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            transition: 'all 0.2s',
-            boxShadow: isDetecting ? 'none' : '0 2px 8px rgba(239, 68, 68, 0.3)',
-          }}
-        >
-          <span>{isDetecting ? '⏳' : '🤖'}</span>
-          {isDetecting ? 'Detecting...' : 'Detect Anomalies'}
-        </button>
-      )}
-
-      {/* Legend */}
-      <div style={{ 
-        marginLeft: 'auto', 
-        display: 'flex', 
-        gap: '12px',
-        paddingLeft: '12px',
-        borderLeft: '1px solid rgba(255,255,255,0.3)'
-      }}>
-        {DETECTION_CLASSES.map((cls) => (
-          <div key={cls.value} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <div style={{
-              width: '12px',
-              height: '12px',
-              background: cls.color,
-              borderRadius: '2px',
-              border: '1px solid white'
-            }} />
-            <span style={{ color: 'white', fontSize: '12px', fontWeight: '500' }}>
-              {cls.label}
+      {/* Second Row: Class Selector and Zoom Controls */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
+        {mode === 'draw' && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <span style={{ fontSize: '14px', fontWeight: '600', color: '#374151' }}>
+              Fault Type:
             </span>
+            <select
+              value={selectedClass}
+              onChange={(e) => onClassChange(e.target.value)}
+              style={{
+                padding: '8px 12px',
+                borderRadius: '6px',
+                border: '1px solid #d1d5db',
+                background: 'white',
+                color: '#374151',
+                fontSize: '14px',
+                cursor: 'pointer',
+                minWidth: '150px'
+              }}
+            >
+              {DETECTION_CLASSES.map((cls) => (
+                <option key={cls.value} value={cls.value}>
+                  {cls.label}
+                </option>
+              ))}
+            </select>
           </div>
-        ))}
+        )}
+
+        {/* Zoom Controls */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginLeft: mode === 'draw' ? '0' : 'auto' }}>
+          <span style={{ fontSize: '14px', fontWeight: '600', color: '#374151' }}>
+            Zoom:
+          </span>
+          <div style={{ display: 'flex', gap: '6px' }}>
+            <ToolButton onClick={onZoomIn} icon="+" label="In" />
+            <ToolButton onClick={onZoomOut} icon="−" label="Out" />
+            <ToolButton onClick={onResetView} icon="⌂" label="Reset" />
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -166,9 +158,9 @@ function ToolButton({ active = false, onClick, icon, label }: ToolButtonProps) {
       style={{
         padding: '8px 12px',
         borderRadius: '6px',
-        border: active ? '2px solid white' : '1px solid rgba(255,255,255,0.3)',
-        background: active ? 'rgba(255,255,255,0.3)' : 'rgba(255,255,255,0.1)',
-        color: 'white',
+        border: active ? '2px solid #3b82f6' : '1px solid #d1d5db',
+        background: active ? '#eff6ff' : 'white',
+        color: active ? '#1d4ed8' : '#374151',
         fontSize: '14px',
         fontWeight: active ? '600' : '500',
         cursor: 'pointer',
@@ -176,10 +168,12 @@ function ToolButton({ active = false, onClick, icon, label }: ToolButtonProps) {
         alignItems: 'center',
         gap: '6px',
         transition: 'all 0.2s',
+        minWidth: '80px',
+        justifyContent: 'center'
       }}
       title={label}
     >
-      <span>{icon}</span>
+      <span style={{ fontSize: '16px' }}>{icon}</span>
       <span style={{ fontSize: '13px' }}>{label}</span>
     </button>
   );

@@ -12,6 +12,7 @@ interface AnnotationCanvasProps {
   mode?: 'view' | 'edit' | 'draw';
   selectedClass?: string;
   onCaptureReady?: (captureFunction: () => string | null) => void;
+  onZoomChange?: (zoomIn: () => void, zoomOut: () => void, resetView: () => void) => void;
 }
 
 const CLASS_COLORS: Record<string, string> = {
@@ -29,7 +30,8 @@ export default function AnnotationCanvas({
   onAnnotationDelete,
   mode = 'view',
   selectedClass = 'Faulty',
-  onCaptureReady
+  onCaptureReady,
+  onZoomChange
 }: AnnotationCanvasProps) {
   const [image, setImage] = useState<HTMLImageElement | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -82,6 +84,66 @@ export default function AnnotationCanvas({
     }
   }, []);
 
+  // Zoom control functions
+  const zoomIn = useCallback(() => {
+    const stage = stageRef.current;
+    if (!stage) return;
+    
+    const scaleBy = 1.2;
+    const oldScale = stage.scaleX();
+    const newScale = Math.min(3, oldScale * scaleBy);
+    
+    const stageCenter = {
+      x: stage.width() / 2,
+      y: stage.height() / 2
+    };
+    
+    const mousePointTo = {
+      x: (stageCenter.x - stage.x()) / oldScale,
+      y: (stageCenter.y - stage.y()) / oldScale,
+    };
+    
+    const newPos = {
+      x: stageCenter.x - mousePointTo.x * newScale,
+      y: stageCenter.y - mousePointTo.y * newScale,
+    };
+    
+    setScale(newScale);
+    setStagePos(newPos);
+  }, []);
+  
+  const zoomOut = useCallback(() => {
+    const stage = stageRef.current;
+    if (!stage) return;
+    
+    const scaleBy = 1.2;
+    const oldScale = stage.scaleX();
+    const newScale = Math.max(0.5, oldScale / scaleBy);
+    
+    const stageCenter = {
+      x: stage.width() / 2,
+      y: stage.height() / 2
+    };
+    
+    const mousePointTo = {
+      x: (stageCenter.x - stage.x()) / oldScale,
+      y: (stageCenter.y - stage.y()) / oldScale,
+    };
+    
+    const newPos = {
+      x: stageCenter.x - mousePointTo.x * newScale,
+      y: stageCenter.y - mousePointTo.y * newScale,
+    };
+    
+    setScale(newScale);
+    setStagePos(newPos);
+  }, []);
+  
+  const resetView = useCallback(() => {
+    setScale(1);
+    setStagePos({ x: 0, y: 0 });
+  }, []);
+
   // Expose capture function to parent component when stage is ready
   useEffect(() => {
     if (onCaptureReady && image && stageRef.current) {
@@ -89,6 +151,13 @@ export default function AnnotationCanvas({
       onCaptureReady(captureCanvas);
     }
   }, [onCaptureReady, captureCanvas, image]);
+
+  // Expose zoom functions to parent component
+  useEffect(() => {
+    if (onZoomChange) {
+      onZoomChange(zoomIn, zoomOut, resetView);
+    }
+  }, [onZoomChange, zoomIn, zoomOut, resetView]);
 
   const handleMouseDown = (e: any) => {
     if (mode !== 'draw') return;

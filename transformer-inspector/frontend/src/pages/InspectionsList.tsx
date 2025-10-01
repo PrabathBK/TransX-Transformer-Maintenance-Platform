@@ -10,13 +10,9 @@ import type { Inspection } from '../api/inspections';
 import type { Transformer } from '../api/transformers';
 
 type CreateInspectionForm = {
-  inspectionNo: string;
+  inspectionNumber: string;
   transformerId: string;
-  branch: string;
-  inspectionDate: string;
-  inspectionTime: string;
-  maintenanceDate: string;
-  maintenanceTime: string;
+  weatherCondition: 'SUNNY' | 'CLOUDY' | 'RAINY' | '';
   inspectedBy: string;
   notes: string;
 };
@@ -34,13 +30,9 @@ export default function InspectionsList() {
 
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState<CreateInspectionForm>({
-    inspectionNo: '',
+    inspectionNumber: '',
     transformerId: '',
-    branch: '',
-    inspectionDate: '',
-    inspectionTime: '07:00',
-    maintenanceDate: '',
-    maintenanceTime: '',
+    weatherCondition: '',
     inspectedBy: '',
     notes: '',
   });
@@ -80,13 +72,9 @@ export default function InspectionsList() {
 
   function resetForm() {
     setForm({
-      inspectionNo: '',
+      inspectionNumber: '',
       transformerId: '',
-      branch: '',
-      inspectionDate: '',
-      inspectionTime: '07:00',
-      maintenanceDate: '',
-      maintenanceTime: '',
+      weatherCondition: '',
       inspectedBy: '',
       notes: '',
     });
@@ -95,29 +83,24 @@ export default function InspectionsList() {
 
   async function onCreate(e: React.FormEvent) {
     e.preventDefault();
-    if (!form.inspectionNo.trim() || !form.transformerId || !form.branch.trim() || 
-        !form.inspectionDate || !form.inspectedBy.trim()) {
+    if (!form.inspectionNumber.trim() || !form.transformerId) {
       setCreateErr('Please fill all required fields.');
       return;
     }
     try {
       setCreateBusy(true); setCreateErr(null);
       await createInspection({
-        inspectionNo: form.inspectionNo.trim(),
+        inspectionNumber: form.inspectionNumber.trim(),
         transformerId: form.transformerId,
-        branch: form.branch.trim(),
-        inspectionDate: form.inspectionDate,
-        inspectionTime: form.inspectionTime,
-        maintenanceDate: form.maintenanceDate || undefined,
-        maintenanceTime: form.maintenanceTime || undefined,
-        inspectedBy: form.inspectedBy.trim(),
+        weatherCondition: form.weatherCondition || undefined,
+        inspectedBy: form.inspectedBy.trim() || undefined,
         notes: form.notes || undefined,
       });
       setOpen(false);
       resetForm();
       setPage(0);
       await load();
-      setSuccessMsg(`Inspection ${form.inspectionNo} created successfully!`);
+      setSuccessMsg(`Inspection ${form.inspectionNumber} created successfully!`);
       setTimeout(() => setSuccessMsg(null), 5000);
     } catch (e: any) {
       const message = String(e?.message || '');
@@ -134,13 +117,6 @@ export default function InspectionsList() {
   function getStatusBadge(status: string) {
     const statusClass = status.toLowerCase().replace('_', '-');
     return <span className={`status-badge ${statusClass}`}>{status.replace('_', ' ')}</span>;
-  }
-
-  function formatDateTime(date: string, time?: string) {
-    if (!date) return '-';
-    const dateObj = new Date(date);
-    const dateStr = dateObj.toLocaleDateString();
-    return time ? `${dateStr} ${time}` : dateStr;
   }
 
   return (
@@ -184,9 +160,9 @@ export default function InspectionsList() {
           <tr>
             <th>Inspection No.</th>
             <th>Transformer No.</th>
-            <th>Branch</th>
+            <th>Weather</th>
             <th>Inspected Date</th>
-            <th>Maintenance Date</th>
+            <th>Annotations</th>
             <th>Status</th>
             <th>Actions</th>
           </tr>
@@ -196,19 +172,19 @@ export default function InspectionsList() {
             <tr key={i.id}>
               <td className="code-data">
                 <div className="code-info">
-                  <span className="code-number">{i.inspectionNo}</span>
-                  <div className="inspected-by">by {i.inspectedBy}</div>
+                  <span className="code-number">{i.inspectionNumber}</span>
+                  <div className="inspected-by">by {i.inspectedBy || 'Unknown'}</div>
                 </div>
               </td>
               <td className="transformer-data">
-                <span className="transformer-code">{i.transformerCode}</span>
+                <span className="transformer-code">{i.transformerCode || '-'}</span>
               </td>
-              <td className="branch-data">{i.branch}</td>
+              <td className="branch-data">{i.weatherCondition || '-'}</td>
               <td className="date-data">
-                {formatDateTime(i.inspectionDate, i.inspectionTime)}
+                {i.inspectedAt ? new Date(i.inspectedAt).toLocaleString() : '-'}
               </td>
               <td className="date-data">
-                {i.maintenanceDate ? formatDateTime(i.maintenanceDate, i.maintenanceTime || undefined) : '-'}
+                {i.annotationCount !== undefined ? `${i.annotationCount} annotations` : '-'}
               </td>
               <td className="status-data">
                 {getStatusBadge(i.status)}
@@ -240,7 +216,7 @@ export default function InspectionsList() {
                       try { 
                         await deleteInspection(i.id); 
                         await load(); 
-                        setSuccessMsg(`Inspection ${i.inspectionNo} deleted successfully!`);
+                        setSuccessMsg(`Inspection ${i.inspectionNumber} deleted successfully!`);
                         setTimeout(() => setSuccessMsg(null), 5000);
                       } catch (e: any) { 
                         setDeleteError(e?.message || 'Delete failed');
@@ -289,9 +265,9 @@ export default function InspectionsList() {
         <form onSubmit={onCreate} style={{ display: 'grid', gridTemplateColumns:'1fr 1fr', gap: 12 }}>
           <Input 
             label="Inspection No." 
-            placeholder="000123589"
-            value={form.inspectionNo} 
-            onChange={e => setForm(f => ({ ...f, inspectionNo: e.target.value }))} 
+            placeholder="INS-001"
+            value={form.inspectionNumber} 
+            onChange={e => setForm(f => ({ ...f, inspectionNumber: e.target.value }))} 
           />
           <Select
             label="Transformer"
@@ -302,41 +278,22 @@ export default function InspectionsList() {
               ...transformers.map(t => ({ value: t.id, label: `${t.code} - ${t.location}` }))
             ]}
           />
-          <Input 
-            label="Branch" 
-            placeholder="Nugegoda"
-            value={form.branch} 
-            onChange={e => setForm(f => ({ ...f, branch: e.target.value }))} 
+          <Select
+            label="Weather Condition (Optional)"
+            value={form.weatherCondition}
+            onChange={e => setForm(f => ({ ...f, weatherCondition: e.target.value as any }))}
+            options={[
+              { value: '', label: 'Select weather…' },
+              { value: 'SUNNY', label: 'Sunny' },
+              { value: 'CLOUDY', label: 'Cloudy' },
+              { value: 'RAINY', label: 'Rainy' }
+            ]}
           />
           <Input 
-            label="Inspected By" 
+            label="Inspected By (Optional)" 
             placeholder="Inspector Name"
             value={form.inspectedBy} 
             onChange={e => setForm(f => ({ ...f, inspectedBy: e.target.value }))} 
-          />
-          <Input 
-            label="Inspection Date" 
-            type="date"
-            value={form.inspectionDate} 
-            onChange={e => setForm(f => ({ ...f, inspectionDate: e.target.value }))} 
-          />
-          <Input 
-            label="Inspection Time" 
-            type="time"
-            value={form.inspectionTime} 
-            onChange={e => setForm(f => ({ ...f, inspectionTime: e.target.value }))} 
-          />
-          <Input 
-            label="Maintenance Date (Optional)" 
-            type="date"
-            value={form.maintenanceDate} 
-            onChange={e => setForm(f => ({ ...f, maintenanceDate: e.target.value }))} 
-          />
-          <Input 
-            label="Maintenance Time (Optional)" 
-            type="time"
-            value={form.maintenanceTime} 
-            onChange={e => setForm(f => ({ ...f, maintenanceTime: e.target.value }))} 
           />
           <div style={{ gridColumn: '1 / -1' }}>
             <Input 

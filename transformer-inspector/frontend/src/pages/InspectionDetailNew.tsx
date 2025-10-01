@@ -1,0 +1,802 @@
+// src/pages/InspectionDetailNew.tsx
+import { useState, useEffect, useRef } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import AnnotationCanvas from '../components/AnnotationCanvas';
+import AnnotationToolbar from '../components/AnnotationToolbar';
+import FileDrop from '../components/FileDrop';
+import {
+  getInspection,
+  detectAnomalies,
+  uploadInspectionImage,
+  updateInspectionStatus,
+  uploadAnnotatedImage,
+} from '../api/inspections';
+import { getAnnotationsByInspection, saveAnnotation, approveAnnotation, rejectAnnotation, deleteAnnotation } from '../api/annotations';
+import { uploadImage } from '../api/images';
+import type { Inspection } from '../api/inspections';
+import type { Annotation } from '../api/annotations';
+
+export default function InspectionDetailNew() {
+  const { id } = useParams();
+  const nav = useNavigate();
+
+  const [inspection, setInspection] = useState<Inspection | null>(null);
+  const [annotations, setAnnotations] = useState<Annotation[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  
+  // Annotation canvas state
+  const [mode, setMode] = useState<'view' | 'edit' | 'draw'>('view');
+  const [selectedClass, setSelectedClass] = useState('Faulty');
+  const [isDetecting, setIsDetecting] = useState(false);
+  
+  // Image upload state
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  
+  // Inspection completion state
+  const [isCompleting, setIsCompleting] = useState(false);
+  
+  // Canvas capture state
+  const captureCanvasRef = useRef<(() => string | null) | null>(null);
+  const [isCanvasReady, setIsCanvasReady] = useState(false);
+  const [isSavingImage, setIsSavingImage] = useState(false);
+
+  // Load inspection and annotations
+  useEffect(() => {
+    if (!id) return;
+    loadData();
+  }, [id]);
+
+  async function loadData() {
+    if (!id) return;
+    
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const [inspectionData, annotationsData] = await Promise.all([
+        getInspection(id),
+        getAnnotationsByInspection(id)
+      ]);
+      
+      setInspection(inspectionData);
+      setAnnotations(annotationsData);
+    } catch (e: any) {
+      setError(e?.message || 'Failed to load data');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleDetectAnomalies() {
+    if (!id) return;
+    
+    try {
+      setIsDetecting(true);
+      const result = await detectAnomalies(id);
+      
+      // Refresh annotations to show AI detections
+      const updatedAnnotations = await getAnnotationsByInspection(id);
+      setAnnotations(updatedAnnotations);
+      
+      alert(`Detection complete! Found ${result.detectionCount || 0} anomalies.`);
+    } catch (e: any) {
+      alert('Detection failed: ' + (e?.message || 'Unknown error'));
+    } finally {
+      setIsDetecting(false);
+    }
+  }
+
+  async function handleAnnotationCreate(bbox: { x1: number; y1: number; x2: number; y2: number }) {
+    if (!id) return;
+    
+    // Map className to classId (matches backend enum/constants)
+    const getClassId = (className: string): number => {
+      const classMap: Record<string, number> = {
+        'Faulty': 1,
+        'faulty_loose_joint': 2, 
+        'faulty_point_overload': 3,
+        'potential_faulty': 4,
+      };
+      return classMap[className] || 1;
+    };
+    
+    try {
+      const annotationRequest = {
+        inspectionId: id,
+        bbox: {
+          x1: Math.round(bbox.x1),
+          y1: Math.round(bbox.y1), 
+          x2: Math.round(bbox.x2),
+          y2: Math.round(bbox.y2),
+        },
+        classId: getClassId(selectedClass),
+        className: selectedClass,
+        confidence: 1.0,
+        source: 'human' as const,
+        userId: 'current-user@example.com', // TODO: Get from auth context
+      };
+      
+      console.log('Creating annotation with request:', annotationRequest);
+      
+      await saveAnnotation(annotationRequest);
+      
+      await loadData();
+    } catch (e: any) {
+      console.error('Annotation creation error:', e);
+      alert('Failed to create annotation: ' + (e?.message || 'Unknown error'));
+    }
+  }
+
+  async function handleAnnotationUpdate(annotation: Annotation) {
+    // Map className to classId (matches backend enum/constants)
+    const getClassId = (className: string): number => {
+      const classMap: Record<string, number> = {
+        'Faulty': 1,
+        'faulty_loose_joint': 2, 
+        'faulty_point_overload': 3,
+        'potential_faulty': 4,
+      };
+      return classMap[className] || 1;
+    };
+    
+    try {
+      console.log('Updating annotation with ID:', annotation.id, 'for version creation');
+      
+      await saveAnnotation({
+        id: annotation.id, // Include ID for version creation
+        inspectionId: annotation.inspectionId,
+        bbox: annotation.bbox,
+        classId: getClassId(annotation.className),
+        className: annotation.className,
+        confidence: annotation.confidence,
+        source: annotation.source,
+        userId: 'current-user@example.com',
+      });
+      
+      await loadData();
+    } catch (e: any) {
+      alert('Failed to update annotation: ' + (e?.message || 'Unknown error'));
+    }
+  }
+
+  async function handleAnnotationDelete(annotationId: string) {
+    if (!confirm('Delete this annotation?')) return;
+    
+    try {
+      await deleteAnnotation(annotationId, 'current-user@example.com');
+      await loadData();
+    } catch (e: any) {
+      alert('Failed to delete annotation: ' + (e?.message || 'Unknown error'));
+    }
+  }
+
+  async function handleApprove(annotationId: string) {
+    try {
+      await approveAnnotation(annotationId, 'current-user@example.com');
+      await loadData();
+    } catch (e: any) {
+      alert('Failed to approve: ' + (e?.message || 'Unknown error'));
+    }
+  }
+
+  async function handleReject(annotationId: string) {
+    try {
+      await rejectAnnotation(annotationId, 'current-user@example.com');
+      await loadData();
+    } catch (e: any) {
+      alert('Failed to reject: ' + (e?.message || 'Unknown error'));
+    }
+  }
+
+  const handleZoomIn = () => {
+    // Implemented in canvas component
+  };
+
+  const handleZoomOut = () => {
+    // Implemented in canvas component
+  };
+
+  const handleResetView = () => {
+    // Implemented in canvas component
+  };
+
+  async function handleImageUpload(file: File) {
+    if (!inspection) return;
+    
+    try {
+      setUploading(true);
+      setUploadError(null);
+      
+      // Upload image to server
+      const uploadedImage = await uploadImage({
+        transformerId: inspection.transformerId,
+        type: 'INSPECTION',
+        uploader: inspection.inspectedBy || 'unknown',
+        file,
+        inspectionId: inspection.id,
+      });
+      
+      // Link image to inspection
+      await uploadInspectionImage(inspection.id, uploadedImage.id);
+      
+      // Reload inspection data
+      await loadData();
+      
+      setSelectedFile(null);
+      alert('Image uploaded successfully! You can now trigger detection.');
+    } catch (e: any) {
+      setUploadError(e?.message || 'Upload failed');
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  const handleCaptureReady = (captureFunc: () => string | null) => {
+    console.log('Capture function received:', typeof captureFunc);
+    captureCanvasRef.current = captureFunc;
+    setIsCanvasReady(true);
+  };
+
+  async function handleSaveAnnotatedImage() {
+    console.log('handleSaveAnnotatedImage called');
+    console.log('inspection:', inspection);
+    console.log('captureCanvasRef.current:', captureCanvasRef.current);
+    console.log('captureCanvas type:', typeof captureCanvasRef.current);
+    
+    if (!inspection) {
+      alert('No inspection available');
+      return;
+    }
+    
+    if (!captureCanvasRef.current) {
+      alert('Canvas capture function not ready. Please wait for the image to load completely.');
+      return;
+    }
+    
+    if (typeof captureCanvasRef.current !== 'function') {
+      alert('Canvas capture is not a function. Please refresh the page and try again.');
+      return;
+    }
+    
+    try {
+      setIsSavingImage(true);
+      
+      console.log('Calling captureCanvas function...');
+      // Capture canvas as base64 data URL
+      const dataUrl = captureCanvasRef.current();
+      console.log('Capture result:', dataUrl ? 'Success' : 'Failed');
+      
+      if (!dataUrl) {
+        alert('Failed to capture annotated image. Please ensure the image is fully loaded.');
+        return;
+      }
+      
+      // Convert base64 to blob
+      const response = await fetch(dataUrl);
+      const blob = await response.blob();
+      
+      // Create file from blob
+      const file = new File([blob], `annotated_${inspection.inspectionNumber}_${Date.now()}.png`, { type: 'image/png' });
+      
+      // Upload annotated image
+      const uploadedImage = await uploadImage({
+        transformerId: inspection.transformerId,
+        type: 'INSPECTION',
+        uploader: inspection.inspectedBy || 'system',
+        file,
+        inspectionId: inspection.id,
+      });
+      
+      // Update inspection with annotated image
+      await uploadAnnotatedImage(inspection.id, uploadedImage.id);
+      
+      // Reload data to show updated image
+      await loadData();
+      
+      alert('✅ Annotated image saved! This image will now appear on the transformer page.');
+    } catch (e: any) {
+      alert('Failed to save annotated image: ' + (e?.message || 'Unknown error'));
+    } finally {
+      setIsSavingImage(false);
+    }
+  }
+
+  async function handleCompleteInspection() {
+    if (!inspection) return;
+    
+    try {
+      setIsCompleting(true);
+      
+      // Update inspection status to COMPLETED
+      await updateInspectionStatus(inspection.id, 'COMPLETED');
+      
+      // Show success message
+      alert('Inspection completed successfully! Redirecting to transformer page...');
+      
+      // Navigate to transformer detail page
+      nav(`/transformers/${inspection.transformerId}`);
+    } catch (e: any) {
+      alert('Failed to complete inspection: ' + (e?.message || 'Unknown error'));
+    } finally {
+      setIsCompleting(false);
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="page-container">
+        <div className="loading-message">Loading inspection...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="page-container">
+        <div className="error-message">{error}</div>
+        <button onClick={() => nav('/inspections')} className="primary-button">
+          Back to Inspections
+        </button>
+      </div>
+    );
+  }
+
+  if (!inspection) {
+    return (
+      <div className="page-container">
+        <div className="error-message">Inspection not found</div>
+        <button onClick={() => nav('/inspections')} className="primary-button">
+          Back to Inspections
+        </button>
+      </div>
+    );
+  }
+
+  // Use original image URL for editing annotations, fall back to current inspection image
+  const imageUrl = inspection.originalInspectionImageUrl || inspection.inspectionImageUrl || 'https://via.placeholder.com/800x600?text=No+Image';
+
+  return (
+    <div className="page-container">
+      {/* Header */}
+      <div className="page-header">
+        <div>
+          <button 
+            onClick={() => nav('/inspections')} 
+            style={{
+              background: 'transparent',
+              border: 'none',
+              color: '#3b82f6',
+              fontSize: '14px',
+              cursor: 'pointer',
+              marginBottom: '8px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px'
+            }}
+          >
+            ← Back to Inspections
+          </button>
+          <h1 className="page-title">Inspection {inspection.inspectionNumber}</h1>
+          <div style={{ color: '#6b7280', fontSize: '14px', marginTop: '4px' }}>
+            Transformer: {inspection.transformerCode} | Weather: {inspection.weatherCondition || 'N/A'}
+          </div>
+        </div>
+        <span className={`status-badge ${inspection.status.toLowerCase().replace('_', '-')}`}>
+          {inspection.status.replace('_', ' ')}
+        </span>
+      </div>
+
+      {/* Main Content */}
+      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '24px' }}>
+        {/* Left: Annotation Canvas */}
+        <div>
+          <AnnotationToolbar
+            mode={mode}
+            onModeChange={setMode}
+            selectedClass={selectedClass}
+            onClassChange={setSelectedClass}
+            onZoomIn={handleZoomIn}
+            onZoomOut={handleZoomOut}
+            onResetView={handleResetView}
+            onDetectAnomalies={handleDetectAnomalies}
+            isDetecting={isDetecting}
+          />
+
+          {/* Image Upload Section */}
+          {!inspection.inspectionImageId && (
+            <div style={{
+              marginBottom: '16px',
+              padding: '16px',
+              background: '#fef3c7',
+              border: '2px solid #fbbf24',
+              borderRadius: '10px',
+            }}>
+              <div style={{ marginBottom: '12px', color: '#92400e', fontWeight: '600', fontSize: '14px' }}>
+                ⚠️ No inspection image uploaded. Please upload a thermal image to enable detection.
+              </div>
+              <FileDrop onFile={setSelectedFile} />
+              {selectedFile && (
+                <div style={{ marginTop: '12px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <span style={{ fontSize: '14px', color: '#1e40af', fontWeight: '500' }}>
+                    Selected: {selectedFile.name}
+                  </span>
+                  <button
+                    onClick={() => handleImageUpload(selectedFile)}
+                    disabled={uploading}
+                    style={{
+                      background: uploading ? '#94a3b8' : 'linear-gradient(135deg, #1e40af 0%, #3b82f6 100%)',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '8px',
+                      padding: '10px 20px',
+                      fontSize: '14px',
+                      fontWeight: '600',
+                      cursor: uploading ? 'not-allowed' : 'pointer',
+                      boxShadow: '0 2px 8px rgba(30, 64, 175, 0.2)',
+                    }}
+                  >
+                    {uploading ? '⏳ Uploading...' : '📤 Upload Image'}
+                  </button>
+                </div>
+              )}
+              {uploadError && (
+                <div style={{ marginTop: '8px', color: '#b91c1c', fontSize: '14px' }}>
+                  Error: {uploadError}
+                </div>
+              )}
+            </div>
+          )}
+
+          <AnnotationCanvas
+            imageUrl={imageUrl}
+            annotations={annotations}
+            mode={mode}
+            selectedClass={selectedClass}
+            onAnnotationCreate={handleAnnotationCreate}
+            onAnnotationUpdate={handleAnnotationUpdate}
+            onAnnotationDelete={handleAnnotationDelete}
+            onCaptureReady={handleCaptureReady}
+          />
+
+          {/* Instructions */}
+          <div style={{
+            marginTop: '16px',
+            padding: '12px',
+            background: '#f0f9ff',
+            border: '1px solid #bfdbfe',
+            borderRadius: '8px',
+            fontSize: '14px',
+            color: '#1e40af'
+          }}>
+            <strong>Instructions:</strong>
+            <ul style={{ marginTop: '8px', marginBottom: '0', paddingLeft: '20px' }}>
+              <li><strong>View:</strong> Pan with mouse drag, zoom with scroll wheel</li>
+              <li><strong>Edit:</strong> Click to select, drag to move, drag corners to resize, Delete key to remove</li>
+              <li><strong>Draw:</strong> Click and drag to draw new bounding box</li>
+            </ul>
+          </div>
+        </div>
+
+        {/* Right: Annotations List */}
+        <div>
+          <div style={{
+            background: 'white',
+            borderRadius: '12px',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+            padding: '20px',
+          }}>
+            <h2 style={{ margin: '0 0 16px 0', fontSize: '18px', fontWeight: '600' }}>
+              Annotations ({annotations.length})
+            </h2>
+
+            {annotations.length === 0 && (
+              <div style={{ 
+                textAlign: 'center', 
+                padding: '40px 20px', 
+                color: '#6b7280',
+                fontSize: '14px'
+              }}>
+                No annotations yet. Click "Detect Anomalies" or draw manually.
+              </div>
+            )}
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              {annotations.map((ann) => (
+                <AnnotationCard
+                  key={ann.id}
+                  annotation={ann}
+                  onApprove={() => handleApprove(ann.id)}
+                  onReject={() => handleReject(ann.id)}
+                  onDelete={() => handleAnnotationDelete(ann.id)}
+                />
+              ))}
+            </div>
+          </div>
+
+          {/* Inspector Notes */}
+          <div style={{
+            background: 'white',
+            borderRadius: '12px',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+            padding: '20px',
+            marginTop: '16px'
+          }}>
+            <h3 style={{ margin: '0 0 12px 0', fontSize: '16px', fontWeight: '600' }}>Notes</h3>
+            <p style={{ fontSize: '14px', color: '#6b7280', lineHeight: '1.6' }}>
+              {inspection.notes || 'No notes provided.'}
+            </p>
+          </div>
+
+          {/* Save Annotated Image Button */}
+          {inspection.status !== 'COMPLETED' && annotations.length > 0 && (
+            <div style={{
+              background: 'white',
+              borderRadius: '12px',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+              padding: '20px',
+              marginTop: '16px',
+              textAlign: 'center'
+            }}>
+              <h3 style={{ margin: '0 0 12px 0', fontSize: '16px', fontWeight: '600', color: '#3b82f6' }}>
+                💾 Save Annotated Image
+              </h3>
+              <p style={{ fontSize: '14px', color: '#6b7280', lineHeight: '1.6', marginBottom: '16px' }}>
+                Save the current image with annotations to display on the transformer page. You can do this multiple times as you make changes.
+              </p>
+              <button
+                onClick={handleSaveAnnotatedImage}
+                disabled={isSavingImage || !inspection.inspectionImageId || !isCanvasReady}
+                style={{
+                  background: (isSavingImage || !isCanvasReady) ? '#94a3b8' : 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '10px',
+                  padding: '14px 28px',
+                  fontSize: '16px',
+                  fontWeight: '600',
+                  cursor: (isSavingImage || !inspection.inspectionImageId || !isCanvasReady) ? 'not-allowed' : 'pointer',
+                  boxShadow: '0 4px 12px rgba(59, 130, 246, 0.3)',
+                  minWidth: '160px',
+                  opacity: (!inspection.inspectionImageId || !isCanvasReady) ? 0.6 : 1
+                }}
+              >
+                {isSavingImage ? '⏳ Saving...' : !isCanvasReady ? '⏳ Loading...' : '💾 Save Image'}
+              </button>
+              {!inspection.inspectionImageId && (
+                <p style={{ fontSize: '12px', color: '#ef4444', marginTop: '8px' }}>
+                  Please upload an inspection image first
+                </p>
+              )}
+              {inspection.inspectionImageId && !isCanvasReady && (
+                <p style={{ fontSize: '12px', color: '#f59e0b', marginTop: '8px' }}>
+                  Canvas is loading, please wait...
+                </p>
+              )}
+            </div>
+          )}
+
+          {/* Complete Inspection Button */}
+          {inspection.status !== 'COMPLETED' && (
+            <div style={{
+              background: 'white',
+              borderRadius: '12px',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+              padding: '20px',
+              marginTop: '16px',
+              textAlign: 'center'
+            }}>
+              <h3 style={{ margin: '0 0 12px 0', fontSize: '16px', fontWeight: '600', color: '#059669' }}>
+                ✅ Finish Inspection
+              </h3>
+              <p style={{ fontSize: '14px', color: '#6b7280', lineHeight: '1.6', marginBottom: '16px' }}>
+                Click Done when you have finished editing annotations. This will mark the inspection as complete and display the results on the transformer page.
+              </p>
+              <button
+                onClick={handleCompleteInspection}
+                disabled={isCompleting || !inspection.inspectionImageId}
+                style={{
+                  background: isCompleting ? '#94a3b8' : 'linear-gradient(135deg, #059669 0%, #10b981 100%)',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '10px',
+                  padding: '14px 28px',
+                  fontSize: '16px',
+                  fontWeight: '600',
+                  cursor: isCompleting || !inspection.inspectionImageId ? 'not-allowed' : 'pointer',
+                  boxShadow: '0 4px 12px rgba(5, 150, 105, 0.3)',
+                  minWidth: '140px',
+                  opacity: !inspection.inspectionImageId ? 0.6 : 1
+                }}
+              >
+                {isCompleting ? '⏳ Finishing...' : '✅ Done'}
+              </button>
+              {!inspection.inspectionImageId && (
+                <p style={{ fontSize: '12px', color: '#ef4444', marginTop: '8px' }}>
+                  Please upload an inspection image first
+                </p>
+              )}
+            </div>
+          )}
+
+          {inspection.status === 'COMPLETED' && (
+            <div style={{
+              background: 'white',
+              borderRadius: '12px',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+              padding: '20px',
+              marginTop: '16px',
+              textAlign: 'center',
+              border: '2px solid #10b981'
+            }}>
+              <h3 style={{ margin: '0 0 8px 0', fontSize: '16px', fontWeight: '600', color: '#059669' }}>
+                ✅ Inspection Completed
+              </h3>
+              <p style={{ fontSize: '14px', color: '#6b7280', marginBottom: '12px' }}>
+                This inspection has been marked as complete.
+              </p>
+              <button
+                onClick={() => nav(`/transformers/${inspection.transformerId}`)}
+                style={{
+                  background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '8px',
+                  padding: '10px 20px',
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  boxShadow: '0 2px 8px rgba(59, 130, 246, 0.2)'
+                }}
+              >
+                🏠 View on Transformer Page
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+interface AnnotationCardProps {
+  annotation: Annotation;
+  onApprove: () => void;
+  onReject: () => void;
+  onDelete: () => void;
+}
+
+function AnnotationCard({ annotation, onApprove, onReject, onDelete }: AnnotationCardProps) {
+  const CLASS_COLORS: Record<string, string> = {
+    'Faulty': '#ef4444',
+    'faulty_loose_joint': '#22c55e',
+    'faulty_point_overload': '#3b82f6',
+    'potential_faulty': '#eab308',
+  };
+
+  const color = CLASS_COLORS[annotation.className] || '#6b7280';
+
+  return (
+    <div style={{
+      border: `2px solid ${color}`,
+      borderRadius: '8px',
+      padding: '12px',
+      background: `${color}11`,
+    }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '8px' }}>
+        <div>
+          <div style={{ fontWeight: '600', fontSize: '14px', color: color }}>
+            {annotation.className}
+          </div>
+          <div style={{ fontSize: '12px', color: '#6b7280', marginTop: '2px' }}>
+            {annotation.source === 'ai' ? '🤖 AI Detection' : '👤 Manual'}
+            {' · '}
+            {Math.round(annotation.confidence * 100)}% confidence
+          </div>
+        </div>
+        <div style={{
+          fontSize: '11px',
+          color: '#6b7280',
+          background: 'white',
+          padding: '2px 6px',
+          borderRadius: '4px'
+        }}>
+          v{annotation.version}
+        </div>
+      </div>
+
+      <div style={{ fontSize: '12px', color: '#6b7280', marginBottom: '12px' }}>
+        BBox: ({Math.round(annotation.bbox.x1)}, {Math.round(annotation.bbox.y1)}) → 
+        ({Math.round(annotation.bbox.x2)}, {Math.round(annotation.bbox.y2)})
+      </div>
+
+      {annotation.source === 'ai' && annotation.actionType === 'created' && (
+        <div style={{ display: 'flex', gap: '8px' }}>
+          <button
+            onClick={onApprove}
+            style={{
+              flex: 1,
+              padding: '6px',
+              border: 'none',
+              borderRadius: '6px',
+              background: '#22c55e',
+              color: 'white',
+              fontSize: '12px',
+              fontWeight: '600',
+              cursor: 'pointer'
+            }}
+          >
+            ✓ Approve
+          </button>
+          <button
+            onClick={onReject}
+            style={{
+              flex: 1,
+              padding: '6px',
+              border: 'none',
+              borderRadius: '6px',
+              background: '#ef4444',
+              color: 'white',
+              fontSize: '12px',
+              fontWeight: '600',
+              cursor: 'pointer'
+            }}
+          >
+            ✗ Reject
+          </button>
+        </div>
+      )}
+
+      {annotation.source === 'human' && (
+        <button
+          onClick={onDelete}
+          style={{
+            width: '100%',
+            padding: '6px',
+            border: 'none',
+            borderRadius: '6px',
+            background: '#ef4444',
+            color: 'white',
+            fontSize: '12px',
+            fontWeight: '600',
+            cursor: 'pointer'
+          }}
+        >
+          🗑️ Delete
+        </button>
+      )}
+
+      {annotation.actionType === 'approved' && (
+        <div style={{
+          marginTop: '8px',
+          padding: '6px',
+          background: '#dcfce7',
+          color: '#16a34a',
+          borderRadius: '4px',
+          fontSize: '12px',
+          fontWeight: '600',
+          textAlign: 'center'
+        }}>
+          ✓ Approved
+        </div>
+      )}
+
+      {annotation.actionType === 'rejected' && (
+        <div style={{
+          marginTop: '8px',
+          padding: '6px',
+          background: '#fee2e2',
+          color: '#dc2626',
+          borderRadius: '4px',
+          fontSize: '12px',
+          fontWeight: '600',
+          textAlign: 'center'
+        }}>
+          ✗ Rejected
+        </div>
+      )}
+    </div>
+  );
+}

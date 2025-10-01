@@ -3,17 +3,23 @@ import { api } from './client';
 
 export type Inspection = {
   id: string;
-  inspectionNo: string;
+  inspectionNumber: string;  // Updated field name
   transformerId: string;
-  transformerCode: string;
-  branch: string;
-  inspectionDate: string;  // LocalDate as string
-  inspectionTime: string;  // LocalTime as string
-  maintenanceDate?: string | null;
-  maintenanceTime?: string | null;
-  status: 'IN_PROGRESS' | 'PENDING' | 'COMPLETED';
-  inspectedBy: string;
+  transformerCode?: string;
+  branch?: string;
+  baselineImageId?: string | null;
+  baselineImageUrl?: string | null;
+  inspectionImageId?: string | null;
+  inspectionImageUrl?: string | null;
+  originalInspectionImageId?: string | null;
+  originalInspectionImageUrl?: string | null;
+  weatherCondition?: 'SUNNY' | 'CLOUDY' | 'RAINY' | null;
+  status: 'PENDING' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED';
   notes?: string | null;
+  inspectedAt?: string | null;
+  inspectedBy?: string | null;
+  maintenanceDate?: string | null;
+  annotationCount?: number;
   createdAt: string;
   updatedAt: string;
 };
@@ -27,14 +33,10 @@ export type PageResp<T> = {
 };
 
 export type CreateInspectionBody = {
-  inspectionNo: string;
+  inspectionNumber: string;
   transformerId: string;
-  branch: string;
-  inspectionDate: string;
-  inspectionTime: string;
-  maintenanceDate?: string;
-  maintenanceTime?: string;
-  inspectedBy: string;
+  weatherCondition?: 'SUNNY' | 'CLOUDY' | 'RAINY';
+  inspectedBy?: string;
   notes?: string;
 };
 
@@ -64,9 +66,35 @@ export async function updateInspection(id: string, body: CreateInspectionBody) {
   });
 }
 
-export async function updateInspectionStatus(id: string, status: 'IN_PROGRESS' | 'PENDING' | 'COMPLETED') {
-  return api<Inspection>(`/api/inspections/${id}/status?status=${status}`, {
+export async function updateInspectionStatus(id: string, status: 'PENDING' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED') {
+  return api<Inspection>(`/api/inspections/${id}`, {
     method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ status }),
+  });
+}
+
+export async function uploadInspectionImage(id: string, imageId: string) {
+  return api<Inspection>(`/api/inspections/${id}/upload-image?imageId=${imageId}`, {
+    method: 'POST',
+  });
+}
+
+export async function uploadAnnotatedImage(id: string, imageId: string) {
+  return api<Inspection>(`/api/inspections/${id}/upload-annotated-image?imageId=${imageId}`, {
+    method: 'POST',
+  });
+}
+
+export async function detectAnomalies(id: string, confidenceThreshold: number = 0.25) {
+  return api<{ 
+    success: boolean; 
+    message: string; 
+    detectionCount: number;
+    detections?: any[];
+    processingTimeMs?: number;
+  }>(`/api/inspections/${id}/detect-anomalies?confidenceThreshold=${confidenceThreshold}`, {
+    method: 'POST',
   });
 }
 

@@ -5,6 +5,7 @@ import AnnotationCanvas from '../components/AnnotationCanvas';
 import AnnotationToolbar from '../components/AnnotationToolbar';
 import AnnotationLegend from '../components/AnnotationLegend';
 import NotesSection from '../components/NotesSection';
+import CommentsSection from '../components/CommentsSection';
 import FileDrop from '../components/FileDrop';
 import {
   getInspection,
@@ -651,6 +652,9 @@ export default function InspectionDetailNew() {
             initialNotes={inspection.notes || ''}
             onNotesUpdate={() => loadData()}
           />
+
+          {/* Comments Section */}
+          <CommentsSection inspectionId={inspection.id} />
 
           {/* Save Annotated Image Button */}
           {inspection.status !== 'COMPLETED' && annotations.length > 0 && (

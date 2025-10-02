@@ -76,7 +76,7 @@ export async function updateInspectionStatus(id: string, status: 'PENDING' | 'IN
 
 export async function updateInspectionNotes(id: string, notes: string) {
   return api<Inspection>(`/api/inspections/${id}`, {
-    method: 'PATCH',
+    method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ notes }),
   });

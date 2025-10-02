@@ -605,6 +605,9 @@ export default function InspectionDetailNew() {
               <span><strong>Draw:</strong> Click and drag to create</span>
             </div>
           </div>
+
+          {/* Comments Section */}
+          <CommentsSection inspectionId={inspection.id} />
         </div>
 
         {/* Right: Annotations List */}
@@ -652,9 +655,6 @@ export default function InspectionDetailNew() {
             initialNotes={inspection.notes || ''}
             onNotesUpdate={() => loadData()}
           />
-
-          {/* Comments Section */}
-          <CommentsSection inspectionId={inspection.id} />
 
           {/* Save Annotated Image Button */}
           {inspection.status !== 'COMPLETED' && annotations.length > 0 && (

@@ -14,7 +14,8 @@ import {
   uploadAnnotatedImage,
 } from '../api/inspections';
 import { getAnnotationsByInspection, saveAnnotation, approveAnnotation, rejectAnnotation, deleteAnnotation } from '../api/annotations';
-import { uploadImage } from '../api/images';
+import { uploadImage, listImages } from '../api/images';
+import type { ThermalImage } from '../api/images';
 import type { Inspection } from '../api/inspections';
 import type { Annotation } from '../api/annotations';
 
@@ -24,6 +25,7 @@ export default function InspectionDetailNew() {
 
   const [inspection, setInspection] = useState<Inspection | null>(null);
   const [annotations, setAnnotations] = useState<Annotation[]>([]);
+  const [baselineImage, setBaselineImage] = useState<ThermalImage | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
@@ -65,10 +67,42 @@ export default function InspectionDetailNew() {
       
       setInspection(inspectionData);
       setAnnotations(annotationsData);
+      
+      // Load baseline image for the transformer
+      if (inspectionData.transformerId) {
+        await loadBaselineImage(inspectionData.transformerId, inspectionData.weatherCondition);
+      }
     } catch (e: any) {
       setError(e?.message || 'Failed to load data');
     } finally {
       setLoading(false);
+    }
+  }
+  
+  async function loadBaselineImage(transformerId: string, weatherCondition?: string | null) {
+    try {
+      const response = await listImages({ transformerId, type: 'BASELINE', page: 0, size: 10 });
+      const baselineImages = response.content || [];
+      
+      // Try to find a baseline image matching the weather condition first
+      let selectedBaseline = null;
+      if (weatherCondition) {
+        selectedBaseline = baselineImages.find(img => 
+          img.envCondition === weatherCondition
+        );
+      }
+      
+      // If no matching weather condition, use the most recent baseline image
+      if (!selectedBaseline && baselineImages.length > 0) {
+        selectedBaseline = baselineImages.sort((a, b) => 
+          new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime()
+        )[0];
+      }
+      
+      setBaselineImage(selectedBaseline || null);
+    } catch (e: any) {
+      console.error('Failed to load baseline image:', e);
+      setBaselineImage(null);
     }
   }
 
@@ -79,9 +113,19 @@ export default function InspectionDetailNew() {
       setIsDetecting(true);
       const result = await detectAnomalies(id);
       
-      // Refresh annotations to show AI detections
-      const updatedAnnotations = await getAnnotationsByInspection(id);
+      // Refresh annotations, inspection data, and baseline image
+      const [updatedAnnotations, updatedInspection] = await Promise.all([
+        getAnnotationsByInspection(id),
+        getInspection(id)
+      ]);
+      
       setAnnotations(updatedAnnotations);
+      setInspection(updatedInspection);
+      
+      // Refresh baseline image as well
+      if (updatedInspection.transformerId) {
+        await loadBaselineImage(updatedInspection.transformerId, updatedInspection.weatherCondition);
+      }
       
       alert(`Detection complete! Found ${result.detectionCount || 0} anomalies.`);
     } catch (e: any) {
@@ -440,6 +484,27 @@ export default function InspectionDetailNew() {
           {inspection.status.replace('_', ' ')}
         </div>
       </div>
+
+      {/* Side-by-side Image Comparison */}
+      {(baselineImage || inspection.baselineImageUrl || inspection.inspectionImageUrl || inspection.originalInspectionImageUrl) && (
+        <div style={{ marginBottom: 24 }}>
+          <h3 style={{ margin: '0 0 16px 0', fontSize: '18px', fontWeight: '600', color: '#1f2937' }}>
+            Thermal Image Comparison
+          </h3>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+            <ImageBox 
+              title="Baseline" 
+              imageUrl={baselineImage?.publicUrl || inspection.baselineImageUrl}
+              timestamp={baselineImage?.uploadedAt}
+            />
+            <ImageBox 
+              title="Inspection" 
+              imageUrl={inspection.inspectionImageUrl || inspection.originalInspectionImageUrl}
+              timestamp={inspection.inspectedAt}
+            />
+          </div>
+        </div>
+      )}
 
       {/* Main Content */}
       <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '24px' }}>
@@ -848,6 +913,77 @@ function AnnotationCard({ annotation, onApprove, onReject, onDelete }: Annotatio
           ✗ Rejected
         </div>
       )}
+    </div>
+  );
+}
+
+// ImageBox component for side-by-side comparison
+function ImageBox({ title, imageUrl, timestamp }: { title: string; imageUrl: string | null | undefined; timestamp: string | null | undefined }) {
+  return (
+    <div style={{ 
+      background: '#fff', 
+      border: '1px solid #e5e7eb', 
+      borderRadius: 12, 
+      padding: 16,
+      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)'
+    }}>
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        alignItems: 'center',
+        marginBottom: 12 
+      }}>
+        <div style={{ 
+          fontWeight: 600, 
+          fontSize: '16px',
+          color: '#1f2937'
+        }}>
+          {title}
+        </div>
+        {timestamp && (
+          <div style={{ 
+            fontSize: 12, 
+            color: '#6b7280',
+            background: '#f3f4f6',
+            padding: '4px 8px',
+            borderRadius: '4px'
+          }}>
+            {new Date(timestamp).toLocaleString()}
+          </div>
+        )}
+      </div>
+      <div style={{ 
+        height: 280, 
+        display: 'flex', 
+        alignItems: 'center', 
+        justifyContent: 'center', 
+        background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', 
+        borderRadius: 8,
+        border: '2px solid #334155'
+      }}>
+        {imageUrl ? (
+          <img 
+            src={imageUrl} 
+            alt={`${title} thermal image`}
+            style={{ 
+              maxHeight: '100%', 
+              maxWidth: '100%', 
+              objectFit: 'contain',
+              borderRadius: '4px'
+            }} 
+          />
+        ) : (
+          <div style={{ 
+            color: '#94a3b8',
+            textAlign: 'center',
+            fontSize: '14px',
+            fontWeight: '500'
+          }}>
+            <div style={{ fontSize: '32px', marginBottom: '8px' }}>📷</div>
+            <div>No {title.toLowerCase()} image</div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

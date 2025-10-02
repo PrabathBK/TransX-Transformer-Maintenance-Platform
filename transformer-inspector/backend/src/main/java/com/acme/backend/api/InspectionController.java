@@ -54,11 +54,12 @@ public class InspectionController {
 
     /**
      * Get all inspections with pagination and search
-     * GET /api/inspections?page=0&size=10&q=search
+     * GET /api/inspections?page=0&size=10&q=search&transformerId=uuid
      */
     @GetMapping
     public ResponseEntity<Page<InspectionDTO>> getAllInspections(
             @RequestParam(defaultValue = "") String q,
+            @RequestParam(required = false) UUID transformerId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "createdAt") String sortBy,
@@ -67,7 +68,10 @@ public class InspectionController {
         Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
         
         Page<InspectionDTO> inspections;
-        if (q.trim().isEmpty()) {
+        if (transformerId != null) {
+            // Filter by transformer ID
+            inspections = inspectionService.getInspectionsByTransformerId(transformerId, pageable);
+        } else if (q.trim().isEmpty()) {
             inspections = inspectionService.getAllInspections(pageable);
         } else {
             inspections = inspectionService.searchInspections(q, pageable);
@@ -145,6 +149,32 @@ public class InspectionController {
         } catch (Exception e) {
             log.error("Error during anomaly detection: {}", e.getMessage(), e);
             throw new RuntimeException("Failed to detect anomalies: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Update inspection status
+     * PUT /api/inspections/{id}/status
+     */
+    @PutMapping("/{id}/status")
+    public ResponseEntity<InspectionDTO> updateInspectionStatus(
+            @PathVariable UUID id,
+            @RequestBody Map<String, Object> request
+    ) {
+        try {
+            String statusStr = (String) request.get("status");
+            if (statusStr == null) {
+                throw new RuntimeException("Status is required");
+            }
+            
+            Inspection.Status status = Inspection.Status.valueOf(statusStr);
+            log.info("Updating inspection {} status to: {}", id, status);
+            
+            InspectionDTO inspection = inspectionService.updateInspection(id, status, null);
+            return ResponseEntity.ok(inspection);
+        } catch (Exception e) {
+            log.error("Error updating inspection status: {}", e.getMessage(), e);
+            throw new RuntimeException("Failed to update inspection status: " + e.getMessage());
         }
     }
 

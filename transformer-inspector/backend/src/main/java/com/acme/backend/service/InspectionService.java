@@ -221,6 +221,14 @@ public class InspectionService {
     }
     
     /**
+     * Get inspections by transformer ID
+     */
+    @Transactional(readOnly = true)
+    public Page<InspectionDTO> getInspectionsByTransformerId(UUID transformerId, Pageable pageable) {
+        return inspectionRepo.findByTransformerId(transformerId, pageable).map(this::toDTO);
+    }
+    
+    /**
      * Get inspection by ID
      */
     @Transactional(readOnly = true)

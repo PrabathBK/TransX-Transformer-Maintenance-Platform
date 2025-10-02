@@ -42,11 +42,27 @@ export default function AnnotationCanvas({
   const stageRef = useRef<any>(null);
   const transformerRef = useRef<any>(null);
 
-  // Load image
+  // Load image and calculate initial scale
   useEffect(() => {
     const img = new window.Image();
     img.crossOrigin = 'anonymous';
-    img.onload = () => setImage(img);
+    img.onload = () => {
+      setImage(img);
+      
+      // Calculate scale to fit image in canvas
+      const stageWidth = 800;
+      const stageHeight = 600;
+      const scaleX = stageWidth / img.width;
+      const scaleY = stageHeight / img.height;
+      const fitScale = Math.min(scaleX, scaleY, 1); // Don't scale up small images
+      
+      // Center the image
+      const centerX = (stageWidth - img.width * fitScale) / 2;
+      const centerY = (stageHeight - img.height * fitScale) / 2;
+      
+      setScale(fitScale);
+      setStagePos({ x: centerX, y: centerY });
+    };
     img.onerror = () => console.error('Failed to load image');
     img.src = imageUrl;
   }, [imageUrl]);
@@ -140,9 +156,22 @@ export default function AnnotationCanvas({
   }, []);
   
   const resetView = useCallback(() => {
-    setScale(1);
-    setStagePos({ x: 0, y: 0 });
-  }, []);
+    if (!image) return;
+    
+    // Recalculate fit scale
+    const stageWidth = 800;
+    const stageHeight = 600;
+    const scaleX = stageWidth / image.width;
+    const scaleY = stageHeight / image.height;
+    const fitScale = Math.min(scaleX, scaleY, 1);
+    
+    // Center the image
+    const centerX = (stageWidth - image.width * fitScale) / 2;
+    const centerY = (stageHeight - image.height * fitScale) / 2;
+    
+    setScale(fitScale);
+    setStagePos({ x: centerX, y: centerY });
+  }, [image]);
 
   // Expose capture function to parent component when stage is ready
   useEffect(() => {

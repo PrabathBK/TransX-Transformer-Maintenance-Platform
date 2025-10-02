@@ -109,6 +109,12 @@ export default function InspectionDetailNew() {
   async function handleDetectAnomalies() {
     if (!id) return;
     
+    // Validate that inspection exists and has an image uploaded
+    if (!inspection || !inspection.inspectionImageId) {
+      alert('⚠️ Please upload an inspection image before detecting anomalies.');
+      return;
+    }
+    
     try {
       setIsDetecting(true);
       const result = await detectAnomalies(id);
@@ -127,7 +133,7 @@ export default function InspectionDetailNew() {
         await loadBaselineImage(updatedInspection.transformerId, updatedInspection.weatherCondition);
       }
       
-      alert(`Detection complete! Found ${result.detectionCount || 0} anomalies.`);
+      alert(`Detection complete! Found ${result.detections?.length || 0} anomalies.`);
     } catch (e: any) {
       alert('Detection failed: ' + (e?.message || 'Unknown error'));
     } finally {
@@ -230,7 +236,7 @@ export default function InspectionDetailNew() {
 
   async function handleReject(annotationId: string) {
     try {
-      await rejectAnnotation(annotationId, 'current-user@example.com');
+      await rejectAnnotation(annotationId, 'current-user@example.com', 'User rejected this annotation');
       await loadData();
     } catch (e: any) {
       alert('Failed to reject: ' + (e?.message || 'Unknown error'));

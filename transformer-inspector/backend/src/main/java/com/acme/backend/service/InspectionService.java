@@ -108,7 +108,7 @@ public class InspectionService {
     }
     
     /**
-     * Trigger anomaly detection on inspection image (Phase 2)
+     * Trigger anomaly detection on inspection image with baseline comparison (Phase 2)
      */
     public DetectionResponse detectAnomalies(UUID inspectionId, Double confidenceThreshold) {
         Inspection inspection = inspectionRepo.findById(inspectionId)
@@ -118,14 +118,57 @@ public class InspectionService {
             throw new RuntimeException("No inspection image uploaded");
         }
         
-        // Get absolute path to image file
-        String imagePath = getAbsoluteImagePath(inspection.getInspectionImage());
+        // Get absolute path to inspection image
+        String inspectionImagePath = getAbsoluteImagePath(inspection.getInspectionImage());
         
-        log.info("Triggering detection for inspection: {}, image: {}", 
-                inspection.getInspectionNumber(), imagePath);
+        // Try to find a baseline image for comparison
+        String baselineImagePath = null;
+        UUID transformerId = inspection.getTransformer().getId();
         
-        // Call ML service
-        DetectionResponse response = mlServiceClient.detectAnomalies(imagePath, confidenceThreshold);
+        if (transformerId != null) {
+            log.info("🔍 Looking for baseline images for transformer: {}", transformerId);
+            
+            // Get baseline images, prioritizing matching weather condition
+            Page<ThermalImage> baselineImages = thermalImageRepo.findByTransformerIdAndType(
+                transformerId, 
+                ThermalImage.Type.BASELINE, 
+                Pageable.ofSize(10)
+            );
+            
+            ThermalImage selectedBaseline = null;
+            
+            // Try to match weather condition first
+            if (inspection.getWeatherCondition() != null && baselineImages.hasContent()) {
+                selectedBaseline = baselineImages.getContent().stream()
+                    .filter(img -> inspection.getWeatherCondition().equals(img.getEnvCondition()))
+                    .findFirst()
+                    .orElse(null);
+                    
+                if (selectedBaseline != null) {
+                    log.info("✅ Found baseline with matching weather: {}", inspection.getWeatherCondition());
+                }
+            }
+            
+            // If no weather match, use most recent baseline
+            if (selectedBaseline == null && baselineImages.hasContent()) {
+                selectedBaseline = baselineImages.getContent().get(0);  // Most recent due to default ordering
+                log.info("📷 Using most recent baseline image (no weather match)");
+            }
+            
+            if (selectedBaseline != null) {
+                baselineImagePath = getAbsoluteImagePath(selectedBaseline);
+                log.info("🖼️ Selected baseline: {}", baselineImagePath);
+            } else {
+                log.warn("⚠️ No baseline images found for transformer: {}", transformerId);
+            }
+        }
+        
+        log.info("🚀 Triggering anomaly detection for inspection: {}", inspection.getInspectionNumber());
+        log.info("   Inspection image: {}", inspectionImagePath);
+        log.info("   Baseline image: {}", baselineImagePath != null ? baselineImagePath : "None");
+        
+        // Call ML service with both images
+        DetectionResponse response = mlServiceClient.detectAnomalies(inspectionImagePath, baselineImagePath, confidenceThreshold);
         
         // Save AI-generated annotations to database
         if (response.success() && response.detections() != null) {

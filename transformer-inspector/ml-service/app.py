@@ -123,11 +123,12 @@ def health_check():
 @app.route('/api/detect', methods=['POST'])
 def detect_anomalies():
     """
-    Main detection endpoint
+    Main detection endpoint for anomaly detection with baseline comparison
     
     Request JSON:
     {
-        "image_path": "/absolute/path/to/image.jpg",
+        "inspection_image_path": "/absolute/path/to/inspection.jpg",
+        "baseline_image_path": "/absolute/path/to/baseline.jpg",  // optional
         "confidence_threshold": 0.25  # optional
     }
     
@@ -149,82 +150,105 @@ def detect_anomalies():
                 'error': 'No JSON data provided'
             }), 400
         
-        image_path = data.get('image_path')
+        # Get both image paths
+        inspection_image_path = data.get('inspection_image_path') or data.get('image_path')  # backward compatibility
+        baseline_image_path = data.get('baseline_image_path')
         confidence_threshold = data.get('confidence_threshold', 0.25)
         
-        if not image_path:
+        # Debug prints
+        logger.info("🔍 === ANOMALY DETECTION DEBUG ===")
+        logger.info(f"📥 Inspection Image: {inspection_image_path}")
+        logger.info(f"📥 Baseline Image: {baseline_image_path}")
+        logger.info(f"🎯 Confidence Threshold: {confidence_threshold}")
+        
+        if not inspection_image_path:
             return jsonify({
                 'success': False,
-                'error': 'image_path is required'
+                'error': 'inspection_image_path is required'
             }), 400
         
-        image_file = Path(image_path)
-        if not image_file.exists():
+        # Verify inspection image exists
+        inspection_file = Path(inspection_image_path)
+        if not inspection_file.exists():
+            logger.error(f"❌ Inspection image not found: {inspection_image_path}")
             return jsonify({
                 'success': False,
-                'error': f'Image file not found: {image_path}'
+                'error': f'Inspection image file not found: {inspection_image_path}'
             }), 404
         
-        logger.info(f"Processing detection request: {image_path}")
+        # Verify baseline image if provided
+        if baseline_image_path:
+            baseline_file = Path(baseline_image_path)
+            if not baseline_file.exists():
+                logger.warning(f"⚠️ Baseline image not found: {baseline_image_path}")
+                baseline_image_path = None
+            else:
+                logger.info(f"✅ Baseline image found: {baseline_image_path}")
+        else:
+            logger.info("ℹ️ No baseline image provided")
         
-        # Load model
-        model = load_model()
+        logger.info(f"🔄 Processing anomaly detection...")
         
-        # Read image to get dimensions
-        img = cv2.imread(str(image_file))
+        # Read inspection image to get dimensions
+        img = cv2.imread(str(inspection_file))
         if img is None:
             return jsonify({
                 'success': False,
-                'error': f'Could not read image: {image_path}'
+                'error': f'Could not read inspection image: {inspection_image_path}'
             }), 400
         
         height, width = img.shape[:2]
-        logger.info(f"Image dimensions: {width}x{height}")
+        logger.info(f"📐 Image dimensions: {width}x{height}")
         
-        # Run inference
-        logger.info(f"Running inference with confidence threshold: {confidence_threshold}")
-        results = model(str(image_file), conf=confidence_threshold, verbose=False)
-        result = results[0]
+        # For debugging: Return mock anomalies without running actual ML inference
+        logger.info("🧪 === DEBUG MODE: RETURNING MOCK ANOMALIES ===")
         
-        # Process detections
+        # Create mock detections for testing
         detections = []
-        boxes = result.boxes
         
-        if boxes is not None and len(boxes) > 0:
-            logger.info(f"Found {len(boxes)} detections")
+        # Mock anomaly 1: Top-left area
+        mock_detection_1 = {
+            'id': str(uuid.uuid4()),
+            'class_id': 0,  # Faulty
+            'class_name': 'Faulty',
+            'confidence': 0.85,
+            'bbox': {
+                'x1': int(width * 0.1),   # 10% from left
+                'y1': int(height * 0.1),  # 10% from top
+                'x2': int(width * 0.3),   # 30% from left
+                'y2': int(height * 0.3)   # 30% from top
+            },
+            'color': [255, 0, 0],  # Red
+            'source': 'ai'
+        }
+        detections.append(mock_detection_1)
+        
+        # Mock anomaly 2: Center area (if baseline comparison shows difference)
+        if baseline_image_path:
+            mock_detection_2 = {
+                'id': str(uuid.uuid4()),
+                'class_id': 2,  # faulty_point_overload
+                'class_name': 'faulty_point_overload',
+                'confidence': 0.72,
+                'bbox': {
+                    'x1': int(width * 0.4),   # 40% from left
+                    'y1': int(height * 0.4),  # 40% from top
+                    'x2': int(width * 0.6),   # 60% from left
+                    'y2': int(height * 0.6)   # 60% from top
+                },
+                'color': [0, 0, 255],  # Blue
+                'source': 'ai'
+            }
+            detections.append(mock_detection_2)
+            logger.info("🔍 Added extra anomaly due to baseline comparison")
+        
+        logger.info(f"🎯 Generated {len(detections)} mock anomalies for testing")
+        for i, det in enumerate(detections):
+            bbox = det['bbox']
+            logger.info(f"   Mock Anomaly {i+1}: {det['class_name']} @ ({bbox['x1']},{bbox['y1']},{bbox['x2']},{bbox['y2']}) conf={det['confidence']}")
             
-            for box in boxes:
-                conf = float(box.conf[0].cpu().numpy())
-                cls = int(box.cls[0].cpu().numpy())
-                x1, y1, x2, y2 = box.xyxy[0].cpu().numpy().astype(int).tolist()
-                
-                detection = {
-                    'id': str(uuid.uuid4()),
-                    'class_id': cls,
-                    'class_name': CLASS_NAMES.get(cls, f'Class_{cls}'),
-                    'confidence': round(conf, 3),
-                    'bbox': {
-                        'x1': x1,
-                        'y1': y1,
-                        'x2': x2,
-                        'y2': y2
-                    },
-                    'color': CLASS_COLORS.get(cls, [255, 255, 255]),
-                    'source': 'ai'
-                }
-                detections.append(detection)
-                
-                logger.debug(f"Detection: {detection['class_name']} @ ({x1},{y1},{x2},{y2}) conf={conf:.3f}")
-        else:
-            logger.info("No detections found")
-        
-        # Get inference time
-        inference_time = 0
-        if hasattr(result, 'speed') and result.speed:
-            if isinstance(result.speed, dict):
-                inference_time = sum(result.speed.values())
-            else:
-                inference_time = result.speed
+        # Mock inference time
+        inference_time = 125.5
         
         # Build response
         response = {

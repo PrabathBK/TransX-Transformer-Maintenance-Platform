@@ -59,13 +59,20 @@ export async function saveAnnotation(body: SaveAnnotationRequest) {
 
 export async function approveAnnotation(id: string, userId: string) {
   return api<Annotation>(`/api/annotations/${id}/approve?userId=${encodeURIComponent(userId)}`, {
-    method: 'PUT',
+    method: 'POST',
   });
 }
 
-export async function rejectAnnotation(id: string, userId: string) {
-  return api<Annotation>(`/api/annotations/${id}/reject?userId=${encodeURIComponent(userId)}`, {
-    method: 'PUT',
+export async function rejectAnnotation(id: string, userId: string, reason: string = 'User rejected') {
+  return api<Annotation>(`/api/annotations/${id}/reject`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      userId: userId,
+      reason: reason
+    })
   });
 }
 

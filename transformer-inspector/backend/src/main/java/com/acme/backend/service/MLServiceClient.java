@@ -47,19 +47,40 @@ public class MLServiceClient {
     }
     
     /**
-     * Send image for anomaly detection
+     * Send image for anomaly detection (backward compatibility)
      * 
      * @param imagePath Absolute file path to the thermal image
      * @param confidenceThreshold Minimum confidence threshold (default 0.25)
      * @return DetectionResponse with bounding boxes and classifications
      */
     public DetectionResponse detectAnomalies(String imagePath, Double confidenceThreshold) {
+        return detectAnomalies(imagePath, null, confidenceThreshold);
+    }
+    
+    /**
+     * Send both baseline and inspection images for anomaly detection with comparison
+     * 
+     * @param inspectionImagePath Absolute file path to the inspection thermal image
+     * @param baselineImagePath Absolute file path to the baseline thermal image (optional)
+     * @param confidenceThreshold Minimum confidence threshold (default 0.25)
+     * @return DetectionResponse with bounding boxes and classifications
+     */
+    public DetectionResponse detectAnomalies(String inspectionImagePath, String baselineImagePath, Double confidenceThreshold) {
         try {
             String url = mlServiceUrl + "/api/detect";
             
-            // Prepare request payload
+            // Prepare request payload for both baseline and inspection images
             Map<String, Object> request = new HashMap<>();
-            request.put("image_path", imagePath);
+            request.put("inspection_image_path", inspectionImagePath);
+            if (baselineImagePath != null && !baselineImagePath.trim().isEmpty()) {
+                request.put("baseline_image_path", baselineImagePath);
+                log.info("🔍 Sending anomaly detection with baseline comparison");
+                log.info("   Inspection: {}", inspectionImagePath);
+                log.info("   Baseline: {}", baselineImagePath);
+            } else {
+                log.info("🔍 Sending anomaly detection without baseline");
+                log.info("   Inspection: {}", inspectionImagePath);
+            }
             request.put("confidence_threshold", confidenceThreshold != null ? confidenceThreshold : 0.25);
             
             // Set headers
@@ -67,8 +88,6 @@ public class MLServiceClient {
             headers.setContentType(MediaType.APPLICATION_JSON);
             
             HttpEntity<Map<String, Object>> entity = new HttpEntity<>(request, headers);
-            
-            log.info("Sending detection request to ML service: {}", imagePath);
             
             // Call ML service
             ResponseEntity<DetectionResponse> response = restTemplate.postForEntity(

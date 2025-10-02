@@ -96,11 +96,19 @@ export async function uploadAnnotatedImage(id: string, imageId: string) {
 
 export async function detectAnomalies(id: string, confidenceThreshold: number = 0.25) {
   return api<{ 
-    success: boolean; 
-    message: string; 
-    detectionCount: number;
-    detections?: any[];
-    processingTimeMs?: number;
+    success: boolean;
+    detections: Array<{
+      id: string;
+      classId: number;
+      className: string;
+      confidence: number;
+      bbox: {x1: number; y1: number; x2: number; y2: number};
+      color: number[];
+      source: string;
+    }>;
+    imageDimensions?: {width: number; height: number};
+    inferenceTimeMs?: number;
+    error?: string;
   }>(`/api/inspections/${id}/detect-anomalies?confidenceThreshold=${confidenceThreshold}`, {
     method: 'POST',
   });

@@ -108,6 +108,33 @@ public class InspectionService {
     }
     
     /**
+     * Remove inspection image from inspection (allows re-upload)
+     */
+    public InspectionDTO removeInspectionImage(UUID inspectionId) {
+        Inspection inspection = inspectionRepo.findById(inspectionId)
+                .orElseThrow(() -> new RuntimeException("Inspection not found"));
+        
+        if (inspection.getInspectionImage() == null) {
+            throw new RuntimeException("No inspection image to remove");
+        }
+        
+        // Clear the inspection image references
+        inspection.setInspectionImage(null);
+        inspection.setOriginalInspectionImage(null);
+        
+        // Reset status to PENDING since we removed the image
+        inspection.setStatus(Inspection.Status.PENDING);
+        
+        // Clear any existing annotations since they're tied to the removed image
+        annotationRepo.deleteByInspectionId(inspectionId);
+        
+        inspection = inspectionRepo.save(inspection);
+        log.info("Removed inspection image from inspection: {}", inspection.getInspectionNumber());
+        
+        return toDTO(inspection);
+    }
+    
+    /**
      * Trigger anomaly detection on inspection image with baseline comparison (Phase 2)
      */
     public DetectionResponse detectAnomalies(UUID inspectionId, Double confidenceThreshold) {

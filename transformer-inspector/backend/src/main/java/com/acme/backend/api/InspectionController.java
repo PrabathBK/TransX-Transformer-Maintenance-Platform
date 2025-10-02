@@ -134,6 +134,22 @@ public class InspectionController {
     }
 
     /**
+     * Remove inspection image from inspection (before detection)
+     * DELETE /api/inspections/{id}/inspection-image
+     */
+    @DeleteMapping("/{id}/inspection-image")
+    public ResponseEntity<InspectionDTO> removeInspectionImage(@PathVariable UUID id) {
+        try {
+            log.info("Removing inspection image from inspection: {}", id);
+            InspectionDTO inspection = inspectionService.removeInspectionImage(id);
+            return ResponseEntity.ok(inspection);
+        } catch (Exception e) {
+            log.error("Error removing inspection image: {}", e.getMessage(), e);
+            throw new RuntimeException("Failed to remove inspection image: " + e.getMessage());
+        }
+    }
+
+    /**
      * Trigger anomaly detection on inspection image (Phase 2 - FR2.1)
      * POST /api/inspections/{id}/detect-anomalies
      */

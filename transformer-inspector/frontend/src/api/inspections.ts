@@ -94,6 +94,12 @@ export async function uploadAnnotatedImage(id: string, imageId: string) {
   });
 }
 
+export async function removeInspectionImage(id: string) {
+  return api<Inspection>(`/api/inspections/${id}/inspection-image`, {
+    method: 'DELETE',
+  });
+}
+
 export async function detectAnomalies(id: string, confidenceThreshold: number = 0.25) {
   return api<{ 
     success: boolean;

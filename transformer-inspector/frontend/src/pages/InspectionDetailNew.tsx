@@ -13,6 +13,7 @@ import {
   uploadInspectionImage,
   updateInspectionStatus,
   uploadAnnotatedImage,
+  removeInspectionImage,
 } from '../api/inspections';
 import { getAnnotationsByInspection, saveAnnotation, approveAnnotation, rejectAnnotation, deleteAnnotation } from '../api/annotations';
 import { uploadImage, listImages } from '../api/images';
@@ -39,6 +40,7 @@ export default function InspectionDetailNew() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
+  const [removingImage, setRemovingImage] = useState(false);
   
   // Inspection completion state
   const [isCompleting, setIsCompleting] = useState(false);
@@ -295,6 +297,31 @@ export default function InspectionDetailNew() {
       setUploadError(e?.message || 'Upload failed');
     } finally {
       setUploading(false);
+    }
+  }
+
+  async function handleRemoveImage() {
+    if (!inspection) return;
+    
+    if (!window.confirm('Are you sure you want to remove the uploaded image? This will also clear any existing annotations.')) {
+      return;
+    }
+    
+    try {
+      setRemovingImage(true);
+      
+      // Remove image from inspection
+      await removeInspectionImage(inspection.id);
+      
+      // Reload inspection data to reflect changes
+      await loadData();
+      
+      alert('✅ Image removed successfully. You can now upload a new image.');
+    } catch (e: any) {
+      console.error('Error removing image:', e);
+      alert(`❌ Failed to remove image: ${e?.message || 'Unknown error'}`);
+    } finally {
+      setRemovingImage(false);
     }
   }
 
@@ -574,6 +601,58 @@ export default function InspectionDetailNew() {
                   ❌ {uploadError}
                 </div>
               )}
+            </div>
+          )}
+
+          {/* Remove Image Section - Show when image is uploaded but no annotations exist */}
+          {inspection.inspectionImageId && annotations.length === 0 && (
+            <div style={{
+              marginBottom: '16px',
+              padding: '16px',
+              background: '#fef3c7',
+              border: '1px solid #fbbf24',
+              borderRadius: '12px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+            }}>
+              <div>
+                <div style={{ color: '#92400e', fontWeight: '600', fontSize: '14px', marginBottom: '4px' }}>
+                  🖼️ Inspection Image Uploaded
+                </div>
+                <div style={{ color: '#a16207', fontSize: '13px' }}>
+                  Want to upload a different image? You can remove this one and upload a new one.
+                </div>
+              </div>
+              <button
+                onClick={handleRemoveImage}
+                disabled={removingImage}
+                style={{
+                  background: removingImage ? '#9ca3af' : '#dc2626',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '8px',
+                  padding: '8px 16px',
+                  fontSize: '13px',
+                  fontWeight: '600',
+                  cursor: removingImage ? 'not-allowed' : 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                }}
+              >
+                {removingImage ? (
+                  <>
+                    <span style={{ fontSize: '12px' }}>⏳</span>
+                    Removing...
+                  </>
+                ) : (
+                  <>
+                    <span style={{ fontSize: '12px' }}>🗑️</span>
+                    Remove Image
+                  </>
+                )}
+              </button>
             </div>
           )}
 

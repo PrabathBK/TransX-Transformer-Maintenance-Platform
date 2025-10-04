@@ -16,8 +16,6 @@
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
 --
-<<<<<<< Updated upstream
-=======
 -- Table structure for table `annotation_history`
 --
 
@@ -103,7 +101,6 @@ INSERT INTO `annotations` VALUES (_binary 'ÆÖºëuOQè6|\◊0X\ƒ',_binary 'lzAç
 UNLOCK TABLES;
 
 --
->>>>>>> Stashed changes
 -- Table structure for table `courses`
 --
 
@@ -160,6 +157,37 @@ LOCK TABLES `enrollments` WRITE;
 UNLOCK TABLES;
 
 --
+-- Table structure for table `inspection_comments`
+--
+
+DROP TABLE IF EXISTS `inspection_comments`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `inspection_comments` (
+  `id` binary(16) NOT NULL,
+  `inspection_id` binary(16) NOT NULL,
+  `comment_text` varchar(2048) NOT NULL,
+  `author` varchar(255) NOT NULL,
+  `created_at` timestamp(6) NULL DEFAULT CURRENT_TIMESTAMP(6),
+  `updated_at` timestamp(6) NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
+  PRIMARY KEY (`id`),
+  KEY `idx_inspection_comments_inspection_id` (`inspection_id`),
+  KEY `idx_inspection_comments_created_at` (`created_at`),
+  CONSTRAINT `inspection_comments_ibfk_1` FOREIGN KEY (`inspection_id`) REFERENCES `inspections` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `inspection_comments`
+--
+
+LOCK TABLES `inspection_comments` WRITE;
+/*!40000 ALTER TABLE `inspection_comments` DISABLE KEYS */;
+INSERT INTO `inspection_comments` VALUES (_binary '\‚Ñü\ƒVED°¥ë\◊X~',_binary '™\“ÔÖòäMIØy0ìWhT','2 Anomalies Detected','Prabath','2025-10-01 23:57:03.341024','2025-10-01 23:57:03.341030');
+/*!40000 ALTER TABLE `inspection_comments` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `inspections`
 --
 
@@ -168,20 +196,6 @@ DROP TABLE IF EXISTS `inspections`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `inspections` (
   `id` binary(16) NOT NULL,
-<<<<<<< Updated upstream
-  `branch` varchar(255) NOT NULL,
-  `created_at` datetime(6) DEFAULT NULL,
-  `inspected_by` varchar(255) NOT NULL,
-  `inspection_date` date NOT NULL,
-  `inspection_no` varchar(255) NOT NULL,
-  `inspection_time` time(6) NOT NULL,
-  `maintenance_date` date DEFAULT NULL,
-  `maintenance_time` time(6) DEFAULT NULL,
-  `notes` varchar(2048) DEFAULT NULL,
-  `status` enum('COMPLETED','IN_PROGRESS','PENDING') NOT NULL,
-  `updated_at` datetime(6) DEFAULT NULL,
-  `transformer_id` binary(16) NOT NULL,
-=======
   `inspection_number` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   `transformer_id` binary(16) NOT NULL,
   `baseline_image_id` binary(16) DEFAULT NULL,
@@ -196,11 +210,20 @@ CREATE TABLE `inspections` (
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `original_inspection_image_id` binary(16) DEFAULT NULL,
->>>>>>> Stashed changes
   PRIMARY KEY (`id`),
-  KEY `FKdd9p95vu842eqnl7na60jbupr` (`transformer_id`),
-  CONSTRAINT `FKdd9p95vu842eqnl7na60jbupr` FOREIGN KEY (`transformer_id`) REFERENCES `transformers` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+  UNIQUE KEY `inspection_number` (`inspection_number`),
+  KEY `baseline_image_id` (`baseline_image_id`),
+  KEY `inspection_image_id` (`inspection_image_id`),
+  KEY `idx_inspection_number` (`inspection_number`),
+  KEY `idx_transformer_id` (`transformer_id`),
+  KEY `idx_status` (`status`),
+  KEY `idx_inspected_at` (`inspected_at`),
+  KEY `idx_inspections_original_inspection_image_id` (`original_inspection_image_id`),
+  CONSTRAINT `fk_inspection_original_image` FOREIGN KEY (`original_inspection_image_id`) REFERENCES `thermal_images` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `inspections_ibfk_1` FOREIGN KEY (`transformer_id`) REFERENCES `transformers` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `inspections_ibfk_2` FOREIGN KEY (`baseline_image_id`) REFERENCES `thermal_images` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `inspections_ibfk_3` FOREIGN KEY (`inspection_image_id`) REFERENCES `thermal_images` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -209,11 +232,7 @@ CREATE TABLE `inspections` (
 
 LOCK TABLES `inspections` WRITE;
 /*!40000 ALTER TABLE `inspections` DISABLE KEYS */;
-<<<<<<< Updated upstream
-INSERT INTO `inspections` VALUES (_binary '[)ì3£iC(ç§¶´\·\‡Q\ ','Wilgamuwa','2025-08-27 10:34:31.060523','Prabath','2025-08-28','03','09:00:00.000000',NULL,NULL,NULL,'PENDING','2025-08-27 10:34:48.615428',_binary 'q®Éb8@C∫ÚZ(ZA∏'),(_binary 'âˇ\¬˚0@HÜöl11:Jg•','Nugegoda','2025-08-27 16:50:54.798912','Dinethra','2025-08-27','000654234','07:00:00.000000','2025-08-28','14:24:00.000000',NULL,'IN_PROGRESS','2025-08-27 16:50:54.798912',_binary '\"\ÍXB\Î^Dmál\‘,¡*Û\Ÿ');
-=======
 INSERT INTO `inspections` VALUES (_binary 'lzAçã6|êò∂\≈','INS-003',_binary 'Òö\À1\∆MÀÉ\ﬂ;â∫à\⁄;',NULL,_binary 'Ú\na8\◊OrÜ¶\Í\‡©~',NULL,'SUNNY','IN_PROGRESS',NULL,'dinethra','2025-10-03 00:01:59',NULL,'2025-10-03 00:01:59','2025-10-03 00:18:01',_binary '˙V\'%∞´M	¶Ü ë9y¢\»'),(_binary '™\“ÔÖòäMIØy0ìWhT','INS-001',_binary 'F\Îˇ¥ÙCí¥dr\–X/\‹8',NULL,_binary '\nê¢mzC©èª9ﬁü	',NULL,'SUNNY','COMPLETED','This is transformer 1 in the dataset','Prabath','2025-10-01 23:37:55',NULL,'2025-10-01 23:37:55','2025-10-02 06:49:39',_binary '\Ã7Å∑¯LK£úyë˙õ\ﬁÒ'),(_binary '\—V›üíª@êã®ŒòÜ¥Lº','INS-002',_binary '\\˝\€\‡ÄºBJΩ\Îà\‡Z˝µ',NULL,_binary 'î\›-`ÆN∏§\Î\Â@j',NULL,'CLOUDY','COMPLETED','This is transformer 10 in the data set','admin','2025-10-02 00:09:25',NULL,'2025-10-02 00:09:25','2025-10-02 00:35:10',_binary '?ß\Œh\ƒ\‘CD™†˙^êäΩr'),(_binary '\Ó\‚eM~@¥Òºiu\‡ßT','INS-004',_binary 'π}g¥A.Bƒ≠\ÏCWf{&z',NULL,NULL,NULL,'CLOUDY','PENDING','test 2','Dinethra','2025-10-02 06:50:57',NULL,'2025-10-02 06:50:57','2025-10-02 06:50:57',NULL);
->>>>>>> Stashed changes
 /*!40000 ALTER TABLE `inspections` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -251,11 +270,7 @@ CREATE TABLE `thermal_images` (
 
 LOCK TABLES `thermal_images` WRITE;
 /*!40000 ALTER TABLE `thermal_images` DISABLE KEYS */;
-<<<<<<< Updated upstream
-INSERT INTO `thermal_images` VALUES (_binary 'HôÙû\·ãC)ÖßE\Ô\ƒ\›\…\·','image/webp',NULL,'Screenshot-2023-12-12-174147.webp','http://localhost:8080/files/71a8831b-6238-4043-baf2-5a28035a41b8/inspection/b6636ac8-15c2-412e-baad-19ffc579d697_Screenshot-2023-12-12-174147.webp',73508,'b6636ac8-15c2-412e-baad-19ffc579d697_Screenshot-2023-12-12-174147.webp','INSPECTION','2025-08-27 10:34:45.458630','Prabath',_binary 'q®Éb8@C∫ÚZ(ZA∏',_binary '[)ì3£iC(ç§¶´\·\‡Q\ '),(_binary 'L∑ùãêJ π;<…ç4:p','image/webp','CLOUDY','250-kva-electric-transformer-500x500.jpeg.webp','http://localhost:8080/files/d822a5c4-da88-485b-9313-f040543d1bdd/baseline/e9a2b5e0-e7d0-4c6a-8276-dc1554e7ae45_250-kva-electric-transformer-500x500.jpeg.webp',15888,'e9a2b5e0-e7d0-4c6a-8276-dc1554e7ae45_250-kva-electric-transformer-500x500.jpeg.webp','BASELINE','2025-08-27 09:59:31.458943','admin',_binary '\ÿ\"•\ƒ⁄àH[ì@T=\›',NULL),(_binary '\\\‰Úî\‰˙Göö˝Ω¶\ŒOöu','image/jpeg','CLOUDY','images.jpeg','http://localhost:8080/files/22ea5842-eb5e-446d-876c-d42cc12af3d9/baseline/4878714c-df21-4698-b055-cc30eeada7ec_images.jpeg',6363,'4878714c-df21-4698-b055-cc30eeada7ec_images.jpeg','BASELINE','2025-08-27 16:47:08.241121','admin',_binary '\"\ÍXB\Î^Dmál\‘,¡*Û\Ÿ',NULL),(_binary 'Å\0≠;öD‘ú\ÕÒ¨\ÕW=','image/webp','SUNNY','250-kva-electric-transformer-500x500.jpeg.webp','http://localhost:8080/files/78ac221d-a96c-4334-821c-0456c521d2f9/baseline/dbf274d5-290c-4062-8cac-c2b20b4c55a0_250-kva-electric-transformer-500x500.jpeg.webp',15888,'dbf274d5-290c-4062-8cac-c2b20b4c55a0_250-kva-electric-transformer-500x500.jpeg.webp','BASELINE','2025-08-27 10:33:58.794901','admin',_binary 'x¨\"©lC4ÇV\≈!\“˘',NULL),(_binary '≠\Èi\Z†@±ã®9\◊7äæ','image/webp','CLOUDY','Screenshot-2023-12-12-174147.webp','http://localhost:8080/files/1b706c90-42cd-4e7c-8b7f-64eb15acbcd8/baseline/b71601cd-e000-48fd-b7b9-73f8c4c9968c_Screenshot-2023-12-12-174147.webp',73508,'b71601cd-e000-48fd-b7b9-73f8c4c9968c_Screenshot-2023-12-12-174147.webp','BASELINE','2025-08-27 09:59:17.104514','admin',_binary 'plêB\ÕN|ãd\Î¨º\ÿ',NULL),(_binary '∞<ı8\‡∑MçØ3.h•.\Ÿ\Á','image/jpeg',NULL,'ima.jpeg','http://localhost:8080/files/22ea5842-eb5e-446d-876c-d42cc12af3d9/inspection/058c6b48-c302-4ec4-86d0-0674c721e2c8_ima.jpeg',7494,'058c6b48-c302-4ec4-86d0-0674c721e2c8_ima.jpeg','INSPECTION','2025-08-27 16:51:41.022277','Dinethra',_binary '\"\ÍXB\Î^Dmál\‘,¡*Û\Ÿ',_binary 'âˇ\¬˚0@HÜöl11:Jg•'),(_binary 'º \Œ°æA*ö/n\◊}®','image/webp','CLOUDY','tran.webp','http://localhost:8080/files/22ea5842-eb5e-446d-876c-d42cc12af3d9/baseline/910f4287-7431-4ac0-b99a-edd887f25993_tran.webp',58736,'910f4287-7431-4ac0-b99a-edd887f25993_tran.webp','BASELINE','2025-08-27 16:47:40.048997','admin',_binary '\"\ÍXB\Î^Dmál\‘,¡*Û\Ÿ',NULL),(_binary '\◊a£\›9K∆ì*ªm6†´','image/webp','CLOUDY','4-benefits-of-an-isolation-transformer.jpg.webp','http://localhost:8080/files/71a8831b-6238-4043-baf2-5a28035a41b8/baseline/4a3bcbea-3933-4f8d-a8a7-be51210f4810_4-benefits-of-an-isolation-transformer.jpg.webp',106496,'4a3bcbea-3933-4f8d-a8a7-be51210f4810_4-benefits-of-an-isolation-transformer.jpg.webp','BASELINE','2025-08-27 10:33:45.346504','admin',_binary 'q®Éb8@C∫ÚZ(ZA∏',NULL);
-=======
 INSERT INTO `thermal_images` VALUES (_binary '\Í8‘ΩE¥ÇäImCΩÃ¶','image/png','SUNNY','T5_normal_001.png','http://localhost:8080/files/f19acb31-c613-4dcb-83df-3b89ba88da3b/baseline/8d3fd1ff-0c02-4d15-9b47-5df8a2d430c3_T5_normal_001.png',81998,'8d3fd1ff-0c02-4d15-9b47-5df8a2d430c3_T5_normal_001.png','BASELINE','2025-10-02 18:49:49.678565','admin',_binary 'Òö\À1\∆MÀÉ\ﬂ;â∫à\⁄;',NULL),(_binary '˚$T\≈H3≤6\Œ1ø\√\Á','image/jpeg','SUNNY','T1_normal_003.jpg','http://localhost:8080/files/46ebff1d-b4f4-4392-b464-72d0582fdc38/baseline/c17cd32a-49ca-4b74-8165-2bcfa02bde9e_T1_normal_003.jpg',27630,'c17cd32a-49ca-4b74-8165-2bcfa02bde9e_T1_normal_003.jpg','BASELINE','2025-10-02 05:06:53.377655','seed',_binary 'F\Îˇ¥ÙCí¥dr\–X/\‹8',NULL),(_binary '\nê¢mzC©èª9ﬁü	','image/png',NULL,'annotated_INS-001_1759407575077.png','http://localhost:8080/files/46ebff1d-b4f4-4392-b464-72d0582fdc38/inspection/73cb7cce-1296-469c-ada3-d40d10b82b0b_annotated_INS-001_1759407575077.png',460877,'73cb7cce-1296-469c-ada3-d40d10b82b0b_annotated_INS-001_1759407575077.png','INSPECTION','2025-10-02 12:19:35.162562','Prabath',_binary 'F\Îˇ¥ÙCí¥dr\–X/\‹8',_binary '™\“ÔÖòäMIØy0ìWhT'),(_binary '%’£1åKmÜa\”<\ÁGâI','image/jpeg','SUNNY','T7_normal_001.jpg','http://localhost:8080/files/b97d67b4-412e-42c4-adec-4357667b267a/baseline/2275d00e-b2a3-482f-89a8-f80c2fe43d21_T7_normal_001.jpg',398693,'2275d00e-b2a3-482f-89a8-f80c2fe43d21_T7_normal_001.jpg','BASELINE','2025-10-02 05:06:53.391896','seed',_binary 'π}g¥A.Bƒ≠\ÏCWf{&z',NULL),(_binary '\' õ\"•I\0Ω\‡≥`áö','image/png',NULL,'annotated_INS-001_1759382729668.png','http://localhost:8080/files/46ebff1d-b4f4-4392-b464-72d0582fdc38/inspection/37e7988d-761a-408b-b7bf-2c375bbef7e8_annotated_INS-001_1759382729668.png',432522,'37e7988d-761a-408b-b7bf-2c375bbef7e8_annotated_INS-001_1759382729668.png','INSPECTION','2025-10-02 05:25:29.743230','Prabath',_binary 'F\Îˇ¥ÙCí¥dr\–X/\‹8',_binary '™\“ÔÖòäMIØy0ìWhT'),(_binary '6\€\∆UNàM°ÙΩNP¡\‰','image/jpeg',NULL,'T10_faulty_001.jpg','http://localhost:8080/files/5cfddbe0-80bc-424a-bdeb-88e05afd1bb5/inspection/c4c2f607-3ca1-4aaf-9ed2-fefb53e560d8_T10_faulty_001.jpg',255567,'c4c2f607-3ca1-4aaf-9ed2-fefb53e560d8_T10_faulty_001.jpg','INSPECTION','2025-10-02 05:50:18.404554','admin',_binary '\\˝\€\‡ÄºBJΩ\Îà\‡Z˝µ',_binary '\—V›üíª@êã®ŒòÜ¥Lº'),(_binary '>\ÿ*^I≥I\r£d∑∑\ÿH','image/png',NULL,'annotated_INS-001_1759382826077.png','http://localhost:8080/files/46ebff1d-b4f4-4392-b464-72d0582fdc38/inspection/45e8b498-f03a-46b5-a2ce-a7fa0f1a5205_annotated_INS-001_1759382826077.png',432728,'45e8b498-f03a-46b5-a2ce-a7fa0f1a5205_annotated_INS-001_1759382826077.png','INSPECTION','2025-10-02 05:27:06.100715','Prabath',_binary 'F\Îˇ¥ÙCí¥dr\–X/\‹8',_binary '™\“ÔÖòäMIØy0ìWhT'),(_binary '?ß\Œh\ƒ\‘CD™†˙^êäΩr','image/jpeg',NULL,'T10_faulty_001.jpg','http://localhost:8080/files/5cfddbe0-80bc-424a-bdeb-88e05afd1bb5/inspection/c800fe50-121d-4049-b68b-cd680b9646df_T10_faulty_001.jpg',255567,'c800fe50-121d-4049-b68b-cd680b9646df_T10_faulty_001.jpg','INSPECTION','2025-10-02 05:59:35.650531','admin',_binary '\\˝\€\‡ÄºBJΩ\Îà\‡Z˝µ',_binary '\—V›üíª@êã®ŒòÜ¥Lº'),(_binary '@ím\ÈA•B\Ëõ\…{\…$1¿ë','image/png',NULL,'T3_normal_001.png','http://localhost:8080/files/5cfddbe0-80bc-424a-bdeb-88e05afd1bb5/inspection/30a989db-ca9a-4673-90c7-430cb45eb39c_T3_normal_001.png',56604,'30a989db-ca9a-4673-90c7-430cb45eb39c_T3_normal_001.png','INSPECTION','2025-10-02 05:52:52.431282','admin',_binary '\\˝\€\‡ÄºBJΩ\Îà\‡Z˝µ',_binary '\—V›üíª@êã®ŒòÜ¥Lº'),(_binary 'g∏éh§\ÕC?∑P}ŸîÉß','image/png',NULL,'annotated_INS-003_1759470021701.png','http://localhost:8080/files/f19acb31-c613-4dcb-83df-3b89ba88da3b/inspection/ad4dc80c-0c97-4613-aa5f-492c206e4f62_annotated_INS-003_1759470021701.png',304986,'ad4dc80c-0c97-4613-aa5f-492c206e4f62_annotated_INS-003_1759470021701.png','INSPECTION','2025-10-03 05:40:21.811879','dinethra',_binary 'Òö\À1\∆MÀÉ\ﬂ;â∫à\⁄;',_binary 'lzAçã6|êò∂\≈'),(_binary 'pû\ÍHA∏>L\œ\"\–\¬','image/jpeg',NULL,'T10_normal_002.jpg','http://localhost:8080/files/5cfddbe0-80bc-424a-bdeb-88e05afd1bb5/inspection/9f0d22b9-f85c-4bde-8e0a-38c616f549da_T10_normal_002.jpg',191755,'9f0d22b9-f85c-4bde-8e0a-38c616f549da_T10_normal_002.jpg','INSPECTION','2025-10-02 05:50:42.571918','admin',_binary '\\˝\€\‡ÄºBJΩ\Îà\‡Z˝µ',_binary '\—V›üíª@êã®ŒòÜ¥Lº'),(_binary 'w˘¢l£A≈ªIFÉG\‡\„','image/png',NULL,'annotated_INS-002_1759384804686.png','http://localhost:8080/files/5cfddbe0-80bc-424a-bdeb-88e05afd1bb5/inspection/f63cfa29-c0d4-4292-86d9-c1c5e201dd17_annotated_INS-002_1759384804686.png',260478,'f63cfa29-c0d4-4292-86d9-c1c5e201dd17_annotated_INS-002_1759384804686.png','INSPECTION','2025-10-02 06:00:04.726737','admin',_binary '\\˝\€\‡ÄºBJΩ\Îà\‡Z˝µ',_binary '\—V›üíª@êã®ŒòÜ¥Lº'),(_binary 'éáÅ1\–ONåK¥óáõH','image/png',NULL,'T4_normal_001.png','http://localhost:8080/files/5cfddbe0-80bc-424a-bdeb-88e05afd1bb5/inspection/37626f90-2d81-4670-9046-73e9da4d0b46_T4_normal_001.png',175980,'37626f90-2d81-4670-9046-73e9da4d0b46_T4_normal_001.png','INSPECTION','2025-10-02 05:52:37.832675','admin',_binary '\\˝\€\‡ÄºBJΩ\Îà\‡Z˝µ',_binary '\—V›üíª@êã®ŒòÜ¥Lº'),(_binary 'î\›-`ÆN∏§\Î\Â@j','image/png',NULL,'annotated_INS-002_1759385096751.png','http://localhost:8080/files/5cfddbe0-80bc-424a-bdeb-88e05afd1bb5/inspection/b53d1ba1-e391-47dc-877d-00775a3646ed_annotated_INS-002_1759385096751.png',260478,'b53d1ba1-e391-47dc-877d-00775a3646ed_annotated_INS-002_1759385096751.png','INSPECTION','2025-10-02 06:04:56.783291','admin',_binary '\\˝\€\‡ÄºBJΩ\Îà\‡Z˝µ',_binary '\—V›üíª@êã®ŒòÜ¥Lº'),(_binary 'ñy\Îf\ÀK •å\ÃS¡C','image/jpeg','SUNNY','T10_normal_002.jpg','http://localhost:8080/files/5cfddbe0-80bc-424a-bdeb-88e05afd1bb5/baseline/7b3a3858-0a42-4ef2-8955-6c12a6098f83_T10_normal_002.jpg',191755,'7b3a3858-0a42-4ef2-8955-6c12a6098f83_T10_normal_002.jpg','BASELINE','2025-10-02 05:06:53.373309','seed',_binary '\\˝\€\‡ÄºBJΩ\Îà\‡Z˝µ',NULL),(_binary 'Æ@\Ã\Ó5\"DQπØ\…OBGE\Õ','image/png',NULL,'annotated_INS-001_1759382789633.png','http://localhost:8080/files/46ebff1d-b4f4-4392-b464-72d0582fdc38/inspection/bbe03bd7-ae93-4402-baef-91a070d27104_annotated_INS-001_1759382789633.png',432728,'bbe03bd7-ae93-4402-baef-91a070d27104_annotated_INS-001_1759382789633.png','INSPECTION','2025-10-02 05:26:29.683698','Prabath',_binary 'F\Îˇ¥ÙCí¥dr\–X/\‹8',_binary '™\“ÔÖòäMIØy0ìWhT'),(_binary '∞\ÊÑ\ÍÛS@hëª}2\‰\—','image/png','SUNNY','T4_normal_001.png','http://localhost:8080/files/f8d6d18e-8567-4ca2-9312-72c72d07945a/baseline/7ef93914-b99a-4ad4-b63a-41e0897df367_T4_normal_001.png',175980,'7ef93914-b99a-4ad4-b63a-41e0897df367_T4_normal_001.png','BASELINE','2025-10-02 05:06:53.385630','seed',_binary '¯\÷—éÖgL¢ìr\«-îZ',NULL),(_binary '≥Ò≤2\œI6∞ãã\n\„3<E','image/jpeg',NULL,'T7_normal_001.jpg','http://localhost:8080/files/5cfddbe0-80bc-424a-bdeb-88e05afd1bb5/inspection/40d62d5b-046f-426a-831b-378e792b135d_T7_normal_001.jpg',398693,'40d62d5b-046f-426a-831b-378e792b135d_T7_normal_001.jpg','INSPECTION','2025-10-02 05:53:14.517094','admin',_binary '\\˝\€\‡ÄºBJΩ\Îà\‡Z˝µ',_binary '\—V›üíª@êã®ŒòÜ¥Lº'),(_binary 'µ∫YM}ZB∏†¥ÀÅ\◊Xh\Ó','image/jpeg',NULL,'T1_normal_003.jpg','http://localhost:8080/files/5cfddbe0-80bc-424a-bdeb-88e05afd1bb5/inspection/bb186aa7-a454-4dc9-9714-8d2f9ecbc454_T1_normal_003.jpg',27630,'bb186aa7-a454-4dc9-9714-8d2f9ecbc454_T1_normal_003.jpg','INSPECTION','2025-10-02 05:52:14.116198','admin',_binary '\\˝\€\‡ÄºBJΩ\Îà\‡Z˝µ',_binary '\—V›üíª@êã®ŒòÜ¥Lº'),(_binary '\≈û∫\ÈΩI\"∂:ç\0\r&ê\Í','image/png','SUNNY','Thermal-view-of-the-transformer-core-recorded-at-different-time.png','http://localhost:8080/files/f19acb31-c613-4dcb-83df-3b89ba88da3b/baseline/b8bc72c1-6501-4d94-b5c2-3ff08e23c488_Thermal-view-of-the-transformer-core-recorded-at-different-time.png',85359,'b8bc72c1-6501-4d94-b5c2-3ff08e23c488_Thermal-view-of-the-transformer-core-recorded-at-different-time.png','BASELINE','2025-10-02 11:26:30.858086','admin',_binary 'Òö\À1\∆MÀÉ\ﬂ;â∫à\⁄;',NULL),(_binary '\Ã7Å∑¯LK£úyë˙õ\ﬁÒ','image/jpeg',NULL,'T1_faulty_016.jpg','http://localhost:8080/files/46ebff1d-b4f4-4392-b464-72d0582fdc38/inspection/79b8adf1-bf93-4908-9289-8dc509163720_T1_faulty_016.jpg',32713,'79b8adf1-bf93-4908-9289-8dc509163720_T1_faulty_016.jpg','INSPECTION','2025-10-02 05:08:10.380515','Prabath',_binary 'F\Îˇ¥ÙCí¥dr\–X/\‹8',_binary '™\“ÔÖòäMIØy0ìWhT'),(_binary '\‰\nˇ\'nSK\‚ì%∫\‘5`\‰','image/jpeg',NULL,'T10_faulty_001.jpg','http://localhost:8080/files/5cfddbe0-80bc-424a-bdeb-88e05afd1bb5/inspection/a06efbea-ca0e-4d16-886c-0435304e2618_T10_faulty_001.jpg',255567,'a06efbea-ca0e-4d16-886c-0435304e2618_T10_faulty_001.jpg','INSPECTION','2025-10-02 05:39:42.298176','admin',_binary '\\˝\€\‡ÄºBJΩ\Îà\‡Z˝µ',_binary '\—V›üíª@êã®ŒòÜ¥Lº'),(_binary 'Ú\na8\◊OrÜ¶\Í\‡©~','image/png',NULL,'annotated_INS-003_1759470480727.png','http://localhost:8080/files/f19acb31-c613-4dcb-83df-3b89ba88da3b/inspection/432551ff-515d-4bfd-915c-1acda3939766_annotated_INS-003_1759470480727.png',305256,'432551ff-515d-4bfd-915c-1acda3939766_annotated_INS-003_1759470480727.png','INSPECTION','2025-10-03 05:48:00.798336','dinethra',_binary 'Òö\À1\∆MÀÉ\ﬂ;â∫à\⁄;',_binary 'lzAçã6|êò∂\≈'),(_binary 'ı¢z\\ﬂ´I(Ü¶ˆóDìu\√','image/png','SUNNY','T3_normal_001.png','http://localhost:8080/files/f19acb31-c613-4dcb-83df-3b89ba88da3b/baseline/354c30c9-7d9a-41a2-af17-4ec64ddc9342_T3_normal_001.png',56604,'354c30c9-7d9a-41a2-af17-4ec64ddc9342_T3_normal_001.png','BASELINE','2025-10-02 05:06:53.380115','seed',_binary 'Òö\À1\∆MÀÉ\ﬂ;â∫à\⁄;',NULL),(_binary '˙V\'%∞´M	¶Ü ë9y¢\»','image/png',NULL,'T5_faulty_001.png','http://localhost:8080/files/f19acb31-c613-4dcb-83df-3b89ba88da3b/inspection/b29c15ec-5bb5-48b2-b06b-dcb32e665c40_T5_faulty_001.png',249741,'b29c15ec-5bb5-48b2-b06b-dcb32e665c40_T5_faulty_001.png','INSPECTION','2025-10-03 05:32:34.024841','dinethra',_binary 'Òö\À1\∆MÀÉ\ﬂ;â∫à\⁄;',_binary 'lzAçã6|êò∂\≈');
->>>>>>> Stashed changes
 /*!40000 ALTER TABLE `thermal_images` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -288,7 +303,7 @@ CREATE TABLE `transformers` (
 
 LOCK TABLES `transformers` WRITE;
 /*!40000 ALTER TABLE `transformers` DISABLE KEYS */;
-INSERT INTO `transformers` VALUES (_binary 'plêB\ÕN|ãd\Î¨º\ÿ',300,'TX-003','2025-08-27 09:50:54.625260','Thannekumbura','Near the Bridge','EN-134','Kandy','Bulk','2025-08-27 09:50:54.625274'),(_binary '\"\ÍXB\Î^Dmál\‘,¡*Û\Ÿ',500,'TX-002','2025-08-27 16:46:12.202305','Piliyandala','junction','EN-122-9','Maharagama','Bulk','2025-08-27 16:46:21.498260'),(_binary 'q®Éb8@C∫ÚZ(ZA∏',350,'TX-005','2025-08-27 10:33:32.697239','Hettipola','Town','EN-177','Matale','Distribution','2025-08-27 10:33:32.697251'),(_binary 'x¨\"©lC4ÇV\≈!\“˘',400,'TX-001','2025-08-27 10:33:02.405830','Aralaganvila',NULL,'EN-125','Polonnaruwa','Bulk','2025-08-27 10:33:02.405841'),(_binary '\ÿ\"•\ƒ⁄àH[ì@T=\›',200,'TX-004','2025-08-27 09:52:03.740230','Kathukurunda',NULL,'EN-156','Kalutara','Bulk','2025-08-27 09:52:03.740265');
+INSERT INTO `transformers` VALUES (_binary 'F\Îˇ¥ÙCí¥dr\–X/\‹8',300,'TX-002','2025-10-02 05:06:53.350689','Hettipola','','EN-122-B','Matale','Distribution','2025-10-02 05:06:53.350694'),(_binary '\\˝\€\‡ÄºBJΩ\Îà\‡Z˝µ',500,'TX-001','2025-10-02 05:06:53.312342','Thannekumbura','Near substation','EN-122-A','Kandy','Bulk','2025-10-02 05:06:53.312355'),(_binary 'π}g¥A.Bƒ≠\ÏCWf{&z',250,'TX-005','2025-10-02 05:06:53.367212','Mahiyanganaya','','EN-125-A','Badulla','Bulk','2025-10-02 05:06:53.367216'),(_binary 'Òö\À1\∆MÀÉ\ﬂ;â∫à\⁄;',200,'TX-003','2025-10-02 05:06:53.355797','Kuliyapitiya','','EN-123-A','Kurunagala','Bulk','2025-10-02 05:06:53.355800'),(_binary '¯\÷—éÖgL¢ìr\«-îZ',400,'TX-004','2025-10-02 05:06:53.365039','Nugegoda','','EN-124-B','Colombo','Distribution','2025-10-02 05:06:53.365042');
 /*!40000 ALTER TABLE `transformers` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -329,8 +344,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
-<<<<<<< Updated upstream
--- Dump completed on 2025-08-27 22:23:46
-=======
 -- Dump completed on 2025-10-03 14:17:10
->>>>>>> Stashed changes

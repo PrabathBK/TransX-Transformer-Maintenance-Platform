@@ -1053,10 +1053,10 @@ interface AnnotationCardProps {
 
 function AnnotationCard({ annotation, onApprove, onReject, onDelete }: AnnotationCardProps) {
   const CLASS_COLORS: Record<string, string> = {
-    'Faulty': '#ef4444',
-    'faulty_loose_joint': '#22c55e',
-    'faulty_point_overload': '#3b82f6',
-    'potential_faulty': '#eab308',
+    'Faulty': '#ef4444',           // RED
+    'faulty_loose_joint': '#22c55e', // GREEN  
+    'faulty_point_overload': '#3b82f6', // BLUE
+    'potential_faulty': '#f59e0b',  // ORANGE/YELLOW
   };
 
   const color = CLASS_COLORS[annotation.className] || '#6b7280';

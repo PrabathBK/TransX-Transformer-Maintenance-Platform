@@ -325,7 +325,7 @@ def detect_anomalies():
                         
                         # Only include detections above threshold
                         if conf >= confidence_threshold:
-                            class_name = detection['class_name']
+                            class_name = detection.get('className', detection.get('class_name', 'unknown'))
                             bbox = detection['bbox']
                             
                             # Map class name to class ID
@@ -345,8 +345,8 @@ def detect_anomalies():
                             
                             detection_obj = {
                                 'id': str(uuid.uuid4()),
-                                'class_id': class_id,
-                                'class_name': CLASS_NAMES.get(class_id, class_name),
+                                'classId': class_id,
+                                'className': CLASS_NAMES.get(class_id, class_name),
                                 'confidence': round(conf, 3),
                                 'bbox': {
                                     'x1': bbox['x1'],
@@ -359,7 +359,7 @@ def detect_anomalies():
                             }
                             detections.append(detection_obj)
                             
-                            logger.info(f"✅ Detection: {detection_obj['class_name']} @ ({bbox['x1']},{bbox['y1']},{bbox['x2']},{bbox['y2']}) conf={conf:.3f}")
+                            logger.info(f"✅ Detection: {detection_obj['className']} @ ({bbox['x1']},{bbox['y1']},{bbox['x2']},{bbox['y2']}) conf={conf:.3f}")
                 
                 # Calculate inference time
                 inference_time = (time.time() - start_time) * 1000
@@ -425,8 +425,8 @@ def detect_anomalies():
                 
                 detection_obj = {
                     'id': str(uuid.uuid4()),
-                    'class_id': cls,
-                    'class_name': CLASS_NAMES.get(cls, f'Class_{cls}'),
+                    'classId': cls,
+                    'className': CLASS_NAMES.get(cls, f'Class_{cls}'),
                     'confidence': round(conf, 3),
                     'bbox': {
                         'x1': x1,
@@ -439,7 +439,7 @@ def detect_anomalies():
                 }
                 detections.append(detection_obj)
                 
-                logger.info(f"✅ Detection: {detection_obj['class_name']} @ ({x1},{y1},{x2},{y2}) conf={conf:.3f}")
+                logger.info(f"✅ Detection: {detection_obj['className']} @ ({x1},{y1},{x2},{y2}) conf={conf:.3f}")
         else:
             logger.info("ℹ️ No anomalies detected")
         

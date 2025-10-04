@@ -1,0 +1,18 @@
+{
+  "image_path": "/Users/prabathwijethilaka/Sem7/Software/TransX-Transformer-Maintenance-Platform/transformer-inspector/backend/uploads/46ebff1d-b4f4-4392-b464-72d0582fdc38/inspection/17c3c4d5-6a75-46d7-9673-a3a8f295db03_T10_faulty_001.jpg",
+  "confidence_threshold": 0.01,
+  "detections": [
+    {
+      "id": 1,
+      "confidence": 0.7122202515602112,
+      "class_id": 1,
+      "class_name": "faulty_loose_joint",
+      "bbox": [
+        1248,
+        783,
+        1317,
+        870
+      ]
+    }
+  ]
+}

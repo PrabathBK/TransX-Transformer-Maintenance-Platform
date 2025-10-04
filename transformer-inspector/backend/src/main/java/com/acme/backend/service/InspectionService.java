@@ -40,18 +40,21 @@ public class InspectionService {
     private final TransformerRepo transformerRepo;
     private final ThermalImageRepo thermalImageRepo;
     private final MLServiceClient mlServiceClient;
+    private final InspectionHistoryService historyService;
     
     public InspectionService(
             InspectionRepo inspectionRepo,
             AnnotationRepo annotationRepo,
             TransformerRepo transformerRepo,
             ThermalImageRepo thermalImageRepo,
-            MLServiceClient mlServiceClient) {
+            MLServiceClient mlServiceClient,
+            InspectionHistoryService historyService) {
         this.inspectionRepo = inspectionRepo;
         this.annotationRepo = annotationRepo;
         this.transformerRepo = transformerRepo;
         this.thermalImageRepo = thermalImageRepo;
         this.mlServiceClient = mlServiceClient;
+        this.historyService = historyService;
     }
     
     /**
@@ -76,7 +79,7 @@ public class InspectionService {
         inspection.setInspectedBy(request.inspectedBy());
         inspection.setInspectedAt(request.inspectedAt() != null ? request.inspectedAt() : Instant.now());
         inspection.setNotes(request.notes());
-        inspection.setStatus(Inspection.Status.PENDING);
+        inspection.setStatus(Inspection.Status.DRAFT);
         
         inspection = inspectionRepo.save(inspection);
         log.info("Created inspection: {}", inspection.getInspectionNumber());
@@ -122,8 +125,8 @@ public class InspectionService {
         inspection.setInspectionImage(null);
         inspection.setOriginalInspectionImage(null);
         
-        // Reset status to PENDING since we removed the image
-        inspection.setStatus(Inspection.Status.PENDING);
+        // Reset status to DRAFT since we removed the image
+        inspection.setStatus(Inspection.Status.DRAFT);
         
         // Clear any existing annotations since they're tied to the removed image
         annotationRepo.deleteByInspectionId(inspectionId);
@@ -206,9 +209,11 @@ public class InspectionService {
     }
     
     /**
-     * Save ML detection results as annotations
+     * Save ML detection results as annotations with box numbering and history tracking
      */
     private void saveDetectionsAsAnnotations(Inspection inspection, List<DetectionResponse.Detection> detections) {
+        List<Annotation> newAnnotations = new java.util.ArrayList<>();
+        
         for (DetectionResponse.Detection detection : detections) {
             Annotation annotation = new Annotation();
             annotation.setInspection(inspection);
@@ -224,10 +229,29 @@ public class InspectionService {
             annotation.setCreatedBy("AI-YOLOv8");
             annotation.setIsActive(true);
             
+            newAnnotations.add(annotation);
+        }
+        
+        // Assign box numbers to all new annotations
+        String inspectorName = inspection.getCurrentInspector() != null ? 
+                              inspection.getCurrentInspector() : "AI-System";
+        historyService.assignBoxNumbers(inspection.getId().toString(), newAnnotations, inspectorName);
+        
+        // Save all annotations
+        for (Annotation annotation : newAnnotations) {
             annotationRepo.save(annotation);
         }
         
-        log.info("Saved {} AI-generated annotations for inspection: {}", 
+        // Log AI detection run in history
+        java.util.Map<String, Object> metadata = new java.util.HashMap<>();
+        metadata.put("model_type", "YOLOv8p2");
+        metadata.put("total_detections", detections.size());
+        metadata.put("confidence_threshold", "user_specified");
+        
+        historyService.logAIDetectionRun(inspection.getId().toString(), inspectorName, 
+                                        newAnnotations, metadata);
+        
+        log.info("✅ Saved {} AI-generated annotations with box numbers for inspection: {}", 
                 detections.size(), inspection.getInspectionNumber());
     }
     
@@ -365,6 +389,7 @@ public class InspectionService {
                 inspection.getWeatherCondition(),
                 inspection.getStatus(),
                 inspection.getInspectedBy(),
+                inspection.getCurrentInspector(),  // Phase 3: Current inspector tracking
                 inspection.getInspectedAt(),
                 inspection.getMaintenanceDate(),
                 inspection.getNotes(),
@@ -372,5 +397,52 @@ public class InspectionService {
                 inspection.getCreatedAt(),
                 inspection.getUpdatedAt()
         );
+    }
+
+    /**
+     * Update current inspector for an inspection
+     */
+    @Transactional
+    public void updateCurrentInspector(String inspectionId, String inspectorName) {
+        log.info("👤 Updating current inspector for inspection {} to: {}", inspectionId, inspectorName);
+        
+        Inspection inspection = inspectionRepo.findById(UUID.fromString(inspectionId))
+                .orElseThrow(() -> new RuntimeException("Inspection not found: " + inspectionId));
+        
+        String previousInspector = inspection.getCurrentInspector();
+        inspection.setCurrentInspector(inspectorName);
+        inspectionRepo.save(inspection);
+        
+        log.info("✅ Inspector updated from {} to {}", previousInspector, inspectorName);
+    }
+
+    /**
+     * Complete an inspection and lock it for editing
+     */
+    @Transactional
+    public void completeInspection(String inspectionId, String completedBy) {
+        log.info("🏁 Completing inspection: {} by {}", inspectionId, completedBy);
+        
+        Inspection inspection = inspectionRepo.findById(UUID.fromString(inspectionId))
+                .orElseThrow(() -> new RuntimeException("Inspection not found: " + inspectionId));
+        
+        inspection.setStatus(Inspection.Status.COMPLETED);
+        inspection.setCompletedAt(Instant.now());
+        inspection.setCompletedBy(completedBy);
+        inspectionRepo.save(inspection);
+        
+        // Get statistics for history logging
+        List<Annotation> annotations = annotationRepo.findActiveByInspectionId(inspection.getId());
+        java.util.Map<String, Integer> classificationSummary = new java.util.HashMap<>();
+        
+        for (Annotation annotation : annotations) {
+            String className = annotation.getClassName() != null ? annotation.getClassName() : "Unknown";
+            classificationSummary.merge(className, 1, Integer::sum);
+        }
+        
+        historyService.logInspectionCompleted(inspectionId, completedBy, 
+                                            annotations.size(), classificationSummary);
+        
+        log.info("✅ Inspection completed with {} boxes", annotations.size());
     }
 }

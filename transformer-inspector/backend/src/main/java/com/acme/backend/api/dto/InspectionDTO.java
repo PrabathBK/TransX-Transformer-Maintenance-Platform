@@ -23,6 +23,7 @@ public record InspectionDTO(
         Inspection.WeatherCondition weatherCondition,
         Inspection.Status status,
         String inspectedBy,
+        String currentInspector,  // Phase 3: Current inspector tracking
         Instant inspectedAt,
         Instant maintenanceDate,
         String notes,

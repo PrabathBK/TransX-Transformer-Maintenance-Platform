@@ -16,8 +16,9 @@ import java.util.UUID;
 public class Inspection {
     
     public enum Status {
-        PENDING,
+        DRAFT,
         IN_PROGRESS,
+        UNDER_REVIEW,
         COMPLETED,
         CANCELLED
     }
@@ -69,10 +70,20 @@ public class Inspection {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private Status status = Status.PENDING;
+    private Status status = Status.DRAFT;
 
     @Column(name = "inspected_by")
     private String inspectedBy;
+
+    // Phase 3: Inspector history tracking
+    @Column(name = "current_inspector")
+    private String currentInspector;
+
+    @Column(name = "completed_at")
+    private Instant completedAt;
+
+    @Column(name = "completed_by")
+    private String completedBy;
 
     @Column(length = 2048)
     private String notes;
@@ -120,6 +131,15 @@ public class Inspection {
 
     public String getInspectedBy() { return inspectedBy; }
     public void setInspectedBy(String inspectedBy) { this.inspectedBy = inspectedBy; }
+
+    public String getCurrentInspector() { return currentInspector; }
+    public void setCurrentInspector(String currentInspector) { this.currentInspector = currentInspector; }
+
+    public Instant getCompletedAt() { return completedAt; }
+    public void setCompletedAt(Instant completedAt) { this.completedAt = completedAt; }
+
+    public String getCompletedBy() { return completedBy; }
+    public void setCompletedBy(String completedBy) { this.completedBy = completedBy; }
 
     public String getNotes() { return notes; }
     public void setNotes(String notes) { this.notes = notes; }

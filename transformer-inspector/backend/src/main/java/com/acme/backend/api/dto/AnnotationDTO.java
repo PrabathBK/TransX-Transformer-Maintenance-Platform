@@ -19,6 +19,7 @@ public record AnnotationDTO(
         BigDecimal confidence,
         Annotation.Source source,
         Annotation.ActionType actionType,
+        Integer boxNumber,
         String createdBy,
         Instant createdAt,
         String modifiedBy,

@@ -7,6 +7,7 @@ import AnnotationLegend from '../components/AnnotationLegend';
 import NotesSection from '../components/NotesSection';
 import CommentsSection from '../components/CommentsSection';
 import FileDrop from '../components/FileDrop';
+import InspectionHistoryList from '../components/InspectionHistoryList';
 import {
   getInspection,
   detectAnomalies,
@@ -53,6 +54,11 @@ export default function InspectionDetailNew() {
   // Threshold modal state
   const [showThresholdModal, setShowThresholdModal] = useState(false);
   const [threshold, setThreshold] = useState(50); // Default threshold value (0-100)
+  
+  // User access (always granted - will be handled by authentication later)
+  const canEdit = inspection?.status !== 'COMPLETED' && inspection?.status !== 'CANCELLED';
+
+
 
   // Load inspection and annotations
   useEffect(() => {
@@ -85,6 +91,10 @@ export default function InspectionDetailNew() {
       setLoading(false);
     }
   }
+
+
+
+
   
   async function loadBaselineImage(transformerId: string, weatherCondition?: string | null) {
     try {
@@ -325,7 +335,12 @@ export default function InspectionDetailNew() {
   async function handleRemoveImage() {
     if (!inspection) return;
     
-    if (!window.confirm('Are you sure you want to remove the uploaded image? This will also clear any existing annotations.')) {
+    const hasAnnotations = annotations.length > 0;
+    const confirmMessage = hasAnnotations 
+      ? `⚠️ Are you sure you want to remove the uploaded image?\n\nThis will permanently delete:\n• The current inspection image\n• All ${annotations.length} annotation${annotations.length > 1 ? 's' : ''}\n\nThis action cannot be undone.`
+      : 'Are you sure you want to remove the uploaded image? You can upload a new one afterwards.';
+    
+    if (!window.confirm(confirmMessage)) {
       return;
     }
     
@@ -338,7 +353,11 @@ export default function InspectionDetailNew() {
       // Reload inspection data to reflect changes
       await loadData();
       
-      alert('✅ Image removed successfully. You can now upload a new image.');
+      const successMessage = hasAnnotations
+        ? '✅ Image and all annotations removed successfully. You can now upload a new image.'
+        : '✅ Image removed successfully. You can now upload a new image.';
+      
+      alert(successMessage);
     } catch (e: any) {
       console.error('Error removing image:', e);
       alert(`❌ Failed to remove image: ${e?.message || 'Unknown error'}`);
@@ -541,7 +560,9 @@ export default function InspectionDetailNew() {
         </div>
       </div>
 
-      {/* Side-by-side Image Comparison */}
+      {/* Main content - always accessible */}
+      <>
+          {/* Side-by-side Image Comparison */}
       {(baselineImage || inspection.baselineImageUrl || inspection.inspectionImageUrl || inspection.originalInspectionImageUrl) && (
         <div style={{ marginBottom: 24 }}>
           <h3 style={{ margin: '0 0 16px 0', fontSize: '18px', fontWeight: '600', color: '#1f2937' }}>
@@ -626,24 +647,35 @@ export default function InspectionDetailNew() {
             </div>
           )}
 
-          {/* Remove Image Section - Show when image is uploaded but no annotations exist */}
-          {inspection.inspectionImageId && annotations.length === 0 && (
+          {/* Remove Image Section - Show when image is uploaded */}
+          {inspection.inspectionImageId && (
             <div style={{
               marginBottom: '16px',
               padding: '16px',
-              background: '#fef3c7',
-              border: '1px solid #fbbf24',
+              background: annotations.length > 0 ? '#fef2f2' : '#fef3c7',
+              border: `1px solid ${annotations.length > 0 ? '#fca5a5' : '#fbbf24'}`,
               borderRadius: '12px',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
             }}>
               <div>
-                <div style={{ color: '#92400e', fontWeight: '600', fontSize: '14px', marginBottom: '4px' }}>
+                <div style={{ 
+                  color: annotations.length > 0 ? '#dc2626' : '#92400e', 
+                  fontWeight: '600', 
+                  fontSize: '14px', 
+                  marginBottom: '4px' 
+                }}>
                   🖼️ Inspection Image Uploaded
                 </div>
-                <div style={{ color: '#a16207', fontSize: '13px' }}>
-                  Want to upload a different image? You can remove this one and upload a new one.
+                <div style={{ 
+                  color: annotations.length > 0 ? '#b91c1c' : '#a16207', 
+                  fontSize: '13px' 
+                }}>
+                  {annotations.length > 0 
+                    ? `⚠️ Warning: Removing this image will delete ${annotations.length} annotation${annotations.length > 1 ? 's' : ''}.`
+                    : 'Want to upload a different image? You can remove this one and upload a new one.'
+                  }
                 </div>
               </div>
               <button
@@ -1040,6 +1072,12 @@ export default function InspectionDetailNew() {
           </div>
         </div>
       )}
+
+          {/* Inspection History List */}
+          {inspection && (
+            <InspectionHistoryList inspectionId={inspection.id} />
+          )}
+        </>
     </div>
   );
 }

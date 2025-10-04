@@ -18,6 +18,7 @@ export type Annotation = {
   status: 'PENDING' | 'APPROVED' | 'REJECTED';
   actionType?: 'created' | 'edited' | 'approved' | 'rejected';
   version?: number;
+  boxNumber?: number;
   createdBy?: string;
   createdAt: string;
   modifiedBy?: string;

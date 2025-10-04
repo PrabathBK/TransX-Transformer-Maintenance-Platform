@@ -61,6 +61,10 @@ public class Annotation {
     @Column(name = "class_name", length = 50)
     private String className;
     
+    // Box numbering for history tracking (Phase 3)
+    @Column(name = "box_number")
+    private Integer boxNumber;
+    
     @Column(precision = 5, scale = 3)
     private BigDecimal confidence;
     
@@ -76,6 +80,10 @@ public class Annotation {
     // User tracking
     @Column(name = "created_by", length = 100)
     private String createdBy;
+    
+    // Current inspector working on this annotation (Phase 3)
+    @Column(name = "current_inspector", length = 255)
+    private String currentInspector;
     
     @CreationTimestamp
     @Column(name = "created_at")
@@ -171,6 +179,14 @@ public class Annotation {
         this.className = className;
     }
 
+    public Integer getBoxNumber() {
+        return boxNumber;
+    }
+
+    public void setBoxNumber(Integer boxNumber) {
+        this.boxNumber = boxNumber;
+    }
+
     public BigDecimal getConfidence() {
         return confidence;
     }
@@ -201,6 +217,14 @@ public class Annotation {
 
     public void setCreatedBy(String createdBy) {
         this.createdBy = createdBy;
+    }
+
+    public String getCurrentInspector() {
+        return currentInspector;
+    }
+
+    public void setCurrentInspector(String currentInspector) {
+        this.currentInspector = currentInspector;
     }
 
     public Instant getCreatedAt() {
@@ -260,9 +284,11 @@ public class Annotation {
         newVersion.setBboxY2(this.bboxY2);
         newVersion.setClassId(this.classId);
         newVersion.setClassName(this.className);
+        newVersion.setBoxNumber(this.boxNumber);
         newVersion.setConfidence(this.confidence);
         newVersion.setSource(this.source);
         newVersion.setComments(this.comments);
+        newVersion.setCurrentInspector(this.currentInspector);
         newVersion.setParentAnnotation(this);
         newVersion.setIsActive(true);
         return newVersion;

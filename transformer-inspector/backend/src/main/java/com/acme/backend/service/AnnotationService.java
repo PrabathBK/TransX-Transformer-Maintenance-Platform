@@ -45,6 +45,36 @@ public class AnnotationService {
     }
     
     /**
+     * Get user name with fallback to default
+     */
+    private String getUserName(String userId) {
+        if (userId == null || userId.trim().isEmpty()) {
+            return "User"; // Default user name until authentication is implemented
+        }
+        return userId;
+    }
+
+    /**
+     * Get the next available box number for an inspection
+     */
+    private Integer getNextBoxNumber(UUID inspectionId) {
+        List<Annotation> existingAnnotations = annotationRepo.findActiveByInspectionId(inspectionId);
+        
+        if (existingAnnotations.isEmpty()) {
+            return 1;
+        }
+        
+        // Find the highest existing box number
+        Integer maxBoxNumber = existingAnnotations.stream()
+                .map(Annotation::getBoxNumber)
+                .filter(Objects::nonNull)
+                .max(Integer::compareTo)
+                .orElse(0);
+                
+        return maxBoxNumber + 1;
+    }
+
+    /**
      * Create or update annotation (Phase 3)
      */
     public AnnotationDTO saveAnnotation(SaveAnnotationRequest request) {
@@ -65,7 +95,7 @@ public class AnnotationService {
             // Create new version
             annotation = existing.createNewVersion();
             annotation.setActionType(Annotation.ActionType.edited);
-            annotation.setModifiedBy(request.userId());
+            annotation.setModifiedBy(getUserName(request.userId()));
             annotation.setModifiedAt(Instant.now());
             
             log.info("Creating new version {} of annotation {}", 
@@ -75,10 +105,15 @@ public class AnnotationService {
             annotation = new Annotation();
             annotation.setInspection(inspection);
             annotation.setActionType(Annotation.ActionType.created);
-            annotation.setCreatedBy(request.userId());
+            annotation.setCreatedBy(getUserName(request.userId()));
             annotation.setIsActive(true);
             
-            log.info("Creating new annotation for inspection {}", inspection.getInspectionNumber());
+            // Assign next box number for this inspection
+            Integer nextBoxNumber = getNextBoxNumber(inspection.getId());
+            annotation.setBoxNumber(nextBoxNumber);
+            
+            log.info("Creating new annotation for inspection {} with box number {}", 
+                    inspection.getInspectionNumber(), nextBoxNumber);
         }
         
         // Set bounding box
@@ -106,13 +141,14 @@ public class AnnotationService {
                 .orElseThrow(() -> new RuntimeException("Annotation not found"));
         
         // Create a "deleted" version
+        String userName = getUserName(userId);
         annotation.setIsActive(false);
         annotation.setActionType(Annotation.ActionType.deleted);
-        annotation.setModifiedBy(userId);
+        annotation.setModifiedBy(userName);
         annotation.setModifiedAt(Instant.now());
         
         annotationRepo.save(annotation);
-        log.info("Marked annotation {} as deleted by {}", annotationId, userId);
+        log.info("Marked annotation {} as deleted by {}", annotationId, userName);
     }
     
     /**
@@ -123,7 +159,7 @@ public class AnnotationService {
                 .orElseThrow(() -> new RuntimeException("Annotation not found"));
         
         annotation.setActionType(Annotation.ActionType.approved);
-        annotation.setModifiedBy(userId);
+        annotation.setModifiedBy(getUserName(userId));
         annotation.setModifiedAt(Instant.now());
         
         annotation = annotationRepo.save(annotation);
@@ -138,7 +174,7 @@ public class AnnotationService {
                 .orElseThrow(() -> new RuntimeException("Annotation not found"));
         
         annotation.setActionType(Annotation.ActionType.rejected);
-        annotation.setModifiedBy(userId);
+        annotation.setModifiedBy(getUserName(userId));
         annotation.setModifiedAt(Instant.now());
         annotation.setComments(reason);
         annotation.setIsActive(false);
@@ -265,6 +301,7 @@ public class AnnotationService {
                 annotation.getConfidence(),
                 annotation.getSource(),
                 annotation.getActionType(),
+                annotation.getBoxNumber(),
                 annotation.getCreatedBy(),
                 annotation.getCreatedAt(),
                 annotation.getModifiedBy(),

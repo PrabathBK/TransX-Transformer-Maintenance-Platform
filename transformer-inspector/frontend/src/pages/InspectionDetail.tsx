@@ -84,7 +84,7 @@ export default function InspectionDetail() {
     }
   }
 
-  async function handleStatusUpdate(status: 'IN_PROGRESS' | 'PENDING' | 'COMPLETED') {
+  async function handleStatusUpdate(status: 'IN_PROGRESS' | 'DRAFT' | 'UNDER_REVIEW' | 'COMPLETED' | 'CANCELLED') {
     if (!inspection) return;
 
     try {
@@ -211,9 +211,11 @@ export default function InspectionDetail() {
                       fontSize: 14
                     }}
                   >
+                    <option value="DRAFT">Draft</option>
                     <option value="IN_PROGRESS">In Progress</option>
-                    <option value="PENDING">Pending</option>
+                    <option value="UNDER_REVIEW">Under Review</option>
                     <option value="COMPLETED">Completed</option>
+                    <option value="CANCELLED">Cancelled</option>
                   </select>
                 </div>
               </div>

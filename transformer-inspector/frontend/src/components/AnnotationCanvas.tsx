@@ -1,6 +1,6 @@
 // src/components/AnnotationCanvas.tsx
-import { useEffect, useRef, useState, useCallback } from 'react';
-import { Stage, Layer, Image as KonvaImage, Rect, Transformer } from 'react-konva';
+import { useEffect, useRef, useState, useCallback, Fragment } from 'react';
+import { Stage, Layer, Image as KonvaImage, Rect, Transformer, Text, Circle } from 'react-konva';
 import type { Annotation } from '../api/annotations';
 
 interface AnnotationCanvasProps {
@@ -344,24 +344,51 @@ export default function AnnotationCanvas({
             const width = x2 - x1;
             const height = y2 - y1;
             const color = CLASS_COLORS[annotation.className] || '#ef4444';
+            const boxNumber = annotation.boxNumber || '?';
 
             return (
-              <Rect
-                key={annotation.id}
-                id={annotation.id}
-                x={x1}
-                y={y1}
-                width={width}
-                height={height}
-                stroke={color}
-                strokeWidth={3}
-                fill={selectedId === annotation.id ? `${color}33` : 'transparent'}
-                draggable={mode === 'edit'}
-                onClick={() => handleBoxClick(annotation.id)}
-                onTap={() => handleBoxClick(annotation.id)}
-                onDragEnd={(e) => handleBoxDragEnd(annotation, e)}
-                onTransformEnd={(e) => handleBoxTransform(annotation, e)}
-              />
+              <Fragment key={annotation.id}>
+                {/* Main bounding box */}
+                <Rect
+                  id={annotation.id}
+                  x={x1}
+                  y={y1}
+                  width={width}
+                  height={height}
+                  stroke={color}
+                  strokeWidth={3}
+                  fill={selectedId === annotation.id ? `${color}33` : 'transparent'}
+                  draggable={mode === 'edit'}
+                  onClick={() => handleBoxClick(annotation.id)}
+                  onTap={() => handleBoxClick(annotation.id)}
+                  onDragEnd={(e) => handleBoxDragEnd(annotation, e)}
+                  onTransformEnd={(e) => handleBoxTransform(annotation, e)}
+                />
+                
+                {/* Box number label with background circle */}
+                <Circle
+                  x={x1 + 15}
+                  y={y1 + 15}
+                  radius={12}
+                  fill={color}
+                  stroke="white"
+                  strokeWidth={1}
+                />
+                
+                {/* Box number text */}
+                <Text
+                  x={x1 + 15}
+                  y={y1 + 15}
+                  text={boxNumber.toString()}
+                  fontSize={10}
+                  fontWeight="bold"
+                  fill="white"
+                  align="center"
+                  verticalAlign="middle"
+                  offsetX={4} // Half the estimated text width for centering
+                  offsetY={5} // Half the font size for vertical centering
+                />
+              </Fragment>
             );
           })}
 

@@ -14,10 +14,14 @@ export type Inspection = {
   originalInspectionImageId?: string | null;
   originalInspectionImageUrl?: string | null;
   weatherCondition?: 'SUNNY' | 'CLOUDY' | 'RAINY' | null;
-  status: 'PENDING' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED';
+  status: 'DRAFT' | 'IN_PROGRESS' | 'UNDER_REVIEW' | 'COMPLETED' | 'CANCELLED';
   notes?: string | null;
   inspectedAt?: string | null;
   inspectedBy?: string | null;
+  inspector?: {
+    id: string;
+    name: string;
+  } | null;
   maintenanceDate?: string | null;
   annotationCount?: number;
   createdAt: string;
@@ -66,7 +70,7 @@ export async function updateInspection(id: string, body: CreateInspectionBody) {
   });
 }
 
-export async function updateInspectionStatus(id: string, status: 'PENDING' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED') {
+export async function updateInspectionStatus(id: string, status: 'DRAFT' | 'IN_PROGRESS' | 'UNDER_REVIEW' | 'COMPLETED' | 'CANCELLED') {
   return api<Inspection>(`/api/inspections/${id}/status`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },

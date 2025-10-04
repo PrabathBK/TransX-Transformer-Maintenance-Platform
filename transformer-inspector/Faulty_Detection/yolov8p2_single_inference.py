@@ -17,7 +17,7 @@ def run_yolov8p2_inference(image_path):
     
     # Check if image exists
     if not os.path.exists(image_path):
-        print(f"Image not found: {image_path}")
+        print(f"❌ Image not found: {image_path}")
         return
     
     # Look for YOLOv8p2 trained models
@@ -38,12 +38,12 @@ def run_yolov8p2_inference(image_path):
             break
     
     if model_path is None:
-        print(f"No YOLOv8p2 model found! Searched in:")
+        print(f"❌ No YOLOv8p2 model found! Searched in:")
         for path in model_paths:
             print(f"   - {path}")
         return
     
-    print(f"Model: {model_path}")
+    print(f"📦 Model: {model_path}")
     
     try:
         # Import required packages
@@ -64,15 +64,15 @@ def run_yolov8p2_inference(image_path):
         torch.load = patched_torch_load
         
         # Load YOLOv8p2 model
-        print("Loading YOLOv8p2 model...")
+        print("🔄 Loading YOLOv8p2 model...")
         model = YOLO(model_path)
         
         # Check if this is a custom trained model or pretrained
         if "runs/detect" in model_path:
-            print("Using custom trained YOLOv8p2 model")
+            print("🎯 Using custom trained YOLOv8p2 model")
             class_names = ['Faulty', 'faulty_loose_joint', 'faulty_point_overload', 'potential_faulty']
         else:
-            print("Using pretrained YOLOv8p2 model (COCO dataset)")
+            print("🎯 Using pretrained YOLOv8p2 model (COCO dataset)")
             class_names = model.names
         
         # Create output directory
@@ -80,14 +80,14 @@ def run_yolov8p2_inference(image_path):
         output_dir.mkdir(exist_ok=True)
         
         # Run inference
-        print("Running YOLOv8p2 inference...")
+        print("🎯 Running YOLOv8p2 inference...")
         results = model(image_path, conf=0.25, save=False)  # Don't save automatically
         
         # Parse results
         result = results[0]
         boxes = result.boxes
         
-        print(f"\n Inference completed!")
+        print(f"\n✅ Inference completed!")
         
         if boxes is not None and len(boxes) > 0:
             # First, collect all detections with their details
@@ -129,16 +129,16 @@ def run_yolov8p2_inference(image_path):
                 avg_distance = sum(distances) / len(distances) if distances else 0
                 max_distance = max(distances) if distances else 0
                 
-                print(f"Distance analysis: avg={avg_distance:.1f}, max={max_distance:.1f}")
+                print(f"   📏 Distance analysis: avg={avg_distance:.1f}, max={max_distance:.1f}")
                 
                 if avg_distance < 100 and max_distance < 150:
-                    print(f"Found {len(detections)} detections, showing top 3 (clustered close together):")
+                    print(f"🎯 Found {len(detections)} detections, showing top 3 (clustered close together):")
                     final_detections = detections[:3]
                 else:
-                    print(f"Found {len(detections)} detections (spread apart, showing all):")
+                    print(f"🎯 Found {len(detections)} detections (spread apart, showing all):")
                     final_detections = detections
             else:
-                print(f"Found {len(detections)} detections:")
+                print(f"🎯 Found {len(detections)} detections:")
                 final_detections = detections
             
             # Display the filtered detections
@@ -157,11 +157,11 @@ def run_yolov8p2_inference(image_path):
                 width = x2 - x1
                 height = y2 - y1
                 
-                print(f"   Detection {i}:")
-                print(f"      Class: {class_name}")
-                print(f"      Confidence: {conf:.3f}")
-                print(f"      Bounding Box: [{x1}, {y1}, {x2}, {y2}]")
-                print(f"      Size: {width}x{height} pixels")
+                print(f"   🔸 Detection {i}:")
+                print(f"      📋 Class: {class_name}")
+                print(f"      📊 Confidence: {conf:.3f}")
+                print(f"      📍 Bounding Box: [{x1}, {y1}, {x2}, {y2}]")
+                print(f"      📏 Size: {width}x{height} pixels")
             
             # Create custom annotated image with only filtered detections
             img = cv2.imread(image_path)
@@ -213,37 +213,37 @@ def run_yolov8p2_inference(image_path):
                 output_path = output_dir / "predict" / f"annotated_{Path(image_path).name}"
                 output_path.parent.mkdir(parents=True, exist_ok=True)
                 cv2.imwrite(str(output_path), img)
-                print(f"\n Filtered annotated image saved to: {output_path}")
+                print(f"\n💾 Filtered annotated image saved to: {output_path}")
             else:
-                print(f"\n Could not load image for annotation: {image_path}")
+                print(f"\n❌ Could not load image for annotation: {image_path}")
                 
         else:
-            print(f"   No detections found")
+            print(f"   ℹ️  No detections found")
         
-        print(f"\n Results saved to: {output_dir}/predict/")
-        print("  Check the output image with bounding boxes!")
+        print(f"\n💾 Results saved to: {output_dir}/predict/")
+        print("🖼️  Check the output image with bounding boxes!")
         
         # Display inference speed
         if hasattr(result, 'speed'):
             speed = result.speed
             total_time = sum(speed.values()) if isinstance(speed, dict) else speed
-            print(f"Inference speed: {total_time:.1f}ms")
+            print(f"⚡ Inference speed: {total_time:.1f}ms")
         
         # Additional model info
-        print(f"\n Model Information:")
-        print(f"   Model type: YOLOv8p2")
-        print(f"   Input size: {result.orig_shape}")
+        print(f"\n📊 Model Information:")
+        print(f"   🏷️  Model type: YOLOv8p2")
+        print(f"   📏 Input size: {result.orig_shape}")
         if hasattr(model, 'model') and hasattr(model.model, 'yaml'):
             yaml_info = model.model.yaml
             if 'nc' in yaml_info:
-                print(f"   Number of classes: {yaml_info['nc']}")
+                print(f"   🎯 Number of classes: {yaml_info['nc']}")
         
     except ImportError as e:
-        print(f"Import error: {e}")
-        print("Make sure ultralytics and torch are installed:")
+        print(f"❌ Import error: {e}")
+        print("💡 Make sure ultralytics and torch are installed:")
         print("   pip install ultralytics torch torchvision")
     except Exception as e:
-        print(f"Error during YOLOv8p2 inference: {e}")
+        print(f"❌ Error during YOLOv8p2 inference: {e}")
         import traceback
         traceback.print_exc()
 

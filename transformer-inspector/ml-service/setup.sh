@@ -2,7 +2,7 @@
 
 # TransX ML Service - Quick Start Script
 
-echo "Starting TransX ML Service Setup"
+echo "🚀 Starting TransX ML Service Setup"
 echo "===================================="
 
 # Check Python version
@@ -28,14 +28,14 @@ pip install -r requirements.txt
 # Check model file
 echo "Checking for YOLOv8 model weights..."
 if [ -f "../Faulty_Detection/yolov8n.pt" ]; then
-    echo "Model file found: ../Faulty_Detection/yolov8n.pt"
+    echo "✅ Model file found: ../Faulty_Detection/yolov8n.pt"
 else
-    echo "Warning: Model file not found at ../Faulty_Detection/yolov8n.pt"
+    echo "⚠️  Warning: Model file not found at ../Faulty_Detection/yolov8n.pt"
     echo "Please ensure the model weights are in place before running the service."
 fi
 
 echo ""
-echo "Setup complete!"
+echo "✅ Setup complete!"
 echo ""
 echo "To start the ML service:"
 echo "  1. Activate virtual environment: source venv/bin/activate"

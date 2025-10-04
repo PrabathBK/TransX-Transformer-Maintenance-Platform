@@ -26,10 +26,6 @@
 //     ) {}
 // }
 
-<<<<<<< Updated upstream
-
-=======
->>>>>>> Stashed changes
 package com.acme.backend.api.dto;
 
 import com.acme.backend.domain.Annotation;

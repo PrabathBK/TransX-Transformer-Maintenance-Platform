@@ -15,10 +15,6 @@
 //         Instant createdAt
 // ) {}
 
-<<<<<<< Updated upstream
-
-=======
->>>>>>> Stashed changes
 package com.acme.backend.api.dto;
 
 import java.time.Instant;

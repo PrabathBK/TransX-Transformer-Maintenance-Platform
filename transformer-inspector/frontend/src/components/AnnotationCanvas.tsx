@@ -3,8 +3,6 @@
 // import { Stage, Layer, Image as KonvaImage, Rect, Transformer } from 'react-konva';
 // import type { Annotation } from '../api/annotations';
 
-
-
 // interface AnnotationCanvasProps {
 //   imageUrl: string;
 //   annotations: Annotation[];
@@ -364,7 +362,6 @@
 //                 onDragEnd={(e) => handleBoxDragEnd(annotation, e)}
 //                 onTransformEnd={(e) => handleBoxTransform(annotation, e)}
 //               />
-              
 //             );
 //           })}
 
@@ -380,9 +377,6 @@
 //               dash={[5, 5]}
 //               fill="transparent"
 //             />
-
-
-            
 //           )}
 
 //           {/* Transformer for editing */}
@@ -409,7 +403,6 @@
 //     </div>
 //   );
 // }
-
 // src/components/AnnotationCanvas.tsx
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { Stage, Layer, Image as KonvaImage, Rect, Transformer, Text } from 'react-konva';

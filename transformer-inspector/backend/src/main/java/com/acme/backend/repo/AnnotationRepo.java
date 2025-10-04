@@ -57,10 +57,6 @@
 //     void deleteByInspectionId(UUID inspectionId);
 // }
 
-<<<<<<< Updated upstream
-
-=======
->>>>>>> Stashed changes
 package com.acme.backend.repo;
 
 import com.acme.backend.domain.Annotation;
@@ -141,11 +137,4 @@ public interface AnnotationRepo extends JpaRepository<Annotation, UUID> {
      */
     @Query("SELECT a FROM Annotation a WHERE a.inspection.id = :inspectionId AND a.isActive = true ORDER BY a.annotationNumber ASC")
     List<Annotation> findOrderedByNumber(@Param("inspectionId") UUID inspectionId);
-<<<<<<< Updated upstream
-=======
-
-    @Query("SELECT a FROM Annotation a WHERE a.inspection.id = :inspectionId ORDER BY a.createdAt DESC")
-    List<Annotation> findAllByInspectionIdWithHistory(@Param("inspectionId") UUID inspectionId);
-
->>>>>>> Stashed changes
 }

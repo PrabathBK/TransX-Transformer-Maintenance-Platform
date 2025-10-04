@@ -107,19 +107,19 @@ def load_model():
             
             MODEL_PATH = selected_model_path  # Update global for reference
             
-            logger.info(f"Found YOLOv8p2 model: {MODEL_PATH}")
+            logger.info(f"🔍 Found YOLOv8p2 model: {MODEL_PATH}")
             if "yolov8p2.pt" in MODEL_PATH:
-                logger.info("Using your custom YOLOv8p2 weights!")
+                logger.info("🎯 Using your custom YOLOv8p2 weights!")
             elif "runs/detect" in MODEL_PATH:
-                logger.info("Using trained YOLOv8p2 model from training runs")
+                logger.info("🎯 Using trained YOLOv8p2 model from training runs")
             else:
-                logger.info("Using fallback YOLOv8 model")
+                logger.info("⚠️  Using fallback YOLOv8 model")
             
             model = YOLO(MODEL_PATH)
-            logger.info("YOLOv8p2 model loaded successfully!")
+            logger.info("✅ YOLOv8p2 model loaded successfully!")
             
         except Exception as e:
-            logger.error(f"Failed to load model: {e}")
+            logger.error(f"❌ Failed to load model: {e}")
             raise
     
     return model
@@ -183,10 +183,10 @@ def detect_anomalies():
         confidence_threshold = data.get('confidence_threshold', 0.25)
         
         # Debug prints
-        logger.info("=== ANOMALY DETECTION DEBUG ===")
-        logger.info(f"Inspection Image: {inspection_image_path}")
-        logger.info(f"Baseline Image: {baseline_image_path}")
-        logger.info(f"Confidence Threshold: {confidence_threshold}")
+        logger.info("🔍 === ANOMALY DETECTION DEBUG ===")
+        logger.info(f"📥 Inspection Image: {inspection_image_path}")
+        logger.info(f"📥 Baseline Image: {baseline_image_path}")
+        logger.info(f"🎯 Confidence Threshold: {confidence_threshold}")
         
         if not inspection_image_path:
             return jsonify({
@@ -197,7 +197,7 @@ def detect_anomalies():
         # Verify inspection image exists
         inspection_file = Path(inspection_image_path)
         if not inspection_file.exists():
-            logger.error(f"Inspection image not found: {inspection_image_path}")
+            logger.error(f"❌ Inspection image not found: {inspection_image_path}")
             return jsonify({
                 'success': False,
                 'error': f'Inspection image file not found: {inspection_image_path}'
@@ -207,14 +207,14 @@ def detect_anomalies():
         if baseline_image_path:
             baseline_file = Path(baseline_image_path)
             if not baseline_file.exists():
-                logger.warning(f"Baseline image not found: {baseline_image_path}")
+                logger.warning(f"⚠️ Baseline image not found: {baseline_image_path}")
                 baseline_image_path = None
             else:
-                logger.info(f"Baseline image found: {baseline_image_path}")
+                logger.info(f"✅ Baseline image found: {baseline_image_path}")
         else:
             logger.info("ℹ️ No baseline image provided")
         
-        logger.info(f"Processing anomaly detection...")
+        logger.info(f"🔄 Processing anomaly detection...")
         
         # Read inspection image to get dimensions
         img = cv2.imread(str(inspection_file))
@@ -225,11 +225,11 @@ def detect_anomalies():
             }), 400
         
         height, width = img.shape[:2]
-        logger.info(f"Image dimensions: {width}x{height}")
+        logger.info(f"📐 Image dimensions: {width}x{height}")
         
         # Run real YOLOv8p2 inference on inspection image only
-        logger.info("=== REAL YOLOv8p2 INFERENCE MODE ===")
-        logger.info(f"Running inference on inspection image: {inspection_file.name}")
+        logger.info("🎯 === REAL YOLOv8p2 INFERENCE MODE ===")
+        logger.info(f"🔄 Running inference on inspection image: {inspection_file.name}")
         if baseline_image_path:
             logger.info(f"ℹ️  Baseline received but not used for inference (single image approach)")
         
@@ -240,7 +240,7 @@ def detect_anomalies():
         import time
         start_time = time.time()
         
-        logger.info(f"Running YOLOv8 inference with confidence threshold: {confidence_threshold}")
+        logger.info(f"🎯 Running YOLOv8 inference with confidence threshold: {confidence_threshold}")
         results = model(str(inspection_file), conf=confidence_threshold, verbose=False)
         result = results[0]
         
@@ -252,7 +252,7 @@ def detect_anomalies():
         boxes = result.boxes
         
         if boxes is not None and len(boxes) > 0:
-            logger.info(f"Raw detections found: {len(boxes)}")
+            logger.info(f"🎯 Raw detections found: {len(boxes)}")
             
             # Collect all detections with details (same as yolov8p2_single_inference.py)
             raw_detections = []
@@ -289,13 +289,13 @@ def detect_anomalies():
                 avg_distance = sum(distances) / len(distances) if distances else 0
                 max_distance = max(distances) if distances else 0
                 
-                logger.info(f"Distance analysis: avg={avg_distance:.1f}, max={max_distance:.1f}")
+                logger.info(f"📏 Distance analysis: avg={avg_distance:.1f}, max={max_distance:.1f}")
                 
                 if avg_distance < 100 and max_distance < 150:
-                    logger.info(f"Found {len(raw_detections)} detections, using top 3 (clustered)")
+                    logger.info(f"🎯 Found {len(raw_detections)} detections, using top 3 (clustered)")
                     final_detections = raw_detections[:3]
                 else:
-                    logger.info(f"Found {len(raw_detections)} detections (spread apart, using all)")
+                    logger.info(f"🎯 Found {len(raw_detections)} detections (spread apart, using all)")
                     final_detections = raw_detections
             else:
                 final_detections = raw_detections
@@ -322,7 +322,7 @@ def detect_anomalies():
                 }
                 detections.append(detection_obj)
                 
-                logger.info(f"Detection: {detection_obj['class_name']} @ ({x1},{y1},{x2},{y2}) conf={conf:.3f}")
+                logger.info(f"✅ Detection: {detection_obj['class_name']} @ ({x1},{y1},{x2},{y2}) conf={conf:.3f}")
         else:
             logger.info("ℹ️  No anomalies detected in inspection image")
         
@@ -341,12 +341,12 @@ def detect_anomalies():
             }
         }
         
-        logger.info(f"Detection completed: {len(detections)} anomalies found in {inference_time:.1f}ms")
+        logger.info(f"✅ Detection completed: {len(detections)} anomalies found in {inference_time:.1f}ms")
         
         return jsonify(response), 200
         
     except Exception as e:
-        logger.error(f"Error during detection: {e}", exc_info=True)
+        logger.error(f"❌ Error during detection: {e}", exc_info=True)
         return jsonify({
             'success': False,
             'error': str(e)
@@ -364,20 +364,20 @@ def get_classes():
 
 if __name__ == '__main__':
     logger.info("=" * 60)
-    logger.info("Starting TransX ML Service with YOLOv8p2")
+    logger.info("🚀 Starting TransX ML Service with YOLOv8p2")
     logger.info("=" * 60)
-    logger.info("Looking for YOLOv8p2 models in priority order:")
+    logger.info("🔍 Looking for YOLOv8p2 models in priority order:")
     for i, path in enumerate(MODEL_PATHS, 1):
         logger.info(f"   {i}. {path}")
-    logger.info(f"Classes: {CLASS_NAMES}")
+    logger.info(f"📋 Classes: {CLASS_NAMES}")
     logger.info("=" * 60)
     
     # Preload model on startup
     try:
         load_model()
-        logger.info(f"Model preloaded successfully from: {MODEL_PATH}")
+        logger.info(f"✅ Model preloaded successfully from: {MODEL_PATH}")
     except Exception as e:
-        logger.error(f"Could not preload model: {e}")
+        logger.error(f"⚠️  Could not preload model: {e}")
         logger.error("Model will be loaded on first request")
     
     # Start Flask server

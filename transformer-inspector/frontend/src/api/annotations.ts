@@ -212,12 +212,9 @@ export async function exportFeedbackCSV(inspectionId: string) {
   window.open(`${import.meta.env.VITE_API_BASE || 'http://localhost:8080'}${url}`, '_blank');
 }
 
-<<<<<<< Updated upstream
-=======
+
 export async function getAnnotationHistoryForInspection(inspectionId: string) {
   const res = await fetch(`/api/annotations/${inspectionId}/history`);
   if (!res.ok) throw new Error("Failed to load annotation history");
   return res.json();
 }
-
->>>>>>> Stashed changes

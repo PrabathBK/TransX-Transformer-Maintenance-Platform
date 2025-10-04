@@ -269,12 +269,6 @@
 //     }
 // }
 
-<<<<<<< Updated upstream
-
-
-
-=======
->>>>>>> Stashed changes
 package com.acme.backend.domain;
 
 import jakarta.persistence.*;

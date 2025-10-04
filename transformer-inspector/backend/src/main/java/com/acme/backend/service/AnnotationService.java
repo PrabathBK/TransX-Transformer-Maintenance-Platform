@@ -47,95 +47,6 @@
 //     /**
 //      * Create or update annotation (Phase 3)
 //      */
-<<<<<<< Updated upstream
-// //     public AnnotationDTO saveAnnotation(SaveAnnotationRequest request) {
-// //         Inspection inspection = inspectionRepo.findById(request.inspectionId())
-// //                 .orElseThrow(() -> new RuntimeException("Inspection not found"));
-        
-// //         Annotation annotation;
-        
-// //         if (request.id() != null) {
-// //             // Update existing annotation (create new version)
-// //             Annotation existing = annotationRepo.findById(request.id())
-// //                     .orElseThrow(() -> new RuntimeException("Annotation not found"));
-            
-// //             // Deactivate old version
-// //             existing.setIsActive(false);
-// //             annotationRepo.save(existing);
-            
-// //             // Create new version
-// //             annotation = existing.createNewVersion();
-// //             annotation.setActionType(Annotation.ActionType.edited);
-// //             annotation.setModifiedBy(request.userId());
-// //             annotation.setModifiedAt(Instant.now());
-            
-// //             log.info("Creating new version {} of annotation {}", 
-// //                     annotation.getVersion(), existing.getId());
-// //         } else {
-// //             // Create new annotation
-// //             annotation = new Annotation();
-// //             annotation.setInspection(inspection);
-// //             annotation.setActionType(Annotation.ActionType.created);
-// //             annotation.setCreatedBy(request.userId());
-// //             annotation.setIsActive(true);
-            
-// //             log.info("Creating new annotation for inspection {}", inspection.getInspectionNumber());
-// //         }
-        
-// //         // Set bounding box
-// //         annotation.setBboxX1(request.bbox().x1());
-// //         annotation.setBboxY1(request.bbox().y1());
-// //         annotation.setBboxX2(request.bbox().x2());
-// //         annotation.setBboxY2(request.bbox().y2());
-        
-// //         // Set classification
-// //         annotation.setClassId(request.classId());
-// //         annotation.setClassName(request.className());
-// //         annotation.setConfidence(request.confidence());
-// //         annotation.setSource(request.source());
-// //         annotation.setComments(request.comments());
-        
-// //         annotation = annotationRepo.save(annotation);
-// //         return toDTO(annotation);
-// //     }
-//       /**
-//  * Create or update annotation (Phase 3 + extended fields)
-//  */
-//         public AnnotationDTO saveAnnotation(SaveAnnotationRequest request) {
-//         Inspection inspection = inspectionRepo.findById(request.inspectionId())
-//                 .orElseThrow(() -> new RuntimeException("Inspection not found"));
-
-//         Annotation annotation;
-
-//         if (request.id() != null) {
-//                 // Update existing annotation (create new version)
-//                 Annotation existing = annotationRepo.findById(request.id())
-//                         .orElseThrow(() -> new RuntimeException("Annotation not found"));
-
-//                 // Deactivate old version
-//                 existing.setIsActive(false);
-//                 annotationRepo.save(existing);
-
-//                 // Create new version
-//                 annotation = existing.createNewVersion();
-//                 annotation.setActionType(Annotation.ActionType.edited);
-//                 annotation.setModifiedBy(request.userId());
-//                 annotation.setModifiedAt(Instant.now());
-
-//                 log.info("Creating new version {} of annotation {}",
-//                         annotation.getVersion(), existing.getId());
-//         } else {
-//                 // Create new annotation
-//                 annotation = new Annotation();
-//                 annotation.setInspection(inspection);
-//                 annotation.setActionType(Annotation.ActionType.created);
-//                 annotation.setCreatedBy(request.userId());
-//                 annotation.setIsActive(true);
-
-//                 log.info("Creating new annotation for inspection {}", inspection.getInspectionNumber());
-//         }
-
-=======
 //     public AnnotationDTO saveAnnotation(SaveAnnotationRequest request) {
 //         Inspection inspection = inspectionRepo.findById(request.inspectionId())
 //                 .orElseThrow(() -> new RuntimeException("Inspection not found"));
@@ -170,40 +81,22 @@
 //             log.info("Creating new annotation for inspection {}", inspection.getInspectionNumber());
 //         }
         
->>>>>>> Stashed changes
 //         // Set bounding box
 //         annotation.setBboxX1(request.bbox().x1());
 //         annotation.setBboxY1(request.bbox().y1());
 //         annotation.setBboxX2(request.bbox().x2());
 //         annotation.setBboxY2(request.bbox().y2());
-<<<<<<< Updated upstream
-
-=======
         
->>>>>>> Stashed changes
 //         // Set classification
 //         annotation.setClassId(request.classId());
 //         annotation.setClassName(request.className());
 //         annotation.setConfidence(request.confidence());
 //         annotation.setSource(request.source());
 //         annotation.setComments(request.comments());
-<<<<<<< Updated upstream
-
-//         // -------- NEW FIELDS --------
-//         annotation.setAnnotationNumber(request.annotationNumber());
-//         annotation.setSizePx(request.sizePx());
-//         annotation.setSeverityScore(request.severityScore());
-//         annotation.setFlagged(request.flagged());
-
-//         annotation = annotationRepo.save(annotation);
-//         return toDTO(annotation);
-//         }  
-=======
         
 //         annotation = annotationRepo.save(annotation);
 //         return toDTO(annotation);
 //     }
->>>>>>> Stashed changes
     
 //     /**
 //      * Delete annotation (mark as deleted, keep for history)
@@ -353,47 +246,10 @@
 //         return annotation.getActionType().name();
 //     }
     
-<<<<<<< Updated upstream
-// //     /**
-// //      * Convert Annotation entity to DTO
-// //      */
-// //     private AnnotationDTO toDTO(Annotation annotation) {
-// //         return new AnnotationDTO(
-// //                 annotation.getId(),
-// //                 annotation.getInspection().getId(),
-// //                 annotation.getVersion(),
-// //                 new AnnotationDTO.BoundingBox(
-// //                         annotation.getBboxX1(),
-// //                         annotation.getBboxY1(),
-// //                         annotation.getBboxX2(),
-// //                         annotation.getBboxY2()
-// //                 ),
-// //                 annotation.getClassId(),
-// //                 annotation.getClassName(),
-// //                 annotation.getConfidence(),
-// //                 annotation.getSource(),
-// //                 annotation.getActionType(),
-// //                 annotation.getCreatedBy(),
-// //                 annotation.getCreatedAt(),
-// //                 annotation.getModifiedBy(),
-// //                 annotation.getModifiedAt(),
-// //                 annotation.getParentAnnotation() != null ? 
-// //                         annotation.getParentAnnotation().getId() : null,
-// //                 annotation.getIsActive(),
-// //                 annotation.getComments()
-// //         );
-// //     }
-// // }
-//         /**
-//          * Convert Annotation entity to DTO
-//          */
-//         private AnnotationDTO toDTO(Annotation annotation) {
-=======
 //     /**
 //      * Convert Annotation entity to DTO
 //      */
 //     private AnnotationDTO toDTO(Annotation annotation) {
->>>>>>> Stashed changes
 //         return new AnnotationDTO(
 //                 annotation.getId(),
 //                 annotation.getInspection().getId(),
@@ -413,21 +269,6 @@
 //                 annotation.getCreatedAt(),
 //                 annotation.getModifiedBy(),
 //                 annotation.getModifiedAt(),
-<<<<<<< Updated upstream
-//                 annotation.getParentAnnotation() != null ?
-//                         annotation.getParentAnnotation().getId() : null,
-//                 annotation.getIsActive(),
-//                 annotation.getComments(),
-
-//                 // -------- NEW FIELDS --------
-//                 annotation.getAnnotationNumber(),
-//                 annotation.getSizePx(),
-//                 annotation.getSeverityScore(),
-//                 annotation.getFlagged()
-//         );
-//         }
-
-=======
 //                 annotation.getParentAnnotation() != null ? 
 //                         annotation.getParentAnnotation().getId() : null,
 //                 annotation.getIsActive(),
@@ -435,7 +276,6 @@
 //         );
 //     }
 // }
->>>>>>> Stashed changes
 
 
 package com.acme.backend.service;
@@ -604,18 +444,6 @@ public class AnnotationService {
                 .collect(Collectors.toList());
     }
 
-<<<<<<< Updated upstream
-=======
-    @Transactional(readOnly = true)
-    public List<AnnotationDTO> getAllHistoryForInspection(UUID inspectionId) {
-        return annotationRepo.findAllByInspectionIdWithHistory(inspectionId)
-                .stream()
-                .map(this::toDTO)
-                .collect(Collectors.toList());
-    }
-
-
->>>>>>> Stashed changes
     /**
      * Export feedback for model improvement (Phase 3 - FR3.3)
      */

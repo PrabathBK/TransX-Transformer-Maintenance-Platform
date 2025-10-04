@@ -92,7 +92,7 @@ export default function AnnotationToolbar({
               boxShadow: isDetecting ? 'none' : '0 2px 8px rgba(59, 130, 246, 0.3)',
             }}
           >
-            <span>{isDetecting ? '⏳' : ''}</span>
+            <span>{isDetecting ? '⏳' : '🤖'}</span>
             {isDetecting ? 'Detecting...' : 'Detect Anomalies'}
           </button>
         )}

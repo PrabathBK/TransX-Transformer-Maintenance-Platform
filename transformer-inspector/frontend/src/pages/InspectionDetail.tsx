@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import FileDrop from '../components/FileDrop';
+import CommentsSection from '../components/CommentsSection';
 import { getInspection, updateInspectionStatus } from '../api/inspections';
 import { listImages, uploadImage } from '../api/images';
 import type { Inspection } from '../api/inspections';
@@ -254,6 +255,9 @@ export default function InspectionDetail() {
               
               {imgErr && <div style={{ color: '#b00020', marginTop: 12 }}>Error loading images: {imgErr}</div>}
             </div>
+
+            {/* Comments Section */}
+            {inspection && <CommentsSection inspectionId={inspection.id} />}
           </>
         )}
       </div>

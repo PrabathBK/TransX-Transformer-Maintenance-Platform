@@ -47,11 +47,6 @@ public class AnnotationController {
             throw new RuntimeException("Failed to fetch annotations: " + e.getMessage());
         }
     }
-    @GetMapping("/{inspectionId}/history")
-    public List<AnnotationDTO> getHistoryForInspection(@PathVariable UUID inspectionId) {
-        return annotationService.getAllHistoryForInspection(inspectionId);
-    }
-
     
     /**
      * Create or update annotation (Phase 3 - FR3.1)

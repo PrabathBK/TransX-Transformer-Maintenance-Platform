@@ -55,7 +55,7 @@ export default function NotesSection({ inspectionId, initialNotes, onNotesUpdate
     }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
         <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '600', color: '#374151' }}>
-          Notes
+          📝 Notes
         </h3>
         {!isEditing && (
           <button

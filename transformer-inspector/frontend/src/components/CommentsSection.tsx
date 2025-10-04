@@ -107,7 +107,7 @@ export default function CommentsSection({ inspectionId }: CommentsSectionProps) 
         alignItems: 'center',
         gap: '8px'
       }}>
-         Comments ({comments.length})
+        💬 Comments ({comments.length})
       </h3>
 
       {/* Add New Comment Form */}
@@ -176,7 +176,7 @@ export default function CommentsSection({ inspectionId }: CommentsSectionProps) 
               gap: '6px'
             }}
           >
-            {isSubmitting ? 'Adding...' : 'Add Comment'}
+            {isSubmitting ? '💾 Adding...' : '💬 Add Comment'}
           </button>
         </div>
       </form>

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 TransX ML Service - Phase 2 & 3
-Python Flask service for YOLOv8 anomaly detection
+Python Flask service for YOLOv8 anomaly detection with similarity-based comparison
 """
 
 from flask import Flask, request, jsonify
@@ -14,8 +14,13 @@ from pathlib import Path
 import uuid
 import logging
 import sys
+import os
 
-# Setup logging
+# Add paths to import the similarity system
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'Faulty_Detection'))
+
+# Setup logging first
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -24,6 +29,16 @@ logging.basicConfig(
     ]
 )
 logger = logging.getLogger(__name__)
+
+# Import similarity-based YOLO system
+try:
+    from similarity_yolo_system import SimilarityBasedYOLOSystem
+    SIMILARITY_SYSTEM_AVAILABLE = True
+    logger.info("✅ Similarity-based YOLO system imported successfully")
+except ImportError as e:
+    SIMILARITY_SYSTEM_AVAILABLE = False
+    logger.warning(f"⚠️ Could not import similarity system: {e}")
+    logger.warning("Falling back to single image inference")
 
 # Initialize Flask app
 app = Flask(__name__)
@@ -43,6 +58,9 @@ MODEL_PATHS = [
 ]
 MODEL_PATH = None  # Will be determined dynamically
 model = None
+
+# Similarity system instance
+similarity_system = None
 
 # Class mapping from rules.txt
 CLASS_NAMES = {
@@ -83,6 +101,46 @@ def patch_torch_load():
     
     torch.load = patched_load
     logger.info("PyTorch compatibility patch applied")
+
+
+def load_similarity_system():
+    """Initialize similarity-based YOLO system with Flask-safe configuration"""
+    global similarity_system
+    
+    if similarity_system is None and SIMILARITY_SYSTEM_AVAILABLE:
+        try:
+            # Find the best model path for similarity system
+            selected_model_path = None
+            for path in MODEL_PATHS:
+                model_file = Path(path)
+                if model_file.exists():
+                    selected_model_path = str(model_file)
+                    break
+            
+            if selected_model_path is None:
+                raise FileNotFoundError(f"No model found for similarity system! Searched paths: {MODEL_PATHS}")
+            
+            # Initialize with default parameters
+            similarity_system = SimilarityBasedYOLOSystem(
+                similarity_threshold=0.5,  # Default threshold for similarity
+                change_threshold=0.2,      # Default threshold for significance
+                model_path=selected_model_path
+            )
+            
+            # Patch the visualization method to prevent GUI issues in Flask
+            def dummy_visualization(*args, **kwargs):
+                """Dummy visualization that returns None to avoid matplotlib GUI threading issues"""
+                return None
+                
+            similarity_system.create_comparison_visualization = dummy_visualization
+            logger.info(f"✅ Similarity-based YOLO system initialized (Flask-safe) with model: {selected_model_path}")
+            return similarity_system
+            
+        except Exception as e:
+            logger.error(f"❌ Failed to initialize similarity system: {e}")
+            raise
+    
+    return similarity_system
 
 
 def load_model():
@@ -127,18 +185,27 @@ def load_model():
 
 @app.route('/api/health', methods=['GET'])
 def health_check():
-    """Health check endpoint"""
+    """Health check endpoint with similarity system status"""
     try:
         model_loaded = model is not None
-        model_path_exists = Path(MODEL_PATH).exists()
+        model_path_exists = Path(MODEL_PATH).exists() if MODEL_PATH else False
+        similarity_loaded = similarity_system is not None
         
         return jsonify({
             'status': 'healthy',
             'model_loaded': model_loaded,
             'model_path': MODEL_PATH,
             'model_path_exists': model_path_exists,
-            'service': 'TransX ML Service',
-            'version': '1.0.0'
+            'similarity_system_available': SIMILARITY_SYSTEM_AVAILABLE,
+            'similarity_system_loaded': similarity_loaded,
+            'service': 'TransX ML Service with Similarity Engine',
+            'version': '2.0.0',
+            'features': [
+                'Standard YOLOv8 inference',
+                'Similarity-based comparison' if SIMILARITY_SYSTEM_AVAILABLE else 'Similarity system unavailable',
+                'Configurable thresholds',
+                'Smart detection filtering'
+            ]
         }), 200
     except Exception as e:
         return jsonify({
@@ -150,13 +217,13 @@ def health_check():
 @app.route('/api/detect', methods=['POST'])
 def detect_anomalies():
     """
-    Main detection endpoint for anomaly detection with baseline comparison
+    Main detection endpoint using similarity-based YOLO system
     
     Request JSON:
     {
         "inspection_image_path": "/absolute/path/to/inspection.jpg",
-        "baseline_image_path": "/absolute/path/to/baseline.jpg",  // optional
-        "confidence_threshold": 0.25  # optional
+        "baseline_image_path": "/absolute/path/to/baseline.jpg",  // optional but recommended
+        "confidence_threshold": 0.25  # threshold as decimal (0.0-1.0)
     }
     
     Response JSON:
@@ -165,7 +232,8 @@ def detect_anomalies():
         "detections": [...],
         "image_dimensions": {...},
         "inference_time_ms": 245.3,
-        "model_info": {...}
+        "model_info": {...},
+        "similarity_analysis": {...}
     }
     """
     try:
@@ -177,13 +245,13 @@ def detect_anomalies():
                 'error': 'No JSON data provided'
             }), 400
         
-        # Get both image paths
+        # Get parameters
         inspection_image_path = data.get('inspection_image_path') or data.get('image_path')  # backward compatibility
         baseline_image_path = data.get('baseline_image_path')
         confidence_threshold = data.get('confidence_threshold', 0.25)
         
         # Debug prints
-        logger.info("🔍 === ANOMALY DETECTION DEBUG ===")
+        logger.info("🔍 === SIMILARITY-BASED ANOMALY DETECTION ===")
         logger.info(f"📥 Inspection Image: {inspection_image_path}")
         logger.info(f"📥 Baseline Image: {baseline_image_path}")
         logger.info(f"🎯 Confidence Threshold: {confidence_threshold}")
@@ -211,10 +279,6 @@ def detect_anomalies():
                 baseline_image_path = None
             else:
                 logger.info(f"✅ Baseline image found: {baseline_image_path}")
-        else:
-            logger.info("ℹ️ No baseline image provided")
-        
-        logger.info(f"🔄 Processing anomaly detection...")
         
         # Read inspection image to get dimensions
         img = cv2.imread(str(inspection_file))
@@ -227,84 +291,137 @@ def detect_anomalies():
         height, width = img.shape[:2]
         logger.info(f"📐 Image dimensions: {width}x{height}")
         
-        # Run real YOLOv8p2 inference on inspection image only
-        logger.info("🎯 === REAL YOLOv8p2 INFERENCE MODE ===")
-        logger.info(f"🔄 Running inference on inspection image: {inspection_file.name}")
-        if baseline_image_path:
-            logger.info(f"ℹ️  Baseline received but not used for inference (single image approach)")
-        
-        # Load model if not already loaded
-        model = load_model()
-        
-        # Run YOLOv8 inference on inspection image only
         import time
         start_time = time.time()
         
-        logger.info(f"🎯 Running YOLOv8 inference with confidence threshold: {confidence_threshold}")
+        # Choose inference method based on baseline availability
+        if baseline_image_path and SIMILARITY_SYSTEM_AVAILABLE:
+            # Use similarity-based YOLO system
+            logger.info("🎯 === SIMILARITY-BASED YOLO MODE ===")
+            logger.info("Running advanced comparison analysis...")
+            
+            try:
+                # Initialize similarity system if needed
+                sim_system = load_similarity_system()
+                
+                # Run similarity-based analysis (disable visualization to prevent GUI threading issues)
+                results = sim_system.analyze_image_pair(
+                    baseline_image_path,  # reference image
+                    inspection_image_path,  # target image
+                    verbose=False  # Disable verbose to avoid matplotlib GUI issues in Flask
+                )
+                
+                # Extract detections from similarity system results
+                detections = []
+                yolo_analysis = results.get('yolo_analysis', {})
+                target_detections = yolo_analysis.get('target_detections', [])
+                
+                if target_detections:
+                    logger.info(f"🎯 Similarity system found {len(target_detections)} detections")
+                    
+                    for detection in target_detections:
+                        # Convert from similarity system format to API format
+                        conf = detection['confidence']
+                        
+                        # Only include detections above threshold
+                        if conf >= confidence_threshold:
+                            class_name = detection['class_name']
+                            bbox = detection['bbox']
+                            
+                            # Map class name to class ID
+                            class_id = None
+                            for cid, cname in CLASS_NAMES.items():
+                                if cname.lower() == class_name.lower():
+                                    class_id = cid
+                                    break
+                            
+                            if class_id is None:
+                                # Try to find partial match or default
+                                class_id = 0  # Default to 'Faulty'
+                                for cid, cname in CLASS_NAMES.items():
+                                    if class_name.lower() in cname.lower() or cname.lower() in class_name.lower():
+                                        class_id = cid
+                                        break
+                            
+                            detection_obj = {
+                                'id': str(uuid.uuid4()),
+                                'class_id': class_id,
+                                'class_name': CLASS_NAMES.get(class_id, class_name),
+                                'confidence': round(conf, 3),
+                                'bbox': {
+                                    'x1': bbox['x1'],
+                                    'y1': bbox['y1'],
+                                    'x2': bbox['x2'],
+                                    'y2': bbox['y2']
+                                },
+                                'color': CLASS_COLORS.get(class_id, [255, 255, 255]),
+                                'source': 'similarity_ai'
+                            }
+                            detections.append(detection_obj)
+                            
+                            logger.info(f"✅ Detection: {detection_obj['class_name']} @ ({bbox['x1']},{bbox['y1']},{bbox['x2']},{bbox['y2']}) conf={conf:.3f}")
+                
+                # Calculate inference time
+                inference_time = (time.time() - start_time) * 1000
+                
+                # Build enhanced response with similarity analysis
+                similarity_data = results.get('similarity_analysis', {})
+                combined_data = results.get('combined_analysis', {})
+                
+                response = {
+                    'success': True,
+                    'detections': detections,
+                    'image_dimensions': {
+                        'width': width,
+                        'height': height
+                    },
+                    'inference_time_ms': round(inference_time, 2),
+                    'model_info': {
+                        'type': 'SimilarityBasedYOLO',
+                        'classes': CLASS_NAMES,
+                        'engine': 'similarity_yolo_system.py'
+                    },
+                    'similarity_analysis': {
+                        'is_similar': similarity_data.get('is_similar', False),
+                        'confidence': similarity_data.get('confidence', 0.0),
+                        'method': similarity_data.get('best_method', 'unknown'),
+                        'change_detected': combined_data.get('significant_change', False),
+                        'change_magnitude': combined_data.get('change_magnitude', 0.0)
+                    }
+                }
+                
+                logger.info(f"✅ Similarity-based detection completed: {len(detections)} anomalies found in {inference_time:.1f}ms")
+                logger.info(f"   Similarity: {similarity_data.get('confidence', 0.0):.1%}, Change detected: {combined_data.get('significant_change', False)}")
+                
+                return jsonify(response), 200
+                
+            except Exception as e:
+                logger.error(f"❌ Similarity system failed, falling back to single image: {e}")
+                # Fall through to single image detection
+        
+        # Fallback: Single image inference (when no baseline or similarity system failed)
+        logger.info("🎯 === SINGLE IMAGE INFERENCE MODE ===")
+        logger.info("Using standard YOLOv8 detection...")
+        
+        # Load standard model
+        model = load_model()
+        
+        # Run YOLOv8 inference
+        logger.info(f"🔄 Running YOLOv8 inference with confidence threshold: {confidence_threshold}")
         results = model(str(inspection_file), conf=confidence_threshold, verbose=False)
         result = results[0]
         
-        # Calculate inference time
-        inference_time = (time.time() - start_time) * 1000
-        
-        # Process detections using same logic as yolov8p2_single_inference.py
+        # Process detections
         detections = []
         boxes = result.boxes
         
         if boxes is not None and len(boxes) > 0:
-            logger.info(f"🎯 Raw detections found: {len(boxes)}")
+            logger.info(f"🎯 Found {len(boxes)} detections")
             
-            # Collect all detections with details (same as yolov8p2_single_inference.py)
-            raw_detections = []
             for i, box in enumerate(boxes):
                 conf = float(box.conf[0].cpu().numpy())
                 cls = int(box.cls[0].cpu().numpy())
                 x1, y1, x2, y2 = box.xyxy[0].cpu().numpy().astype(int).tolist()
-                
-                raw_detections.append({
-                    'index': i,
-                    'confidence': conf,
-                    'class_id': cls,
-                    'bbox': [x1, y1, x2, y2]
-                })
-            
-            # Sort by confidence (descending)
-            raw_detections.sort(key=lambda x: x['confidence'], reverse=True)
-            
-            # Smart filtering: same logic as yolov8p2_single_inference.py
-            if len(raw_detections) > 3:
-                top_3 = raw_detections[:3]
-                distances = []
-                
-                for i in range(len(top_3)):
-                    for j in range(i + 1, len(top_3)):
-                        x1_center = (top_3[i]['bbox'][0] + top_3[i]['bbox'][2]) / 2
-                        y1_center = (top_3[i]['bbox'][1] + top_3[i]['bbox'][3]) / 2
-                        x2_center = (top_3[j]['bbox'][0] + top_3[j]['bbox'][2]) / 2
-                        y2_center = (top_3[j]['bbox'][1] + top_3[j]['bbox'][3]) / 2
-                        
-                        distance = ((x1_center - x2_center)**2 + (y1_center - y2_center)**2)**0.5
-                        distances.append(distance)
-                
-                avg_distance = sum(distances) / len(distances) if distances else 0
-                max_distance = max(distances) if distances else 0
-                
-                logger.info(f"📏 Distance analysis: avg={avg_distance:.1f}, max={max_distance:.1f}")
-                
-                if avg_distance < 100 and max_distance < 150:
-                    logger.info(f"🎯 Found {len(raw_detections)} detections, using top 3 (clustered)")
-                    final_detections = raw_detections[:3]
-                else:
-                    logger.info(f"🎯 Found {len(raw_detections)} detections (spread apart, using all)")
-                    final_detections = raw_detections
-            else:
-                final_detections = raw_detections
-            
-            # Convert to API format
-            for detection in final_detections:
-                conf = detection['confidence']
-                cls = detection['class_id']
-                x1, y1, x2, y2 = detection['bbox']
                 
                 detection_obj = {
                     'id': str(uuid.uuid4()),
@@ -324,9 +441,12 @@ def detect_anomalies():
                 
                 logger.info(f"✅ Detection: {detection_obj['class_name']} @ ({x1},{y1},{x2},{y2}) conf={conf:.3f}")
         else:
-            logger.info("ℹ️  No anomalies detected in inspection image")
+            logger.info("ℹ️ No anomalies detected")
         
-        # Build response
+        # Calculate inference time
+        inference_time = (time.time() - start_time) * 1000
+        
+        # Build standard response
         response = {
             'success': True,
             'detections': detections,
@@ -341,7 +461,7 @@ def detect_anomalies():
             }
         }
         
-        logger.info(f"✅ Detection completed: {len(detections)} anomalies found in {inference_time:.1f}ms")
+        logger.info(f"✅ Standard detection completed: {len(detections)} anomalies found in {inference_time:.1f}ms")
         
         return jsonify(response), 200
         
@@ -363,23 +483,36 @@ def get_classes():
 
 
 if __name__ == '__main__':
-    logger.info("=" * 60)
-    logger.info("🚀 Starting TransX ML Service with YOLOv8p2")
-    logger.info("=" * 60)
+    logger.info("=" * 80)
+    logger.info("🚀 Starting TransX ML Service with Similarity-Based YOLOv8p2")
+    logger.info("=" * 80)
     logger.info("🔍 Looking for YOLOv8p2 models in priority order:")
     for i, path in enumerate(MODEL_PATHS, 1):
-        logger.info(f"   {i}. {path}")
+        exists = "✅" if Path(path).exists() else "❌"
+        logger.info(f"   {i}. {path} {exists}")
     logger.info(f"📋 Classes: {CLASS_NAMES}")
-    logger.info("=" * 60)
+    logger.info(f"🔧 Similarity System Available: {'✅' if SIMILARITY_SYSTEM_AVAILABLE else '❌'}")
+    logger.info("=" * 80)
     
-    # Preload model on startup
+    # Preload components on startup
     try:
         load_model()
-        logger.info(f"✅ Model preloaded successfully from: {MODEL_PATH}")
+        logger.info(f"✅ Standard model preloaded from: {MODEL_PATH}")
     except Exception as e:
-        logger.error(f"⚠️  Could not preload model: {e}")
-        logger.error("Model will be loaded on first request")
+        logger.error(f"⚠️  Could not preload standard model: {e}")
+    
+    if SIMILARITY_SYSTEM_AVAILABLE:
+        try:
+            load_similarity_system()
+            logger.info("✅ Similarity-based YOLO system preloaded")
+        except Exception as e:
+            logger.error(f"⚠️  Could not preload similarity system: {e}")
     
     # Start Flask server
+    logger.info("🌟 Server Features:")
+    logger.info("   • Single image inference (standard YOLOv8)")
+    logger.info("   • Similarity-based comparison (with baseline)")
+    logger.info("   • Configurable confidence thresholds")
+    logger.info("   • Smart detection filtering")
     logger.info("Starting Flask server on http://0.0.0.0:5001")
     app.run(host='0.0.0.0', port=5001, debug=True)

@@ -49,6 +49,10 @@ export default function InspectionDetailNew() {
   const captureCanvasRef = useRef<(() => string | null) | null>(null);
   const [isCanvasReady, setIsCanvasReady] = useState(false);
   const [isSavingImage, setIsSavingImage] = useState(false);
+  
+  // Threshold modal state
+  const [showThresholdModal, setShowThresholdModal] = useState(false);
+  const [threshold, setThreshold] = useState(50); // Default threshold value (0-100)
 
   // Load inspection and annotations
   useEffect(() => {
@@ -118,9 +122,27 @@ export default function InspectionDetailNew() {
       return;
     }
     
+    // Check if baseline image exists
+    if (!baselineImage && !inspection.baselineImageUrl) {
+      alert('⚠️ No baseline image found for comparison. Please upload a baseline image for this transformer first.');
+      return;
+    }
+    
+    // Open threshold modal instead of directly calling detection
+    setShowThresholdModal(true);
+  }
+
+  async function handleDetectWithThreshold() {
+    if (!id) return;
+    
     try {
       setIsDetecting(true);
-      const result = await detectAnomalies(id);
+      setShowThresholdModal(false);
+      
+      // Convert threshold from 0-100 to 0.0-1.0 range expected by backend
+      const normalizedThreshold = threshold / 100;
+      
+      const result = await detectAnomalies(id, normalizedThreshold);
       
       // Refresh annotations, inspection data, and baseline image
       const [updatedAnnotations, updatedInspection] = await Promise.all([
@@ -136,9 +158,9 @@ export default function InspectionDetailNew() {
         await loadBaselineImage(updatedInspection.transformerId, updatedInspection.weatherCondition);
       }
       
-      alert(`Detection complete! Found ${result.detections?.length || 0} anomalies.`);
+      alert(`✅ Detection complete! Found ${result.detections?.length || 0} anomalies with threshold ${threshold}%.`);
     } catch (e: any) {
-      alert('Detection failed: ' + (e?.message || 'Unknown error'));
+      alert('❌ Detection failed: ' + (e?.message || 'Unknown error'));
     } finally {
       setIsDetecting(false);
     }
@@ -862,6 +884,162 @@ export default function InspectionDetailNew() {
           )}
         </div>
       </div>
+
+      {/* Threshold Modal */}
+      {showThresholdModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000,
+        }}>
+          <div style={{
+            backgroundColor: 'white',
+            borderRadius: '16px',
+            padding: '24px',
+            minWidth: '400px',
+            boxShadow: '0 10px 25px rgba(0, 0, 0, 0.2)',
+          }}>
+            <h3 style={{ 
+              margin: '0 0 16px 0', 
+              fontSize: '20px', 
+              fontWeight: '600',
+              color: '#1f2937'
+            }}>
+              🔍 Configure Anomaly Detection
+            </h3>
+            
+            <div style={{ marginBottom: '20px' }}>
+              <p style={{ 
+                fontSize: '14px', 
+                color: '#6b7280', 
+                marginBottom: '16px' 
+              }}>
+                Set the detection threshold for the similarity-based YOLO inference engine.
+                Lower values detect more anomalies, higher values are more selective.
+              </p>
+              
+              <label style={{ 
+                display: 'block', 
+                fontSize: '14px', 
+                fontWeight: '600', 
+                color: '#374151',
+                marginBottom: '8px'
+              }}>
+                Threshold Value (0-100)
+              </label>
+              
+              <input
+                type="range"
+                min="0"
+                max="100"
+                value={threshold}
+                onChange={(e) => setThreshold(Number(e.target.value))}
+                style={{
+                  width: '100%',
+                  height: '8px',
+                  borderRadius: '4px',
+                  background: `linear-gradient(to right, #ef4444 0%, #eab308 50%, #22c55e 100%)`,
+                  outline: 'none',
+                  marginBottom: '12px'
+                }}
+              />
+              
+              <div style={{ 
+                display: 'flex', 
+                justifyContent: 'space-between',
+                fontSize: '12px',
+                color: '#6b7280',
+                marginBottom: '8px'
+              }}>
+                <span>More Sensitive</span>
+                <span style={{ 
+                  fontSize: '16px', 
+                  fontWeight: '700', 
+                  color: '#1f2937' 
+                }}>
+                  {threshold}%
+                </span>
+                <span>More Selective</span>
+              </div>
+              
+              <div style={{ 
+                fontSize: '13px', 
+                color: '#374151',
+                padding: '8px 12px',
+                backgroundColor: '#f3f4f6',
+                borderRadius: '6px'
+              }}>
+                💡 <strong>Recommended:</strong> Start with 50% for balanced detection, 
+                adjust based on results.
+              </div>
+            </div>
+            
+            <div style={{ 
+              display: 'flex', 
+              gap: '12px', 
+              justifyContent: 'flex-end' 
+            }}>
+              <button
+                onClick={() => setShowThresholdModal(false)}
+                disabled={isDetecting}
+                style={{
+                  padding: '10px 20px',
+                  border: '1px solid #d1d5db',
+                  borderRadius: '8px',
+                  background: 'white',
+                  color: '#374151',
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  cursor: isDetecting ? 'not-allowed' : 'pointer',
+                  opacity: isDetecting ? 0.6 : 1
+                }}
+              >
+                Cancel
+              </button>
+              
+              <button
+                onClick={handleDetectWithThreshold}
+                disabled={isDetecting}
+                style={{
+                  padding: '10px 20px',
+                  border: 'none',
+                  borderRadius: '8px',
+                  background: isDetecting 
+                    ? '#9ca3af' 
+                    : 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
+                  color: 'white',
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  cursor: isDetecting ? 'not-allowed' : 'pointer',
+                  boxShadow: isDetecting ? 'none' : '0 2px 8px rgba(59, 130, 246, 0.2)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px'
+                }}
+              >
+                {isDetecting ? (
+                  <>
+                    <span style={{ fontSize: '12px' }}>⏳</span>
+                    Detecting...
+                  </>
+                ) : (
+                  <>
+                    <span style={{ fontSize: '12px' }}>🚀</span>
+                    Start Detection
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

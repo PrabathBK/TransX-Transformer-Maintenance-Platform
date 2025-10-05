@@ -20,7 +20,7 @@ A full-stack application for managing electrical transformers with AI-powered th
   - This process determines whether both images were captured from approximately the same angle and viewpoint.
   - The computed similarity value is stored as a flag for use in the final comparison stage.
 
-- **YOLOv8-Based Anomaly Detection:**
+- **YOLOv8 Based Anomaly Detection:**
   - Regardless of the similarity outcome, both images are forwarded to the **YOLOv8 model** for anomaly detection.
   - The model analyzes the **maintenance (inspection)** thermal image and identifies potential faults or abnormal heat zones.
 

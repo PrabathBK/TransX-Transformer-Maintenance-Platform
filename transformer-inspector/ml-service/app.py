@@ -34,10 +34,10 @@ logger = logging.getLogger(__name__)
 try:
     from similarity_yolo_system import SimilarityBasedYOLOSystem
     SIMILARITY_SYSTEM_AVAILABLE = True
-    logger.info("✅ Similarity-based YOLO system imported successfully")
+    logger.info("Similarity-based YOLO system imported successfully")
 except ImportError as e:
     SIMILARITY_SYSTEM_AVAILABLE = False
-    logger.warning(f"⚠️ Could not import similarity system: {e}")
+    logger.warning(f"Could not import similarity system: {e}")
     logger.warning("Falling back to single image inference")
 
 # Initialize Flask app
@@ -133,11 +133,11 @@ def load_similarity_system():
                 return None
                 
             similarity_system.create_comparison_visualization = dummy_visualization
-            logger.info(f"✅ Similarity-based YOLO system initialized (Flask-safe) with model: {selected_model_path}")
+            logger.info("Similarity-based YOLO system initialized (Flask-safe) with model: {selected_model_path}")
             return similarity_system
             
         except Exception as e:
-            logger.error(f"❌ Failed to initialize similarity system: {e}")
+            logger.error(f"Failed to initialize similarity system: {e}")
             raise
     
     return similarity_system
@@ -165,19 +165,19 @@ def load_model():
             
             MODEL_PATH = selected_model_path  # Update global for reference
             
-            logger.info(f"🔍 Found YOLOv8p2 model: {MODEL_PATH}")
+            logger.info("Found YOLOv8p2 model: {MODEL_PATH}")
             if "yolov8p2.pt" in MODEL_PATH:
-                logger.info("🎯 Using your custom YOLOv8p2 weights!")
+                logger.info("Using your custom YOLOv8p2 weights!")
             elif "runs/detect" in MODEL_PATH:
-                logger.info("🎯 Using trained YOLOv8p2 model from training runs")
+                logger.info("Using trained YOLOv8p2 model from training runs")
             else:
-                logger.info("⚠️  Using fallback YOLOv8 model")
+                logger.info("Using fallback YOLOv8 model")
             
             model = YOLO(MODEL_PATH)
-            logger.info("✅ YOLOv8p2 model loaded successfully!")
+            logger.info("YOLOv8p2 model loaded successfully!")
             
         except Exception as e:
-            logger.error(f"❌ Failed to load model: {e}")
+            logger.error(f"Failed to load model: {e}")
             raise
     
     return model
@@ -251,10 +251,10 @@ def detect_anomalies():
         confidence_threshold = data.get('confidence_threshold', 0.25)
         
         # Debug prints
-        logger.info("🔍 === SIMILARITY-BASED ANOMALY DETECTION ===")
-        logger.info(f"📥 Inspection Image: {inspection_image_path}")
-        logger.info(f"📥 Baseline Image: {baseline_image_path}")
-        logger.info(f"🎯 Confidence Threshold: {confidence_threshold}")
+        logger.info("SIMILARITY-BASED ANOMALY DETECTION")
+        logger.info(f"Inspection Image: {inspection_image_path}")
+        logger.info(f"Baseline Image: {baseline_image_path}")
+        logger.info(f"Confidence Threshold: {confidence_threshold}")
         
         if not inspection_image_path:
             return jsonify({
@@ -265,7 +265,7 @@ def detect_anomalies():
         # Verify inspection image exists
         inspection_file = Path(inspection_image_path)
         if not inspection_file.exists():
-            logger.error(f"❌ Inspection image not found: {inspection_image_path}")
+            logger.error(f"Inspection image not found: {inspection_image_path}")
             return jsonify({
                 'success': False,
                 'error': f'Inspection image file not found: {inspection_image_path}'
@@ -275,10 +275,10 @@ def detect_anomalies():
         if baseline_image_path:
             baseline_file = Path(baseline_image_path)
             if not baseline_file.exists():
-                logger.warning(f"⚠️ Baseline image not found: {baseline_image_path}")
+                logger.warning(f"Baseline image not found: {baseline_image_path}")
                 baseline_image_path = None
             else:
-                logger.info(f"✅ Baseline image found: {baseline_image_path}")
+                logger.info(f"Baseline image found: {baseline_image_path}")
         
         # Read inspection image to get dimensions
         img = cv2.imread(str(inspection_file))
@@ -289,7 +289,7 @@ def detect_anomalies():
             }), 400
         
         height, width = img.shape[:2]
-        logger.info(f"📐 Image dimensions: {width}x{height}")
+        logger.info(f"Image dimensions: {width}x{height}")
         
         import time
         start_time = time.time()
@@ -297,7 +297,7 @@ def detect_anomalies():
         # Choose inference method based on baseline availability
         if baseline_image_path and SIMILARITY_SYSTEM_AVAILABLE:
             # Use similarity-based YOLO system
-            logger.info("🎯 === SIMILARITY-BASED YOLO MODE ===")
+            logger.info("SIMILARITY-BASED YOLO MODE")
             logger.info("Running advanced comparison analysis...")
             
             try:
@@ -317,7 +317,7 @@ def detect_anomalies():
                 target_detections = yolo_analysis.get('target_detections', [])
                 
                 if target_detections:
-                    logger.info(f"🎯 Similarity system found {len(target_detections)} detections")
+                    logger.info(f"Similarity system found {len(target_detections)} detections")
                     
                     for detection in target_detections:
                         # Convert from similarity system format to API format
@@ -359,7 +359,7 @@ def detect_anomalies():
                             }
                             detections.append(detection_obj)
                             
-                            logger.info(f"✅ Detection: {detection_obj['className']} @ ({bbox['x1']},{bbox['y1']},{bbox['x2']},{bbox['y2']}) conf={conf:.3f}")
+                            logger.info(f"Detection: {detection_obj['className']} @ ({bbox['x1']},{bbox['y1']},{bbox['x2']},{bbox['y2']}) conf={conf:.3f}")
                 
                 # Calculate inference time
                 inference_time = (time.time() - start_time) * 1000
@@ -390,24 +390,24 @@ def detect_anomalies():
                     }
                 }
                 
-                logger.info(f"✅ Similarity-based detection completed: {len(detections)} anomalies found in {inference_time:.1f}ms")
+                logger.info(f"Similarity-based detection completed: {len(detections)} anomalies found in {inference_time:.1f}ms")
                 logger.info(f"   Similarity: {similarity_data.get('confidence', 0.0):.1%}, Change detected: {combined_data.get('significant_change', False)}")
                 
                 return jsonify(response), 200
                 
             except Exception as e:
-                logger.error(f"❌ Similarity system failed, falling back to single image: {e}")
+                logger.error(f"Similarity system failed, falling back to single image: {e}")
                 # Fall through to single image detection
         
         # Fallback: Single image inference (when no baseline or similarity system failed)
-        logger.info("🎯 === SINGLE IMAGE INFERENCE MODE ===")
+        logger.info("SINGLE IMAGE INFERENCE MODE")
         logger.info("Using standard YOLOv8 detection...")
         
         # Load standard model
         model = load_model()
         
         # Run YOLOv8 inference
-        logger.info(f"🔄 Running YOLOv8 inference with confidence threshold: {confidence_threshold}")
+        logger.info(f"Running YOLOv8 inference with confidence threshold: {confidence_threshold}")
         results = model(str(inspection_file), conf=confidence_threshold, verbose=False)
         result = results[0]
         
@@ -416,7 +416,7 @@ def detect_anomalies():
         boxes = result.boxes
         
         if boxes is not None and len(boxes) > 0:
-            logger.info(f"🎯 Found {len(boxes)} detections")
+            logger.info(f"Found {len(boxes)} detections")
             
             for i, box in enumerate(boxes):
                 conf = float(box.conf[0].cpu().numpy())
@@ -439,9 +439,9 @@ def detect_anomalies():
                 }
                 detections.append(detection_obj)
                 
-                logger.info(f"✅ Detection: {detection_obj['className']} @ ({x1},{y1},{x2},{y2}) conf={conf:.3f}")
+                logger.info(f"Detection: {detection_obj['className']} @ ({x1},{y1},{x2},{y2}) conf={conf:.3f}")
         else:
-            logger.info("ℹ️ No anomalies detected")
+            logger.info("No anomalies detected")
         
         # Calculate inference time
         inference_time = (time.time() - start_time) * 1000
@@ -461,12 +461,12 @@ def detect_anomalies():
             }
         }
         
-        logger.info(f"✅ Standard detection completed: {len(detections)} anomalies found in {inference_time:.1f}ms")
+        logger.info(f"Standard detection completed: {len(detections)} anomalies found in {inference_time:.1f}ms")
         
         return jsonify(response), 200
         
     except Exception as e:
-        logger.error(f"❌ Error during detection: {e}", exc_info=True)
+        logger.error(f"Error during detection: {e}", exc_info=True)
         return jsonify({
             'success': False,
             'error': str(e)
@@ -484,35 +484,35 @@ def get_classes():
 
 if __name__ == '__main__':
     logger.info("=" * 80)
-    logger.info("🚀 Starting TransX ML Service with Similarity-Based YOLOv8p2")
+    logger.info("Starting TransX ML Service with Similarity-Based YOLOv8p2")
     logger.info("=" * 80)
-    logger.info("🔍 Looking for YOLOv8p2 models in priority order:")
+    logger.info("Looking for YOLOv8p2 models in priority order:")
     for i, path in enumerate(MODEL_PATHS, 1):
-        exists = "✅" if Path(path).exists() else "❌"
+        exists = "Yes" if Path(path).exists() else "No"
         logger.info(f"   {i}. {path} {exists}")
-    logger.info(f"📋 Classes: {CLASS_NAMES}")
-    logger.info(f"🔧 Similarity System Available: {'✅' if SIMILARITY_SYSTEM_AVAILABLE else '❌'}")
+    logger.info(f"Classes: {CLASS_NAMES}")
+    logger.info(f"Similarity System Available: {'Yes' if SIMILARITY_SYSTEM_AVAILABLE else 'No'}")
     logger.info("=" * 80)
     
     # Preload components on startup
     try:
         load_model()
-        logger.info(f"✅ Standard model preloaded from: {MODEL_PATH}")
+        logger.info("Standard model preloaded from: {MODEL_PATH}")
     except Exception as e:
-        logger.error(f"⚠️  Could not preload standard model: {e}")
+        logger.error(f"Could not preload standard model: {e}")
     
     if SIMILARITY_SYSTEM_AVAILABLE:
         try:
             load_similarity_system()
-            logger.info("✅ Similarity-based YOLO system preloaded")
+            logger.info("Similarity-based YOLO system preloaded")
         except Exception as e:
-            logger.error(f"⚠️  Could not preload similarity system: {e}")
+            logger.error(f"Could not preload similarity system: {e}")
     
     # Start Flask server
-    logger.info("🌟 Server Features:")
-    logger.info("   • Single image inference (standard YOLOv8)")
-    logger.info("   • Similarity-based comparison (with baseline)")
-    logger.info("   • Configurable confidence thresholds")
-    logger.info("   • Smart detection filtering")
+    logger.info("Server Features:")
+    logger.info("Single image inference (standard YOLOv8)")
+    logger.info("Similarity-based comparison (with baseline)")
+    logger.info("Configurable confidence thresholds")
+    logger.info("Smart detection filtering")
     logger.info("Starting Flask server on http://0.0.0.0:5001")
     app.run(host='0.0.0.0', port=5001, debug=True)

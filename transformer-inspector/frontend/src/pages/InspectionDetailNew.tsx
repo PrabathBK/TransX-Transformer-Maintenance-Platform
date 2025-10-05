@@ -666,7 +666,7 @@ export default function InspectionDetailNew() {
                   fontSize: '14px', 
                   marginBottom: '4px' 
                 }}>
-                  🖼️ Inspection Image Uploaded
+                  Inspection Image
                 </div>
                 <div style={{ 
                   color: annotations.length > 0 ? '#b91c1c' : '#a16207', 
@@ -944,7 +944,7 @@ export default function InspectionDetailNew() {
               fontWeight: '600',
               color: '#1f2937'
             }}>
-              🔍 Configure Anomaly Detection
+              Configure Anomaly Detection
             </h3>
             
             <div style={{ marginBottom: '20px' }}>
@@ -953,7 +953,7 @@ export default function InspectionDetailNew() {
                 color: '#6b7280', 
                 marginBottom: '16px' 
               }}>
-                Set the detection threshold for the similarity-based YOLO inference engine.
+                Set the detection threshold.
                 Lower values detect more anomalies, higher values are more selective.
               </p>
               
@@ -1063,7 +1063,7 @@ export default function InspectionDetailNew() {
                   </>
                 ) : (
                   <>
-                    <span style={{ fontSize: '12px' }}>🚀</span>
+                    <span style={{ fontSize: '12px' }}></span>
                     Start Detection
                   </>
                 )}

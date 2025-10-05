@@ -38,7 +38,7 @@ public class InspectionHistoryService {
      */
     @Transactional
     public void assignBoxNumbers(String inspectionId, List<Annotation> newAnnotations, String inspectorName) {
-        log.info("🔢 Assigning box numbers for {} new annotations in inspection: {}", 
+        log.info("Assigning box numbers for {} new annotations in inspection: {}", 
                 newAnnotations.size(), inspectionId);
         
         // Get or create box numbering sequence for this inspection
@@ -65,7 +65,7 @@ public class InspectionHistoryService {
         // Update sequence counter
         boxSequenceRepo.updateNextBoxNumber(inspectionId, nextBoxNumber);
         
-        log.info("✅ Box numbering complete. Next available number: {}", nextBoxNumber);
+        log.info("Box numbering complete. Next available number: {}", nextBoxNumber);
     }
 
     /**
@@ -90,9 +90,9 @@ public class InspectionHistoryService {
                 objectMapper.writeValueAsString(data)
             );
             
-            log.info("📝 Logged inspection creation: {} by {}", inspectionNumber, inspectorName);
+            log.info("Logged inspection creation: {} by {}", inspectionNumber, inspectorName);
         } catch (Exception e) {
-            log.error("❌ Failed to log inspection creation", e);
+            log.error("Failed to log inspection creation", e);
         }
     }
 
@@ -122,10 +122,10 @@ public class InspectionHistoryService {
                 objectMapper.writeValueAsString(data)
             );
             
-            log.info("🤖 Logged AI detection: {} boxes detected by {}", 
+            log.info("Logged AI detection: {} boxes detected by {}", 
                     detectedAnnotations.size(), inspectorName);
         } catch (Exception e) {
-            log.error("❌ Failed to log AI detection run", e);
+            log.error("Failed to log AI detection run", e);
         }
     }
 
@@ -155,10 +155,10 @@ public class InspectionHistoryService {
                 objectMapper.writeValueAsString(newData)
             );
             
-            log.info("👤 Logged inspector change: {} → {} ({})", 
+            log.info("Logged inspector change: {} → {} ({})", 
                     previousInspector, newInspector, reason);
         } catch (Exception e) {
-            log.error("❌ Failed to log inspector change", e);
+            log.error("Failed to log inspector change", e);
         }
     }
 
@@ -186,9 +186,9 @@ public class InspectionHistoryService {
                 objectMapper.writeValueAsString(data)
             );
             
-            log.info("✅ Logged inspection completion: {} boxes by {}", totalBoxes, inspectorName);
+            log.info("Logged inspection completion: {} boxes by {}", totalBoxes, inspectorName);
         } catch (Exception e) {
-            log.error("❌ Failed to log inspection completion", e);
+            log.error("Failed to log inspection completion", e);
         }
     }
 
@@ -196,7 +196,7 @@ public class InspectionHistoryService {
      * Get complete history for an inspection
      */
     public List<InspectionHistoryDTO> getInspectionHistory(String inspectionId) {
-        log.info("📚 Retrieving history for inspection: {}", inspectionId);
+        log.info("Retrieving history for inspection: {}", inspectionId);
         return historyRepo.findHistoryByInspectionId(inspectionId);
     }
 
@@ -204,7 +204,7 @@ public class InspectionHistoryService {
      * Get history summary (recent actions only)
      */
     public List<InspectionHistoryDTO> getInspectionHistorySummary(String inspectionId, int limit) {
-        log.info("📋 Retrieving history summary for inspection: {} (limit: {})", inspectionId, limit);
+        log.info("Retrieving history summary for inspection: {} (limit: {})", inspectionId, limit);
         return historyRepo.findRecentHistoryByInspectionId(inspectionId, limit);
     }
 
@@ -212,7 +212,7 @@ public class InspectionHistoryService {
      * Get box-specific history
      */
     public List<InspectionHistoryDTO> getBoxHistory(String inspectionId, Integer boxNumber) {
-        log.info("📦 Retrieving history for box #{} in inspection: {}", boxNumber, inspectionId);
+        log.info("Retrieving history for box #{} in inspection: {}", boxNumber, inspectionId);
         return historyRepo.findHistoryByInspectionIdAndBoxNumber(inspectionId, boxNumber);
     }
 
@@ -220,7 +220,7 @@ public class InspectionHistoryService {
      * Get statistics for inspection activity
      */
     public Map<String, Object> getInspectionStatistics(String inspectionId) {
-        log.info("📊 Calculating statistics for inspection: {}", inspectionId);
+        log.info("Calculating statistics for inspection: {}", inspectionId);
         
         List<InspectionHistoryDTO> history = getInspectionHistory(inspectionId);
         
@@ -278,13 +278,13 @@ public class InspectionHistoryService {
                                          Inspection.Status inspectionStatus) {
         // Completed inspections are read-only
         if (inspectionStatus == Inspection.Status.COMPLETED) {
-            log.info("🔒 Inspector {} attempting to access COMPLETED inspection {} - READ-ONLY mode", 
+            log.info("Inspector {} attempting to access COMPLETED inspection {} - READ-ONLY mode", 
                     inspectorName, inspectionId);
             return false; // Read-only access only
         }
         
         // Draft and in-progress inspections allow editing
-        log.info("✅ Inspector {} granted edit access to inspection {} (status: {})", 
+        log.info("Inspector {} granted edit access to inspection {} (status: {})", 
                 inspectorName, inspectionId, inspectionStatus);
         return true;
     }

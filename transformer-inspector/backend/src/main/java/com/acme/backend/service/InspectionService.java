@@ -156,7 +156,7 @@ public class InspectionService {
         UUID transformerId = inspection.getTransformer().getId();
         
         if (transformerId != null) {
-            log.info("🔍 Looking for baseline images for transformer: {}", transformerId);
+            log.info("Looking for baseline images for transformer: {}", transformerId);
             
             // Get baseline images, prioritizing matching weather condition
             Page<ThermalImage> baselineImages = thermalImageRepo.findByTransformerIdAndType(
@@ -175,25 +175,25 @@ public class InspectionService {
                     .orElse(null);
                     
                 if (selectedBaseline != null) {
-                    log.info("✅ Found baseline with matching weather: {}", inspection.getWeatherCondition());
+                    log.info("Found baseline with matching weather: {}", inspection.getWeatherCondition());
                 }
             }
             
             // If no weather match, use most recent baseline
             if (selectedBaseline == null && baselineImages.hasContent()) {
                 selectedBaseline = baselineImages.getContent().get(0);  // Most recent due to default ordering
-                log.info("📷 Using most recent baseline image (no weather match)");
+                log.info("Using most recent baseline image (no weather match)");
             }
             
             if (selectedBaseline != null) {
                 baselineImagePath = getAbsoluteImagePath(selectedBaseline);
-                log.info("🖼️ Selected baseline: {}", baselineImagePath);
+                log.info("Selected baseline: {}", baselineImagePath);
             } else {
-                log.warn("⚠️ No baseline images found for transformer: {}", transformerId);
+                log.warn("No baseline images found for transformer: {}", transformerId);
             }
         }
         
-        log.info("🚀 Triggering anomaly detection for inspection: {}", inspection.getInspectionNumber());
+        log.info("Triggering anomaly detection for inspection: {}", inspection.getInspectionNumber());
         log.info("   Inspection image: {}", inspectionImagePath);
         log.info("   Baseline image: {}", baselineImagePath != null ? baselineImagePath : "None");
         
@@ -251,7 +251,7 @@ public class InspectionService {
         historyService.logAIDetectionRun(inspection.getId().toString(), inspectorName, 
                                         newAnnotations, metadata);
         
-        log.info("✅ Saved {} AI-generated annotations with box numbers for inspection: {}", 
+        log.info("Saved {} AI-generated annotations with box numbers for inspection: {}", 
                 detections.size(), inspection.getInspectionNumber());
     }
     
@@ -404,7 +404,7 @@ public class InspectionService {
      */
     @Transactional
     public void updateCurrentInspector(String inspectionId, String inspectorName) {
-        log.info("👤 Updating current inspector for inspection {} to: {}", inspectionId, inspectorName);
+        log.info("Updating current inspector for inspection {} to: {}", inspectionId, inspectorName);
         
         Inspection inspection = inspectionRepo.findById(UUID.fromString(inspectionId))
                 .orElseThrow(() -> new RuntimeException("Inspection not found: " + inspectionId));
@@ -413,7 +413,7 @@ public class InspectionService {
         inspection.setCurrentInspector(inspectorName);
         inspectionRepo.save(inspection);
         
-        log.info("✅ Inspector updated from {} to {}", previousInspector, inspectorName);
+        log.info("Inspector updated from {} to {}", previousInspector, inspectorName);
     }
 
     /**
@@ -421,7 +421,7 @@ public class InspectionService {
      */
     @Transactional
     public void completeInspection(String inspectionId, String completedBy) {
-        log.info("🏁 Completing inspection: {} by {}", inspectionId, completedBy);
+        log.info("Completing inspection: {} by {}", inspectionId, completedBy);
         
         Inspection inspection = inspectionRepo.findById(UUID.fromString(inspectionId))
                 .orElseThrow(() -> new RuntimeException("Inspection not found: " + inspectionId));
@@ -443,6 +443,6 @@ public class InspectionService {
         historyService.logInspectionCompleted(inspectionId, completedBy, 
                                             annotations.size(), classificationSummary);
         
-        log.info("✅ Inspection completed with {} boxes", annotations.size());
+        log.info("Inspection completed with {} boxes", annotations.size());
     }
 }

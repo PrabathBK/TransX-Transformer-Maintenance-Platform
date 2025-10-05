@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import FileDrop from '../components/FileDrop';
+import CommentsSection from '../components/CommentsSection';
 import { getInspection, updateInspectionStatus } from '../api/inspections';
 import { listImages, uploadImage } from '../api/images';
 import type { Inspection } from '../api/inspections';
@@ -83,7 +84,7 @@ export default function InspectionDetail() {
     }
   }
 
-  async function handleStatusUpdate(status: 'IN_PROGRESS' | 'PENDING' | 'COMPLETED') {
+  async function handleStatusUpdate(status: 'IN_PROGRESS' | 'DRAFT' | 'UNDER_REVIEW' | 'COMPLETED' | 'CANCELLED') {
     if (!inspection) return;
 
     try {
@@ -210,9 +211,11 @@ export default function InspectionDetail() {
                       fontSize: 14
                     }}
                   >
+                    <option value="DRAFT">Draft</option>
                     <option value="IN_PROGRESS">In Progress</option>
-                    <option value="PENDING">Pending</option>
+                    <option value="UNDER_REVIEW">Under Review</option>
                     <option value="COMPLETED">Completed</option>
+                    <option value="CANCELLED">Cancelled</option>
                   </select>
                 </div>
               </div>
@@ -254,6 +257,9 @@ export default function InspectionDetail() {
               
               {imgErr && <div style={{ color: '#b00020', marginTop: 12 }}>Error loading images: {imgErr}</div>}
             </div>
+
+            {/* Comments Section */}
+            {inspection && <CommentsSection inspectionId={inspection.id} />}
           </>
         )}
       </div>

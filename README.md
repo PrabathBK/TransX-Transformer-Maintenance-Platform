@@ -17,6 +17,40 @@ A full-stack application for managing electrical transformers with AI-powered th
 - **ML Service** - Flask-based microservice for machine learning inference
 - **Confidence Thresholding** - Configurable detection sensitivity (default: 0.25)
 - **Fault Classification** - Automatic detection of Faulty, Loose Joint, Point Overload, and Potential Faulty conditions
+- **Input** - Baseline & maintenance images, threshold values
+- **Output** - Bounding box coordinates, fault type, confidence values
+
+**Sample JSON Output**
+~~~json
+{
+  "success": true,
+  "detections": [
+    {
+      "id": "uuid-string",
+      "class_id": 0,
+      "class_name": "Faulty",
+      "confidence": 0.87,
+      "bbox": { "x1": 120, "y1": 150, "x2": 300, "y2": 400 },
+      "color": [255, 0, 0],
+      "source": "ai"
+    }
+  ],
+  "image_dimensions": { "width": 1920, "height": 1080 },
+  "inference_time_ms": 245.3,
+  "model_info": {
+    "type": "YOLOv8",
+    "classes": {
+      "0": "Faulty",
+      "1": "faulty_loose_joint",
+      "2": "faulty_point_overload",
+      "3": "potential_faulty"
+    }
+  }
+}
+~~~
+**Side-by-Side Image Comparison View**
+- React frontend displays baseline (left) and maintenance (right) images.
+
 
 ### Phase 3: Advanced Annotation System
 - **Interactive Canvas** - Multi-mode annotation interface (View/Edit/Draw)

@@ -13,12 +13,51 @@ A full-stack application for managing electrical transformers with AI-powered th
 - **Local File Storage** - Secure file uploads with organized storage structure
 
 ### Phase 2: AI-Powered Anomaly Detection
-- **YOLOv8 Integration** - Real-time anomaly detection using trained YOLOv8p2 model
-- **ML Service** - Flask-based microservice for machine learning inference
-- **Confidence Thresholding** - Configurable detection sensitivity (default: 0.25)
-- **Fault Classification** - Automatic detection of Faulty, Loose Joint, Point Overload, and Potential Faulty conditions
-- **Input** - Baseline & maintenance images, threshold values
-- **Output** - Bounding box coordinates, fault type, confidence values
+**Inspection and Anomaly Detection Workflow**
+
+- **Similarity Check:**
+  - When an inspection image is uploaded, the backend first performs a similarity check between the **baseline** and **maintenance** images.
+  - This process determines whether both images were captured from approximately the same angle and viewpoint.
+  - The computed similarity value is stored as a flag for use in the final comparison stage.
+
+- **YOLOv8-Based Anomaly Detection:**
+  - Regardless of the similarity outcome, both images are forwarded to the **YOLOv8 model** for anomaly detection.
+  - The model analyzes the **maintenance (inspection)** thermal image and identifies potential faults or abnormal heat zones.
+
+- **Detected Fault Classes:**
+  - **Faulty (Class 0)** – 🔴 *Loose joints or point overloads*
+  - **Faulty Loose Joint (Class 1)** – 🟢 *Localized loose joints*
+  - **Faulty Point Overload (Class 2)** – 🔵 *Specific point overloads*
+  - **Potential Faulty (Class 3)** – 🟡 *Yellowish joints or wire overloads*
+
+- **Detection Output:**
+  - Each detected region includes:
+    - Bounding box coordinates `(x₁, y₁, x₂, y₂)`
+    - Predicted class label
+    - Confidence score
+
+- **Comparative Analysis (if Similarity Passes):**
+  - If the similarity check confirms matching viewpoints, a **comparative analysis** is performed between the baseline and inspection images.
+  - Based on threshold values, bounding boxes are fine-tuned to align accurately with the baseline reference.
+
+- **Visualization & User Interaction:**
+  - Final anomalies are visualized on the maintenance image using **color-coded bounding boxes** for each fault type.
+  - The interface allows engineers to:
+    - Approve or reject detections
+    - Add notes and comments
+    - Save the updated inspection record
+
+- **Data Logging & Traceability:**
+  - All user actions — detections, approvals, rejections, and comments — are securely stored in the database.
+  - Provides a complete audit trail for **traceability and analysis**.
+
+- **System Integration:**
+  - Demonstrates end-to-end integration of:
+    - YOLOv8 inference engine  
+    - Flask-based ML microservice  
+    - Spring Boot backend  
+    - React TypeScript frontend
+
 
 **Sample JSON Output**
 ~~~json
@@ -50,6 +89,12 @@ A full-stack application for managing electrical transformers with AI-powered th
 ~~~
 **Side-by-Side Image Comparison View**
 - React frontend displays baseline (left) and maintenance (right) images.
+  
+![Anomaly Detection Result](assests/detection01.jpg)
+![Anomaly Detection Result](assests/detection02.jpg)
+![Anomaly Detection Result](assests/detection03.jpg)
+![Anomaly Detection Result](assests/detection04.jpg)
+![Anomaly Detection Result](assests/detection05.jpg)
 
 
 ### Phase 3: Advanced Annotation System

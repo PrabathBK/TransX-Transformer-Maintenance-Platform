@@ -839,6 +839,91 @@ export default function InspectionDetailNew() {
             </div>
           </div>
 
+          {/* Action Buttons Bar */}
+          {inspection.status !== 'COMPLETED' && (
+            <div style={{
+              marginTop: '16px',
+              display: 'flex',
+              gap: '12px',
+              flexWrap: 'wrap'
+            }}>
+              {/* Save Image Button */}
+              {annotations.length > 0 && (
+                <button
+                  onClick={handleSaveAnnotatedImage}
+                  disabled={isSavingImage || !inspection.inspectionImageId || !isCanvasReady}
+                  title="Save the current image with annotations"
+                  style={{
+                    flex: '1 1 auto',
+                    minWidth: '140px',
+                    background: (isSavingImage || !isCanvasReady) ? '#94a3b8' : 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '10px',
+                    padding: '12px 20px',
+                    fontSize: '15px',
+                    fontWeight: '600',
+                    cursor: (isSavingImage || !inspection.inspectionImageId || !isCanvasReady) ? 'not-allowed' : 'pointer',
+                    boxShadow: '0 4px 12px rgba(59, 130, 246, 0.3)',
+                    opacity: (!inspection.inspectionImageId || !isCanvasReady) ? 0.6 : 1,
+                    transition: 'all 0.2s'
+                  }}
+                >
+                  {isSavingImage ? '⏳ Saving...' : !isCanvasReady ? '⏳ Loading...' : '💾 Save Image'}
+                </button>
+              )}
+
+              {/* Complete Inspection Button */}
+              <button
+                onClick={handleCompleteInspection}
+                disabled={isCompleting || !inspection.inspectionImageId}
+                title="Mark inspection as complete"
+                style={{
+                  flex: '1 1 auto',
+                  minWidth: '140px',
+                  background: isCompleting ? '#94a3b8' : 'linear-gradient(135deg, #059669 0%, #10b981 100%)',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '10px',
+                  padding: '12px 20px',
+                  fontSize: '15px',
+                  fontWeight: '600',
+                  cursor: isCompleting || !inspection.inspectionImageId ? 'not-allowed' : 'pointer',
+                  boxShadow: '0 4px 12px rgba(5, 150, 105, 0.3)',
+                  opacity: !inspection.inspectionImageId ? 0.6 : 1,
+                  transition: 'all 0.2s'
+                }}
+              >
+                {isCompleting ? '⏳ Processing...' : '✅ Done'}
+              </button>
+
+              {/* Export Feedback Button */}
+              {annotations.length > 0 && (
+                <button
+                  onClick={handleExportFeedback}
+                  disabled={isExportingFeedback}
+                  title="Export feedback for model fine-tuning"
+                  style={{
+                    flex: '1 1 auto',
+                    minWidth: '140px',
+                    background: isExportingFeedback ? '#94a3b8' : 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '10px',
+                    padding: '12px 20px',
+                    fontSize: '15px',
+                    fontWeight: '600',
+                    cursor: isExportingFeedback ? 'not-allowed' : 'pointer',
+                    boxShadow: '0 4px 12px rgba(139, 92, 246, 0.3)',
+                    transition: 'all 0.2s'
+                  }}
+                >
+                  {isExportingFeedback ? '⏳ Exporting...' : '🤖 Finetune'}
+                </button>
+              )}
+            </div>
+          )}
+
           {/* Comments Section */}
           <CommentsSection inspectionId={inspection.id} />
         </div>
@@ -900,138 +985,6 @@ export default function InspectionDetailNew() {
             initialNotes={inspection.notes || ''}
             onNotesUpdate={() => loadData()}
           />
-
-          {/* Save Annotated Image Button */}
-          {inspection.status !== 'COMPLETED' && annotations.length > 0 && (
-            <div style={{
-              background: 'white',
-              borderRadius: '12px',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-              padding: '20px',
-              marginTop: '16px',
-              textAlign: 'center'
-            }}>
-              <h3 style={{ margin: '0 0 12px 0', fontSize: '16px', fontWeight: '600', color: '#3b82f6' }}>
-                💾 Save Annotated Image
-              </h3>
-              <p style={{ fontSize: '14px', color: '#6b7280', lineHeight: '1.6', marginBottom: '16px' }}>
-                Save the current image with annotations to display on the transformer page. You can do this multiple times as you make changes.
-              </p>
-              <button
-                onClick={handleSaveAnnotatedImage}
-                disabled={isSavingImage || !inspection.inspectionImageId || !isCanvasReady}
-                style={{
-                  background: (isSavingImage || !isCanvasReady) ? '#94a3b8' : 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '10px',
-                  padding: '14px 28px',
-                  fontSize: '16px',
-                  fontWeight: '600',
-                  cursor: (isSavingImage || !inspection.inspectionImageId || !isCanvasReady) ? 'not-allowed' : 'pointer',
-                  boxShadow: '0 4px 12px rgba(59, 130, 246, 0.3)',
-                  minWidth: '160px',
-                  opacity: (!inspection.inspectionImageId || !isCanvasReady) ? 0.6 : 1
-                }}
-              >
-                {isSavingImage ? '⏳ Saving...' : !isCanvasReady ? '⏳ Loading...' : '💾 Save Image'}
-              </button>
-              {!inspection.inspectionImageId && (
-                <p style={{ fontSize: '12px', color: '#ef4444', marginTop: '8px' }}>
-                  Please upload an inspection image first
-                </p>
-              )}
-              {inspection.inspectionImageId && !isCanvasReady && (
-                <p style={{ fontSize: '12px', color: '#f59e0b', marginTop: '8px' }}>
-                  Canvas is loading, please wait...
-                </p>
-              )}
-            </div>
-          )}
-
-          {/* Complete Inspection Button */}
-          {inspection.status !== 'COMPLETED' && (
-            <div style={{
-              background: 'white',
-              borderRadius: '12px',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-              padding: '20px',
-              marginTop: '16px',
-              textAlign: 'center'
-            }}>
-              <h3 style={{ margin: '0 0 12px 0', fontSize: '16px', fontWeight: '600', color: '#059669' }}>
-                ✅ Finish Inspection
-              </h3>
-              <p style={{ fontSize: '14px', color: '#6b7280', lineHeight: '1.6', marginBottom: '16px' }}>
-                Click Done when you have finished editing annotations. This will mark the inspection as complete and display the results on the transformer page.
-              </p>
-              <button
-                onClick={handleCompleteInspection}
-                disabled={isCompleting || !inspection.inspectionImageId}
-                style={{
-                  background: isCompleting ? '#94a3b8' : 'linear-gradient(135deg, #059669 0%, #10b981 100%)',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '10px',
-                  padding: '14px 28px',
-                  fontSize: '16px',
-                  fontWeight: '600',
-                  cursor: isCompleting || !inspection.inspectionImageId ? 'not-allowed' : 'pointer',
-                  boxShadow: '0 4px 12px rgba(5, 150, 105, 0.3)',
-                  minWidth: '140px',
-                  opacity: !inspection.inspectionImageId ? 0.6 : 1
-                }}
-              >
-                {isCompleting ? '⏳ Finishing...' : '✅ Done'}
-              </button>
-              {!inspection.inspectionImageId && (
-                <p style={{ fontSize: '12px', color: '#ef4444', marginTop: '8px' }}>
-                  Please upload an inspection image first
-                </p>
-              )}
-            </div>
-          )}
-
-          {/* Export Feedback Button (FR3.3) */}
-          {annotations.length > 0 && (
-            <div style={{
-              background: 'white',
-              borderRadius: '12px',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-              padding: '20px',
-              marginTop: '16px',
-              textAlign: 'center',
-              border: '2px solid #8b5cf6'
-            }}>
-              <h3 style={{ margin: '0 0 8px 0', fontSize: '16px', fontWeight: '600', color: '#7c3aed' }}>
-                🤖 Model Fine-tuning
-              </h3>
-              <p style={{ fontSize: '14px', color: '#6b7280', lineHeight: '1.6', marginBottom: '16px' }}>
-                Export annotation feedback to improve the AI model. Downloads JSON/CSV files and sends data to ML service for fine-tuning.
-              </p>
-              <button
-                onClick={handleExportFeedback}
-                disabled={isExportingFeedback}
-                style={{
-                  background: isExportingFeedback ? '#94a3b8' : 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '10px',
-                  padding: '14px 28px',
-                  fontSize: '16px',
-                  fontWeight: '600',
-                  cursor: isExportingFeedback ? 'not-allowed' : 'pointer',
-                  boxShadow: '0 4px 12px rgba(139, 92, 246, 0.3)',
-                  minWidth: '220px'
-                }}
-              >
-                {isExportingFeedback ? '⏳ Exporting...' : '🤖 Finetune with Feedbacks'}
-              </button>
-              <p style={{ fontSize: '11px', color: '#9ca3af', marginTop: '12px', lineHeight: '1.4' }}>
-                Exports {annotations.length} annotation{annotations.length !== 1 ? 's' : ''} with AI predictions and human modifications
-              </p>
-            </div>
-          )}
 
           {inspection.status === 'COMPLETED' && (
             <div style={{

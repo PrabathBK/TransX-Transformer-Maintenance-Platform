@@ -16,7 +16,7 @@ import {
   uploadAnnotatedImage,
   removeInspectionImage,
 } from '../api/inspections';
-import { getAnnotationsByInspection, saveAnnotation, approveAnnotation, rejectAnnotation, deleteAnnotation } from '../api/annotations';
+import { getAnnotationsByInspection, saveAnnotation, approveAnnotation, rejectAnnotation, deleteAnnotation, exportFeedback, exportFeedbackCSV } from '../api/annotations';
 import { uploadImage, listImages } from '../api/images';
 import type { ThermalImage } from '../api/images';
 import type { Inspection } from '../api/inspections';
@@ -54,6 +54,9 @@ export default function InspectionDetailNew() {
   // Threshold modal state
   const [showThresholdModal, setShowThresholdModal] = useState(false);
   const [threshold, setThreshold] = useState(50); // Default threshold value (0-100)
+  
+  // Feedback export state (FR3.3)
+  const [isExportingFeedback, setIsExportingFeedback] = useState(false);
   
   // Load inspection and annotations
   useEffect(() => {
@@ -491,6 +494,69 @@ export default function InspectionDetailNew() {
     }
   }
 
+  /**
+   * Export feedback and send to ML service for model fine-tuning (FR3.3)
+   */
+  async function handleExportFeedback() {
+    if (!id) return;
+
+    try {
+      setIsExportingFeedback(true);
+
+      // 1. Export feedback data (JSON format)
+      const feedbackData = await exportFeedback(id);
+      
+      // 2. Download JSON file
+      const jsonBlob = new Blob([JSON.stringify(feedbackData, null, 2)], { type: 'application/json' });
+      const jsonUrl = URL.createObjectURL(jsonBlob);
+      const jsonLink = document.createElement('a');
+      jsonLink.href = jsonUrl;
+      jsonLink.download = `feedback_${inspection?.inspectionNumber || id}.json`;
+      document.body.appendChild(jsonLink);
+      jsonLink.click();
+      document.body.removeChild(jsonLink);
+      URL.revokeObjectURL(jsonUrl);
+
+      // 3. Download CSV file
+      exportFeedbackCSV(id);
+
+      // 4. Send to Flask ML service
+      const mlServiceUrl = import.meta.env.VITE_ML_SERVICE_URL || 'http://localhost:5001';
+      const response = await fetch(`${mlServiceUrl}/api/feedback/upload`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(feedbackData),
+      });
+
+      if (!response.ok) {
+        throw new Error(`ML service returned ${response.status}`);
+      }
+
+      const result = await response.json();
+      
+      alert(`✅ Feedback exported successfully!\n\n` +
+            `📊 Summary:\n` +
+            `- AI Detections: ${result.summary?.totalAiDetections || 0}\n` +
+            `- Human Annotations: ${result.summary?.totalHumanAnnotations || 0}\n` +
+            `- Approved: ${result.summary?.approved || 0}\n` +
+            `- Rejected: ${result.summary?.rejected || 0}\n\n` +
+            `📁 Files downloaded to your Downloads folder\n` +
+            `🤖 Data sent to ML service for fine-tuning\n\n` +
+            `Note: The ML model can now be fine-tuned using this feedback data.`);
+      
+    } catch (e: any) {
+      console.error('Feedback export error:', e);
+      alert(`⚠️ Feedback export partially completed.\n\n` +
+            `Files may have been downloaded, but failed to send to ML service:\n` +
+            `${e?.message || 'Unknown error'}\n\n` +
+            `Check console for details.`);
+    } finally {
+      setIsExportingFeedback(false);
+    }
+  }
+
   if (loading) {
     return (
       <div className="page-container">
@@ -800,17 +866,28 @@ export default function InspectionDetailNew() {
               </div>
             )}
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              {annotations.map((ann) => (
-                <AnnotationCard
-                  key={ann.id}
-                  annotation={ann}
-                  onApprove={() => handleApprove(ann.id)}
-                  onReject={() => handleReject(ann.id)}
-                  onDelete={() => handleAnnotationDelete(ann.id)}
-                  onUpdateComment={handleUpdateComment}
-                />
-              ))}
+            {/* Scrollable Annotations Container */}
+            <div style={{ 
+              maxHeight: '600px', 
+              overflowY: 'auto', 
+              overflowX: 'hidden',
+              paddingRight: '8px',
+              // Custom scrollbar styling
+              scrollbarWidth: 'thin',
+              scrollbarColor: '#cbd5e1 #f1f5f9'
+            }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                {annotations.map((ann) => (
+                  <AnnotationCard
+                    key={ann.id}
+                    annotation={ann}
+                    onApprove={() => handleApprove(ann.id)}
+                    onReject={() => handleReject(ann.id)}
+                    onDelete={() => handleAnnotationDelete(ann.id)}
+                    onUpdateComment={handleUpdateComment}
+                  />
+                ))}
+              </div>
             </div>
           </div>
 
@@ -912,6 +989,47 @@ export default function InspectionDetailNew() {
                   Please upload an inspection image first
                 </p>
               )}
+            </div>
+          )}
+
+          {/* Export Feedback Button (FR3.3) */}
+          {annotations.length > 0 && (
+            <div style={{
+              background: 'white',
+              borderRadius: '12px',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+              padding: '20px',
+              marginTop: '16px',
+              textAlign: 'center',
+              border: '2px solid #8b5cf6'
+            }}>
+              <h3 style={{ margin: '0 0 8px 0', fontSize: '16px', fontWeight: '600', color: '#7c3aed' }}>
+                🤖 Model Fine-tuning
+              </h3>
+              <p style={{ fontSize: '14px', color: '#6b7280', lineHeight: '1.6', marginBottom: '16px' }}>
+                Export annotation feedback to improve the AI model. Downloads JSON/CSV files and sends data to ML service for fine-tuning.
+              </p>
+              <button
+                onClick={handleExportFeedback}
+                disabled={isExportingFeedback}
+                style={{
+                  background: isExportingFeedback ? '#94a3b8' : 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '10px',
+                  padding: '14px 28px',
+                  fontSize: '16px',
+                  fontWeight: '600',
+                  cursor: isExportingFeedback ? 'not-allowed' : 'pointer',
+                  boxShadow: '0 4px 12px rgba(139, 92, 246, 0.3)',
+                  minWidth: '220px'
+                }}
+              >
+                {isExportingFeedback ? '⏳ Exporting...' : '🤖 Finetune with Feedbacks'}
+              </button>
+              <p style={{ fontSize: '11px', color: '#9ca3af', marginTop: '12px', lineHeight: '1.4' }}>
+                Exports {annotations.length} annotation{annotations.length !== 1 ? 's' : ''} with AI predictions and human modifications
+              </p>
             </div>
           )}
 

@@ -1,0 +1,104 @@
+{
+  "inspectionId": "8e43bbf9-ab2a-4de3-b234-9a316afa5107",
+  "inspectionNumber": "INS-008",
+  "transformerCode": "TX-002",
+  "exportedAt": "2025-10-15T17:00:34.334936Z",
+  "comparisons": [
+    {
+      "imageId": "31361901-2aff-438e-aa7b-93efa8d2f86b",
+      "aiPrediction": {
+        "id": "0fe8ab67-830a-4fc6-957b-c49b309c9122",
+        "inspectionId": "8e43bbf9-ab2a-4de3-b234-9a316afa5107",
+        "version": 1,
+        "bbox": {
+          "x1": 380,
+          "y1": 403,
+          "x2": 457,
+          "y2": 514
+        },
+        "classId": 0,
+        "className": "Faulty",
+        "confidence": 0.765,
+        "source": "ai",
+        "actionType": "approved",
+        "boxNumber": 2,
+        "createdBy": "AI-YOLOv8",
+        "createdAt": "2025-10-15T16:56:05Z",
+        "modifiedBy": "current-user@example.com",
+        "modifiedAt": "2025-10-15T16:56:12Z",
+        "parentAnnotationId": null,
+        "isActive": true,
+        "comments": null
+      },
+      "humanAnnotation": null,
+      "actionTaken": "approved"
+    },
+    {
+      "imageId": "31361901-2aff-438e-aa7b-93efa8d2f86b",
+      "aiPrediction": {
+        "id": "3fb95902-c6ce-436e-9242-96329ed66157",
+        "inspectionId": "8e43bbf9-ab2a-4de3-b234-9a316afa5107",
+        "version": 2,
+        "bbox": {
+          "x1": 60,
+          "y1": 260,
+          "x2": 287,
+          "y2": 603
+        },
+        "classId": 1,
+        "className": "Faulty",
+        "confidence": 0.85,
+        "source": "ai",
+        "actionType": "edited",
+        "boxNumber": 1,
+        "createdBy": null,
+        "createdAt": "2025-10-15T16:56:26Z",
+        "modifiedBy": "current-user@example.com",
+        "modifiedAt": "2025-10-15T16:56:26Z",
+        "parentAnnotationId": "eadf2a8c-f6bb-4f74-85bd-78c8178b5568",
+        "isActive": true,
+        "comments": "bit moved right"
+      },
+      "humanAnnotation": null,
+      "actionTaken": "edited"
+    },
+    {
+      "imageId": "31361901-2aff-438e-aa7b-93efa8d2f86b",
+      "aiPrediction": null,
+      "humanAnnotation": {
+        "id": "9093edf7-0787-42e1-814b-ed8482b6a7e0",
+        "inspectionId": "8e43bbf9-ab2a-4de3-b234-9a316afa5107",
+        "version": 1,
+        "bbox": {
+          "x1": 294,
+          "y1": 297,
+          "x2": 370,
+          "y2": 473
+        },
+        "classId": 1,
+        "className": "Faulty",
+        "confidence": 1,
+        "source": "human",
+        "actionType": "created",
+        "boxNumber": 3,
+        "createdBy": "current-user@example.com",
+        "createdAt": "2025-10-15T17:00:16Z",
+        "modifiedBy": null,
+        "modifiedAt": null,
+        "parentAnnotationId": null,
+        "isActive": true,
+        "comments": null
+      },
+      "actionTaken": "added"
+    }
+  ],
+  "summary": {
+    "totalAiDetections": 2,
+    "totalHumanAnnotations": 1,
+    "approved": 1,
+    "rejected": 0,
+    "edited": 1,
+    "added": 1
+  },
+  "receivedAt": "2025-10-15T22:30:34.406768"
+}

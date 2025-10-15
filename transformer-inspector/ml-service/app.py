@@ -482,6 +482,78 @@ def get_classes():
     }), 200
 
 
+@app.route('/api/feedback/upload', methods=['POST'])
+def upload_feedback():
+    """
+    Upload feedback data for model fine-tuning (Phase 3 - FR3.3)
+    Accepts JSON feedback export from backend
+    
+    Expected JSON format:
+    {
+        "inspectionId": "uuid",
+        "inspectionNumber": "string",
+        "transformerCode": "string",
+        "exportedAt": "timestamp",
+        "comparisons": [...],
+        "summary": {...}
+    }
+    """
+    try:
+        if not request.is_json:
+            return jsonify({'error': 'Content-Type must be application/json'}), 400
+        
+        feedback_data = request.get_json()
+        
+        # Validate required fields
+        required_fields = ['inspectionId', 'inspectionNumber', 'comparisons']
+        for field in required_fields:
+            if field not in feedback_data:
+                return jsonify({'error': f'Missing required field: {field}'}), 400
+        
+        # Create feedback storage directory
+        feedback_dir = Path('feedback_data')
+        feedback_dir.mkdir(exist_ok=True)
+        
+        # Save feedback with timestamp
+        inspection_id = feedback_data['inspectionId']
+        feedback_file = feedback_dir / f"feedback_{inspection_id}.json"
+        
+        import json
+        from datetime import datetime
+        
+        # Add received timestamp
+        feedback_data['receivedAt'] = datetime.now().isoformat()
+        
+        with open(feedback_file, 'w') as f:
+            json.dump(feedback_data, f, indent=2)
+        
+        logger.info(f"Feedback saved: {feedback_file}")
+        logger.info(f"Total comparisons: {len(feedback_data.get('comparisons', []))}")
+        
+        summary = feedback_data.get('summary', {})
+        logger.info(f"Summary - AI: {summary.get('totalAiDetections', 0)}, "
+                   f"Human: {summary.get('totalHumanAnnotations', 0)}, "
+                   f"Approved: {summary.get('approved', 0)}, "
+                   f"Rejected: {summary.get('rejected', 0)}")
+        
+        return jsonify({
+            'status': 'success',
+            'message': 'Feedback data received successfully',
+            'inspectionId': inspection_id,
+            'feedbackFile': str(feedback_file),
+            'comparisonsCount': len(feedback_data.get('comparisons', [])),
+            'summary': summary,
+            'note': 'This data can be used for model fine-tuning. See feedback_data directory.'
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"Error uploading feedback: {e}")
+        return jsonify({
+            'status': 'error',
+            'error': str(e)
+        }), 500
+
+
 if __name__ == '__main__':
     logger.info("=" * 80)
     logger.info("Starting TransX ML Service with Similarity-Based YOLOv8p2")
@@ -514,5 +586,6 @@ if __name__ == '__main__':
     logger.info("Similarity-based comparison (with baseline)")
     logger.info("Configurable confidence thresholds")
     logger.info("Smart detection filtering")
+    logger.info("Feedback upload for model fine-tuning (FR3.3)")
     logger.info("Starting Flask server on http://0.0.0.0:5001")
     app.run(host='0.0.0.0', port=5001, debug=True)

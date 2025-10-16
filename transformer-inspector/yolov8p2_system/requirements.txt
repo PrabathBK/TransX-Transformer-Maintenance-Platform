@@ -1,0 +1,104 @@
+# YOLOv8p2 Smart Detection System - Requirements
+# Last updated: October 2025
+# Compatible with Python 3.8 - 3.11
+
+# ========================================
+# CORE DEPENDENCIES (Required)
+# ========================================
+
+# Deep Learning Framework
+torch>=2.0.0,<2.6.0
+torchvision>=0.15.0,<0.20.0
+
+# Object Detection Framework  
+ultralytics>=8.0.0,<9.0.0
+
+# Computer Vision & Image Processing
+opencv-python>=4.8.0,<5.0.0
+numpy>=1.21.0,<2.0.0
+Pillow>=9.0.0,<11.0.0
+
+# Data Science & Utilities
+pandas>=1.5.0,<3.0.0
+matplotlib>=3.5.0,<4.0.0
+
+# Configuration & Serialization
+PyYAML>=6.0,<7.0.0
+
+# Progress Bars & CLI
+tqdm>=4.64.0,<5.0.0
+
+# ========================================
+# IMAGE PROCESSING & AUGMENTATION
+# ========================================
+
+# Advanced image augmentations (used in fine-tuning)
+albumentations>=1.3.0,<2.0.0
+
+# Additional augmentation support
+imgaug>=0.4.0,<1.0.0
+
+# Scientific computing
+scipy>=1.9.0,<2.0.0
+
+# ========================================
+# VISUALIZATION & ANALYSIS (Optional)
+# ========================================
+
+# Enhanced plotting
+seaborn>=0.11.0,<1.0.0
+plotly>=5.0.0,<6.0.0
+
+# ========================================
+# MODEL OPTIMIZATION & EXPORT (Optional)
+# ========================================
+
+# Model format conversion
+onnx>=1.12.0,<2.0.0
+onnxruntime>=1.12.0,<2.0.0
+
+# ========================================
+# LOGGING & MONITORING (Optional)
+# ========================================
+
+# TensorBoard integration
+tensorboard>=2.10.0,<3.0.0
+
+# Weights & Biases integration  
+wandb>=0.13.0,<1.0.0
+
+# ========================================
+# DEVELOPMENT & TESTING (Optional)
+# ========================================
+
+# System monitoring
+psutil>=5.9.0,<6.0.0
+
+# Testing framework
+pytest>=7.0.0,<8.0.0
+
+# Jupyter notebook support
+jupyter>=1.0.0,<2.0.0
+ipykernel>=6.15.0,<7.0.0
+
+# Code formatting
+black>=22.0.0,<24.0.0
+isort>=5.10.0,<6.0.0
+
+# ========================================
+# INSTALLATION NOTES
+# ========================================
+
+# GPU Support (CUDA):
+# For CUDA 11.8: pip install torch torchvision --index-url https://download.pytorch.org/whl/cu118
+# For CUDA 12.1: pip install torch torchvision --index-url https://download.pytorch.org/whl/cu121
+# For CPU only:   pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
+
+# Quick Install:
+# pip install -r requirements.txt
+
+# Minimal Install (core only):
+# pip install torch torchvision ultralytics opencv-python numpy Pillow pandas matplotlib PyYAML tqdm albumentations
+
+# Verification:
+# python -c "import torch; from ultralytics import YOLO; print('✅ Installation successful')"

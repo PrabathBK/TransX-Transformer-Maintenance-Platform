@@ -1,0 +1,6 @@
+path: test_training_data
+train: .
+val: .
+names:
+  0: Faulty
+  1: Good

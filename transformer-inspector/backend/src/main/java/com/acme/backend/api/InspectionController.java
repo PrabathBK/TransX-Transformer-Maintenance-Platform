@@ -247,4 +247,40 @@ public class InspectionController {
             return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(info);
         }
     }
+
+    /**
+     * Export feedback data for model improvement (Phase 3 - FR3.3) 
+     * GET /api/inspections/{id}/feedback-export
+     */
+    @GetMapping("/{id}/feedback-export")
+    public ResponseEntity<FeedbackExportResponse> exportFeedback(@PathVariable UUID id) {
+        try {
+            log.info("Exporting feedback for inspection: {}", id);
+            FeedbackExportResponse feedback = inspectionService.exportFeedback(id);
+            return ResponseEntity.ok(feedback);
+        } catch (Exception e) {
+            log.error("Error exporting feedback: {}", e.getMessage(), e);
+            throw new RuntimeException("Failed to export feedback: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Export feedback as CSV file (Phase 3 - FR3.3)
+     * GET /api/inspections/{id}/feedback-export/csv
+     */
+    @GetMapping("/{id}/feedback-export/csv")
+    public ResponseEntity<String> exportFeedbackCSV(@PathVariable UUID id) {
+        try {
+            log.info("Exporting feedback as CSV for inspection: {}", id);
+            String csv = inspectionService.exportFeedbackAsCSV(id);
+            
+            return ResponseEntity.ok()
+                    .header("Content-Type", "text/csv")
+                    .header("Content-Disposition", "attachment; filename=\"feedback_" + id + ".csv\"")
+                    .body(csv);
+        } catch (Exception e) {
+            log.error("Error exporting feedback as CSV: {}", e.getMessage(), e);
+            throw new RuntimeException("Failed to export feedback as CSV: " + e.getMessage());
+        }
+    }
 }

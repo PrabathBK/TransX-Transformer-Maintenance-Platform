@@ -16,7 +16,7 @@ import {
   uploadAnnotatedImage,
   removeInspectionImage,
 } from '../api/inspections';
-import { getAnnotationsByInspection, saveAnnotation, approveAnnotation, rejectAnnotation, deleteAnnotation } from '../api/annotations';
+import { getAnnotationsByInspection, saveAnnotation, approveAnnotation, rejectAnnotation, deleteAnnotation, exportFeedback, exportFeedbackCSV } from '../api/annotations';
 import { uploadImage, listImages } from '../api/images';
 import type { ThermalImage } from '../api/images';
 import type { Inspection } from '../api/inspections';
@@ -55,11 +55,9 @@ export default function InspectionDetailNew() {
   const [showThresholdModal, setShowThresholdModal] = useState(false);
   const [threshold, setThreshold] = useState(50); // Default threshold value (0-100)
   
-  // User access (always granted - will be handled by authentication later)
-  const canEdit = inspection?.status !== 'COMPLETED' && inspection?.status !== 'CANCELLED';
-
-
-
+  // Feedback export state (FR3.3)
+  const [isExportingFeedback, setIsExportingFeedback] = useState(false);
+  
   // Load inspection and annotations
   useEffect(() => {
     if (!id) return;
@@ -260,6 +258,45 @@ export default function InspectionDetailNew() {
     }
   }
 
+  async function handleUpdateComment(annotationId: string, comments: string) {
+    try {
+      // Find the annotation to update
+      const annotation = annotations.find(a => a.id === annotationId);
+      if (!annotation) {
+        throw new Error('Annotation not found');
+      }
+
+      // Map className to classId
+      const getClassId = (className: string): number => {
+        const classMap: Record<string, number> = {
+          'Faulty': 1,
+          'faulty_loose_joint': 2,
+          'faulty_point_overload': 3,
+          'potential_faulty': 4,
+        };
+        return classMap[className] || 1;
+      };
+
+      // Update annotation with new comments
+      await saveAnnotation({
+        id: annotation.id,
+        inspectionId: annotation.inspectionId,
+        bbox: annotation.bbox,
+        classId: getClassId(annotation.className),
+        className: annotation.className,
+        confidence: annotation.confidence,
+        source: annotation.source,
+        userId: 'current-user@example.com',
+        comments: comments
+      });
+
+      await loadData();
+    } catch (e: any) {
+      alert('Failed to update comment: ' + (e?.message || 'Unknown error'));
+      throw e;
+    }
+  }
+
   async function handleApprove(annotationId: string) {
     try {
       await approveAnnotation(annotationId, 'current-user@example.com');
@@ -454,6 +491,69 @@ export default function InspectionDetailNew() {
       alert('Failed to complete inspection: ' + (e?.message || 'Unknown error'));
     } finally {
       setIsCompleting(false);
+    }
+  }
+
+  /**
+   * Export feedback and send to ML service for model fine-tuning (FR3.3)
+   */
+  async function handleExportFeedback() {
+    if (!id) return;
+
+    try {
+      setIsExportingFeedback(true);
+
+      // 1. Export feedback data (JSON format)
+      const feedbackData = await exportFeedback(id);
+      
+      // 2. Download JSON file
+      const jsonBlob = new Blob([JSON.stringify(feedbackData, null, 2)], { type: 'application/json' });
+      const jsonUrl = URL.createObjectURL(jsonBlob);
+      const jsonLink = document.createElement('a');
+      jsonLink.href = jsonUrl;
+      jsonLink.download = `feedback_${inspection?.inspectionNumber || id}.json`;
+      document.body.appendChild(jsonLink);
+      jsonLink.click();
+      document.body.removeChild(jsonLink);
+      URL.revokeObjectURL(jsonUrl);
+
+      // 3. Download CSV file
+      exportFeedbackCSV(id);
+
+      // 4. Send to Flask ML service
+      const mlServiceUrl = import.meta.env.VITE_ML_SERVICE_URL || 'http://localhost:5001';
+      const response = await fetch(`${mlServiceUrl}/api/feedback/upload`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(feedbackData),
+      });
+
+      if (!response.ok) {
+        throw new Error(`ML service returned ${response.status}`);
+      }
+
+      const result = await response.json();
+      
+      alert(`✅ Feedback exported successfully!\n\n` +
+            `📊 Summary:\n` +
+            `- AI Detections: ${result.summary?.totalAiDetections || 0}\n` +
+            `- Human Annotations: ${result.summary?.totalHumanAnnotations || 0}\n` +
+            `- Approved: ${result.summary?.approved || 0}\n` +
+            `- Rejected: ${result.summary?.rejected || 0}\n\n` +
+            `📁 Files downloaded to your Downloads folder\n` +
+            `🤖 Data sent to ML service for fine-tuning\n\n` +
+            `Note: The ML model can now be fine-tuned using this feedback data.`);
+      
+    } catch (e: any) {
+      console.error('Feedback export error:', e);
+      alert(`⚠️ Feedback export partially completed.\n\n` +
+            `Files may have been downloaded, but failed to send to ML service:\n` +
+            `${e?.message || 'Unknown error'}\n\n` +
+            `Check console for details.`);
+    } finally {
+      setIsExportingFeedback(false);
     }
   }
 
@@ -739,6 +839,91 @@ export default function InspectionDetailNew() {
             </div>
           </div>
 
+          {/* Action Buttons Bar */}
+          {inspection.status !== 'COMPLETED' && (
+            <div style={{
+              marginTop: '16px',
+              display: 'flex',
+              gap: '12px',
+              flexWrap: 'wrap'
+            }}>
+              {/* Save Image Button */}
+              {annotations.length > 0 && (
+                <button
+                  onClick={handleSaveAnnotatedImage}
+                  disabled={isSavingImage || !inspection.inspectionImageId || !isCanvasReady}
+                  title="Save the current image with annotations"
+                  style={{
+                    flex: '1 1 auto',
+                    minWidth: '140px',
+                    background: (isSavingImage || !isCanvasReady) ? '#94a3b8' : 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '10px',
+                    padding: '12px 20px',
+                    fontSize: '15px',
+                    fontWeight: '600',
+                    cursor: (isSavingImage || !inspection.inspectionImageId || !isCanvasReady) ? 'not-allowed' : 'pointer',
+                    boxShadow: '0 4px 12px rgba(59, 130, 246, 0.3)',
+                    opacity: (!inspection.inspectionImageId || !isCanvasReady) ? 0.6 : 1,
+                    transition: 'all 0.2s'
+                  }}
+                >
+                  {isSavingImage ? '⏳ Saving...' : !isCanvasReady ? '⏳ Loading...' : '💾 Save Image'}
+                </button>
+              )}
+
+              {/* Complete Inspection Button */}
+              <button
+                onClick={handleCompleteInspection}
+                disabled={isCompleting || !inspection.inspectionImageId}
+                title="Mark inspection as complete"
+                style={{
+                  flex: '1 1 auto',
+                  minWidth: '140px',
+                  background: isCompleting ? '#94a3b8' : 'linear-gradient(135deg, #059669 0%, #10b981 100%)',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '10px',
+                  padding: '12px 20px',
+                  fontSize: '15px',
+                  fontWeight: '600',
+                  cursor: isCompleting || !inspection.inspectionImageId ? 'not-allowed' : 'pointer',
+                  boxShadow: '0 4px 12px rgba(5, 150, 105, 0.3)',
+                  opacity: !inspection.inspectionImageId ? 0.6 : 1,
+                  transition: 'all 0.2s'
+                }}
+              >
+                {isCompleting ? '⏳ Processing...' : '✅ Done'}
+              </button>
+
+              {/* Export Feedback Button */}
+              {annotations.length > 0 && (
+                <button
+                  onClick={handleExportFeedback}
+                  disabled={isExportingFeedback}
+                  title="Export feedback for model fine-tuning"
+                  style={{
+                    flex: '1 1 auto',
+                    minWidth: '140px',
+                    background: isExportingFeedback ? '#94a3b8' : 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '10px',
+                    padding: '12px 20px',
+                    fontSize: '15px',
+                    fontWeight: '600',
+                    cursor: isExportingFeedback ? 'not-allowed' : 'pointer',
+                    boxShadow: '0 4px 12px rgba(139, 92, 246, 0.3)',
+                    transition: 'all 0.2s'
+                  }}
+                >
+                  {isExportingFeedback ? '⏳ Exporting...' : '🤖 Finetune'}
+                </button>
+              )}
+            </div>
+          )}
+
           {/* Comments Section */}
           <CommentsSection inspectionId={inspection.id} />
         </div>
@@ -766,16 +951,28 @@ export default function InspectionDetailNew() {
               </div>
             )}
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              {annotations.map((ann) => (
-                <AnnotationCard
-                  key={ann.id}
-                  annotation={ann}
-                  onApprove={() => handleApprove(ann.id)}
-                  onReject={() => handleReject(ann.id)}
-                  onDelete={() => handleAnnotationDelete(ann.id)}
-                />
-              ))}
+            {/* Scrollable Annotations Container */}
+            <div style={{ 
+              maxHeight: '600px', 
+              overflowY: 'auto', 
+              overflowX: 'hidden',
+              paddingRight: '8px',
+              // Custom scrollbar styling
+              scrollbarWidth: 'thin',
+              scrollbarColor: '#cbd5e1 #f1f5f9'
+            }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                {annotations.map((ann) => (
+                  <AnnotationCard
+                    key={ann.id}
+                    annotation={ann}
+                    onApprove={() => handleApprove(ann.id)}
+                    onReject={() => handleReject(ann.id)}
+                    onDelete={() => handleAnnotationDelete(ann.id)}
+                    onUpdateComment={handleUpdateComment}
+                  />
+                ))}
+              </div>
             </div>
           </div>
 
@@ -788,97 +985,6 @@ export default function InspectionDetailNew() {
             initialNotes={inspection.notes || ''}
             onNotesUpdate={() => loadData()}
           />
-
-          {/* Save Annotated Image Button */}
-          {inspection.status !== 'COMPLETED' && annotations.length > 0 && (
-            <div style={{
-              background: 'white',
-              borderRadius: '12px',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-              padding: '20px',
-              marginTop: '16px',
-              textAlign: 'center'
-            }}>
-              <h3 style={{ margin: '0 0 12px 0', fontSize: '16px', fontWeight: '600', color: '#3b82f6' }}>
-                💾 Save Annotated Image
-              </h3>
-              <p style={{ fontSize: '14px', color: '#6b7280', lineHeight: '1.6', marginBottom: '16px' }}>
-                Save the current image with annotations to display on the transformer page. You can do this multiple times as you make changes.
-              </p>
-              <button
-                onClick={handleSaveAnnotatedImage}
-                disabled={isSavingImage || !inspection.inspectionImageId || !isCanvasReady}
-                style={{
-                  background: (isSavingImage || !isCanvasReady) ? '#94a3b8' : 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '10px',
-                  padding: '14px 28px',
-                  fontSize: '16px',
-                  fontWeight: '600',
-                  cursor: (isSavingImage || !inspection.inspectionImageId || !isCanvasReady) ? 'not-allowed' : 'pointer',
-                  boxShadow: '0 4px 12px rgba(59, 130, 246, 0.3)',
-                  minWidth: '160px',
-                  opacity: (!inspection.inspectionImageId || !isCanvasReady) ? 0.6 : 1
-                }}
-              >
-                {isSavingImage ? '⏳ Saving...' : !isCanvasReady ? '⏳ Loading...' : '💾 Save Image'}
-              </button>
-              {!inspection.inspectionImageId && (
-                <p style={{ fontSize: '12px', color: '#ef4444', marginTop: '8px' }}>
-                  Please upload an inspection image first
-                </p>
-              )}
-              {inspection.inspectionImageId && !isCanvasReady && (
-                <p style={{ fontSize: '12px', color: '#f59e0b', marginTop: '8px' }}>
-                  Canvas is loading, please wait...
-                </p>
-              )}
-            </div>
-          )}
-
-          {/* Complete Inspection Button */}
-          {inspection.status !== 'COMPLETED' && (
-            <div style={{
-              background: 'white',
-              borderRadius: '12px',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-              padding: '20px',
-              marginTop: '16px',
-              textAlign: 'center'
-            }}>
-              <h3 style={{ margin: '0 0 12px 0', fontSize: '16px', fontWeight: '600', color: '#059669' }}>
-                ✅ Finish Inspection
-              </h3>
-              <p style={{ fontSize: '14px', color: '#6b7280', lineHeight: '1.6', marginBottom: '16px' }}>
-                Click Done when you have finished editing annotations. This will mark the inspection as complete and display the results on the transformer page.
-              </p>
-              <button
-                onClick={handleCompleteInspection}
-                disabled={isCompleting || !inspection.inspectionImageId}
-                style={{
-                  background: isCompleting ? '#94a3b8' : 'linear-gradient(135deg, #059669 0%, #10b981 100%)',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '10px',
-                  padding: '14px 28px',
-                  fontSize: '16px',
-                  fontWeight: '600',
-                  cursor: isCompleting || !inspection.inspectionImageId ? 'not-allowed' : 'pointer',
-                  boxShadow: '0 4px 12px rgba(5, 150, 105, 0.3)',
-                  minWidth: '140px',
-                  opacity: !inspection.inspectionImageId ? 0.6 : 1
-                }}
-              >
-                {isCompleting ? '⏳ Finishing...' : '✅ Done'}
-              </button>
-              {!inspection.inspectionImageId && (
-                <p style={{ fontSize: '12px', color: '#ef4444', marginTop: '8px' }}>
-                  Please upload an inspection image first
-                </p>
-              )}
-            </div>
-          )}
 
           {inspection.status === 'COMPLETED' && (
             <div style={{
@@ -1087,9 +1193,14 @@ interface AnnotationCardProps {
   onApprove: () => void;
   onReject: () => void;
   onDelete: () => void;
+  onUpdateComment: (annotationId: string, comments: string) => void;
 }
 
-function AnnotationCard({ annotation, onApprove, onReject, onDelete }: AnnotationCardProps) {
+function AnnotationCard({ annotation, onApprove, onReject, onDelete, onUpdateComment }: AnnotationCardProps) {
+  const [showCommentInput, setShowCommentInput] = useState(false);
+  const [commentText, setCommentText] = useState(annotation.comments || '');
+  const [isSavingComment, setIsSavingComment] = useState(false);
+  
   const CLASS_COLORS: Record<string, string> = {
     'Faulty': '#ef4444',           // RED
     'faulty_loose_joint': '#22c55e', // GREEN  
@@ -1098,6 +1209,18 @@ function AnnotationCard({ annotation, onApprove, onReject, onDelete }: Annotatio
   };
 
   const color = CLASS_COLORS[annotation.className] || '#6b7280';
+  
+  const handleSaveComment = async () => {
+    setIsSavingComment(true);
+    try {
+      await onUpdateComment(annotation.id, commentText);
+      setShowCommentInput(false);
+    } catch (error) {
+      console.error('Failed to save comment:', error);
+    } finally {
+      setIsSavingComment(false);
+    }
+  };
 
   return (
     <div style={{
@@ -1107,16 +1230,40 @@ function AnnotationCard({ annotation, onApprove, onReject, onDelete }: Annotatio
       background: `${color}11`,
     }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '8px' }}>
-        <div>
-          <div style={{ fontWeight: '600', fontSize: '14px', color: color }}>
-            {annotation.className}
-          </div>
-          <div style={{ fontSize: '12px', color: '#6b7280', marginTop: '2px' }}>
-            {annotation.source === 'ai' ? '🤖 AI Detection' : '👤 Manual'}
-            {' · '}
-            {Math.round(annotation.confidence * 100)}% confidence
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          {/* Box Number Badge */}
+          {annotation.boxNumber && (
+            <div style={{
+              width: '24px',
+              height: '24px',
+              borderRadius: '50%',
+              background: color,
+              color: 'white',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '12px',
+              fontWeight: 'bold',
+              flexShrink: 0,
+              border: '2px solid white',
+              boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+            }}>
+              {annotation.boxNumber}
+            </div>
+          )}
+          
+          <div>
+            <div style={{ fontWeight: '600', fontSize: '14px', color: color }}>
+              {annotation.className}
+            </div>
+            <div style={{ fontSize: '12px', color: '#6b7280', marginTop: '2px' }}>
+              {annotation.source === 'ai' ? '🤖 AI Detection' : '👤 Manual'}
+              {' · '}
+              {Math.round(annotation.confidence * 100)}% confidence
+            </div>
           </div>
         </div>
+        
         <div style={{
           fontSize: '11px',
           color: '#6b7280',
@@ -1128,9 +1275,75 @@ function AnnotationCard({ annotation, onApprove, onReject, onDelete }: Annotatio
         </div>
       </div>
 
-      <div style={{ fontSize: '12px', color: '#6b7280', marginBottom: '12px' }}>
+      <div style={{ fontSize: '12px', color: '#6b7280', marginBottom: '8px' }}>
         BBox: ({Math.round(annotation.bbox.x1)}, {Math.round(annotation.bbox.y1)}) → 
         ({Math.round(annotation.bbox.x2)}, {Math.round(annotation.bbox.y2)})
+      </div>
+
+      {/* Metadata Information */}
+      <div style={{
+        fontSize: '11px',
+        color: '#6b7280',
+        background: '#f9fafb',
+        padding: '8px',
+        borderRadius: '4px',
+        marginBottom: '12px',
+        lineHeight: '1.6'
+      }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+          <span>👤 Created by:</span>
+          <span style={{ fontWeight: '600', color: '#374151' }}>{annotation.createdBy || 'System'}</span>
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+          <span>🕒 Created:</span>
+          <span style={{ fontWeight: '600', color: '#374151' }}>
+            {new Date(annotation.createdAt).toLocaleString('en-US', { 
+              month: 'short', 
+              day: 'numeric', 
+              hour: '2-digit', 
+              minute: '2-digit' 
+            })}
+          </span>
+        </div>
+        {annotation.modifiedBy && annotation.modifiedAt && (
+          <>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+              <span>✏️ Modified by:</span>
+              <span style={{ fontWeight: '600', color: '#374151' }}>{annotation.modifiedBy}</span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <span>🕒 Modified:</span>
+              <span style={{ fontWeight: '600', color: '#374151' }}>
+                {new Date(annotation.modifiedAt).toLocaleString('en-US', { 
+                  month: 'short', 
+                  day: 'numeric', 
+                  hour: '2-digit', 
+                  minute: '2-digit' 
+                })}
+              </span>
+            </div>
+          </>
+        )}
+        {annotation.actionType && annotation.actionType !== 'created' && (
+          <div style={{ 
+            marginTop: '6px', 
+            paddingTop: '6px', 
+            borderTop: '1px solid #e5e7eb',
+            display: 'flex',
+            justifyContent: 'space-between'
+          }}>
+            <span>📋 Action:</span>
+            <span style={{ 
+              fontWeight: '600', 
+              color: annotation.actionType === 'approved' ? '#16a34a' : 
+                     annotation.actionType === 'rejected' ? '#dc2626' : 
+                     annotation.actionType === 'edited' ? '#3b82f6' : '#6b7280',
+              textTransform: 'capitalize'
+            }}>
+              {annotation.actionType}
+            </span>
+          </div>
+        )}
       </div>
 
       {annotation.source === 'ai' && annotation.actionType === 'created' && (
@@ -1218,6 +1431,106 @@ function AnnotationCard({ annotation, onApprove, onReject, onDelete }: Annotatio
           ✗ Rejected
         </div>
       )}
+
+      {/* Comments Section */}
+      <div style={{ marginTop: '12px', paddingTop: '12px', borderTop: '1px solid #e5e7eb' }}>
+        {annotation.comments && !showCommentInput && (
+          <div style={{
+            background: '#f9fafb',
+            padding: '8px',
+            borderRadius: '4px',
+            marginBottom: '8px'
+          }}>
+            <div style={{ fontSize: '11px', color: '#6b7280', marginBottom: '4px', fontWeight: '600' }}>
+              📝 Note:
+            </div>
+            <div style={{ fontSize: '12px', color: '#374151', lineHeight: '1.5' }}>
+              {annotation.comments}
+            </div>
+          </div>
+        )}
+
+        {showCommentInput ? (
+          <div>
+            <textarea
+              value={commentText}
+              onChange={(e) => setCommentText(e.target.value)}
+              placeholder="Add a note about this annotation..."
+              style={{
+                width: '100%',
+                minHeight: '60px',
+                padding: '8px',
+                border: '1px solid #d1d5db',
+                borderRadius: '4px',
+                fontSize: '12px',
+                fontFamily: 'inherit',
+                resize: 'vertical',
+                marginBottom: '8px'
+              }}
+            />
+            <div style={{ display: 'flex', gap: '6px' }}>
+              <button
+                onClick={handleSaveComment}
+                disabled={isSavingComment}
+                style={{
+                  flex: 1,
+                  padding: '6px',
+                  border: 'none',
+                  borderRadius: '4px',
+                  background: isSavingComment ? '#9ca3af' : '#3b82f6',
+                  color: 'white',
+                  fontSize: '11px',
+                  fontWeight: '600',
+                  cursor: isSavingComment ? 'not-allowed' : 'pointer'
+                }}
+              >
+                {isSavingComment ? '💾 Saving...' : '💾 Save Note'}
+              </button>
+              <button
+                onClick={() => {
+                  setShowCommentInput(false);
+                  setCommentText(annotation.comments || '');
+                }}
+                disabled={isSavingComment}
+                style={{
+                  flex: 1,
+                  padding: '6px',
+                  border: '1px solid #d1d5db',
+                  borderRadius: '4px',
+                  background: 'white',
+                  color: '#6b7280',
+                  fontSize: '11px',
+                  fontWeight: '600',
+                  cursor: isSavingComment ? 'not-allowed' : 'pointer'
+                }}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        ) : (
+          <button
+            onClick={() => setShowCommentInput(true)}
+            style={{
+              width: '100%',
+              padding: '6px',
+              border: '1px solid #d1d5db',
+              borderRadius: '4px',
+              background: 'white',
+              color: '#6b7280',
+              fontSize: '11px',
+              fontWeight: '600',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '4px'
+            }}
+          >
+            📝 {annotation.comments ? 'Edit Note' : 'Add Note'}
+          </button>
+        )}
+      </div>
     </div>
   );
 }

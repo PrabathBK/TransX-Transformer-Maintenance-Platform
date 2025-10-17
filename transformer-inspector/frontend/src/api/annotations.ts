@@ -24,6 +24,7 @@ export type Annotation = {
   modifiedBy?: string;
   modifiedAt?: string;
   updatedAt: string;
+  comments?: string | null; // Optional user comments/notes
 };
 
 export type SaveAnnotationRequest = {
@@ -35,6 +36,7 @@ export type SaveAnnotationRequest = {
   confidence?: number;
   source?: 'ai' | 'human';
   userId?: string;
+  comments?: string; // Optional user comments/notes
 };
 
 export type FeedbackExport = {

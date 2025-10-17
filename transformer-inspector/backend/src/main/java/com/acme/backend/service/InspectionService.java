@@ -445,4 +445,170 @@ public class InspectionService {
         
         log.info("Inspection completed with {} boxes", annotations.size());
     }
+
+    /**
+     * Export feedback for model fine-tuning (Phase 3 - FR3.3)
+     */
+    @Transactional(readOnly = true)
+    public FeedbackExportResponse exportFeedback(UUID inspectionId) {
+        log.info("Exporting feedback for inspection: {}", inspectionId);
+        
+        Inspection inspection = inspectionRepo.findById(inspectionId)
+                .orElseThrow(() -> new RuntimeException("Inspection not found: " + inspectionId));
+        
+        List<Annotation> allAnnotations = annotationRepo.findActiveByInspectionId(inspectionId);
+        
+        // Separate AI and human annotations
+        List<Annotation> aiAnnotations = allAnnotations.stream()
+                .filter(a -> Annotation.Source.ai.equals(a.getSource()))
+                .toList();
+        
+        List<Annotation> humanAnnotations = allAnnotations.stream()
+                .filter(a -> Annotation.Source.human.equals(a.getSource()))
+                .toList();
+        
+        // Build comparisons
+        List<FeedbackExportResponse.AnnotationComparison> comparisons = new java.util.ArrayList<>();
+        
+        for (Annotation ai : aiAnnotations) {
+            AnnotationDTO aiDto = toDTO(ai);
+            String action = determineAction(ai);
+            comparisons.add(new FeedbackExportResponse.AnnotationComparison(
+                    inspection.getInspectionImage().getId(),
+                    aiDto,
+                    null,
+                    action
+            ));
+        }
+        
+        for (Annotation human : humanAnnotations) {
+            AnnotationDTO humanDto = toDTO(human);
+            comparisons.add(new FeedbackExportResponse.AnnotationComparison(
+                    inspection.getInspectionImage().getId(),
+                    null,
+                    humanDto,
+                    "added"
+            ));
+        }
+        
+        // Calculate summary
+        int approved = (int) allAnnotations.stream().filter(a -> Annotation.ActionType.approved.equals(a.getActionType())).count();
+        int rejected = (int) allAnnotations.stream().filter(a -> Annotation.ActionType.rejected.equals(a.getActionType())).count();
+        int edited = (int) allAnnotations.stream().filter(a -> Annotation.ActionType.edited.equals(a.getActionType())).count();
+        
+        FeedbackExportResponse.Summary summary = new FeedbackExportResponse.Summary(
+                aiAnnotations.size(),
+                humanAnnotations.size(),
+                approved,
+                rejected,
+                edited,
+                humanAnnotations.size()
+        );
+        
+        return new FeedbackExportResponse(
+                inspectionId,
+                inspection.getInspectionNumber(),
+                inspection.getTransformer().getCode(),
+                Instant.now(),
+                comparisons,
+                summary
+        );
+    }
+
+    /**
+     * Export feedback as CSV format (Phase 3 - FR3.3)
+     */
+    @Transactional(readOnly = true)
+    public String exportFeedbackAsCSV(UUID inspectionId) {
+        FeedbackExportResponse feedback = exportFeedback(inspectionId);
+        
+        StringBuilder csv = new StringBuilder();
+        csv.append("Image ID,Box Number,Source,Class Name,Confidence,BBox X1,BBox Y1,BBox X2,BBox Y2,Action,Created By,Created At,Modified By,Modified At,Comments\n");
+        
+        for (FeedbackExportResponse.AnnotationComparison comp : feedback.comparisons()) {
+            // Add AI prediction if exists
+            if (comp.aiPrediction() != null) {
+                AnnotationDTO ann = comp.aiPrediction();
+                csv.append(String.format("%s,%s,%s,%s,%.4f,%.4f,%.4f,%.4f,%.4f,%s,%s,%s,%s,%s,\"%s\"\n",
+                        comp.imageId(),
+                        ann.boxNumber() != null ? ann.boxNumber() : "",
+                        "ai",
+                        ann.className(),
+                        ann.confidence(),
+                        ann.bbox().x1(),
+                        ann.bbox().y1(),
+                        ann.bbox().x2(),
+                        ann.bbox().y2(),
+                        comp.actionTaken(),
+                        ann.createdBy() != null ? ann.createdBy() : "",
+                        ann.createdAt(),
+                        ann.modifiedBy() != null ? ann.modifiedBy() : "",
+                        ann.modifiedAt() != null ? ann.modifiedAt() : "",
+                        ann.comments() != null ? ann.comments().replace("\"", "\"\"") : ""
+                ));
+            }
+            
+            // Add human annotation if exists
+            if (comp.humanAnnotation() != null) {
+                AnnotationDTO ann = comp.humanAnnotation();
+                csv.append(String.format("%s,%s,%s,%s,%.4f,%.4f,%.4f,%.4f,%.4f,%s,%s,%s,%s,%s,\"%s\"\n",
+                        comp.imageId(),
+                        ann.boxNumber() != null ? ann.boxNumber() : "",
+                        "human",
+                        ann.className(),
+                        ann.confidence(),
+                        ann.bbox().x1(),
+                        ann.bbox().y1(),
+                        ann.bbox().x2(),
+                        ann.bbox().y2(),
+                        "added",
+                        ann.createdBy() != null ? ann.createdBy() : "",
+                        ann.createdAt(),
+                        ann.modifiedBy() != null ? ann.modifiedBy() : "",
+                        ann.modifiedAt() != null ? ann.modifiedAt() : "",
+                        ann.comments() != null ? ann.comments().replace("\"", "\"\"") : ""
+                ));
+            }
+        }
+        
+        return csv.toString();
+    }
+
+    private String determineAction(Annotation annotation) {
+        if (annotation.getActionType() != null) {
+            return annotation.getActionType().name().toLowerCase();
+        }
+        return "pending";
+    }
+
+    /**
+     * Convert Annotation entity to DTO
+     */
+    private AnnotationDTO toDTO(Annotation annotation) {
+        return new AnnotationDTO(
+                annotation.getId(),
+                annotation.getInspection().getId(),
+                annotation.getVersion(),
+                new AnnotationDTO.BoundingBox(
+                        annotation.getBboxX1(),
+                        annotation.getBboxY1(),
+                        annotation.getBboxX2(),
+                        annotation.getBboxY2()
+                ),
+                annotation.getClassId(),
+                annotation.getClassName(),
+                annotation.getConfidence(),
+                annotation.getSource(),
+                annotation.getActionType(),
+                annotation.getBoxNumber(),
+                annotation.getCreatedBy(),
+                annotation.getCreatedAt(),
+                annotation.getModifiedBy(),
+                annotation.getModifiedAt(),
+                annotation.getParentAnnotation() != null ? 
+                        annotation.getParentAnnotation().getId() : null,
+                annotation.getIsActive(),
+                annotation.getComments()
+        );
+    }
 }

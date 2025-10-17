@@ -1,0 +1,30 @@
+{
+  "image_path": "/Users/prabathwijethilaka/Sem7/Software/TransX-Transformer-Maintenance-Platform/transformer-inspector/backend/uploads/5cfddbe0-80bc-424a-bdeb-88e05afd1bb5/inspection/87fa0f3b-9d9f-4696-b13d-cf7d8c7aa3e6_T1_faulty_001.jpg",
+  "confidence_threshold": 0.01,
+  "detections": [
+    {
+      "id": 1,
+      "confidence": 0.8498290181159973,
+      "class_id": 0,
+      "class_name": "Faulty",
+      "bbox": [
+        60,
+        260,
+        287,
+        603
+      ]
+    },
+    {
+      "id": 2,
+      "confidence": 0.7649226784706116,
+      "class_id": 0,
+      "class_name": "Faulty",
+      "bbox": [
+        380,
+        403,
+        457,
+        514
+      ]
+    }
+  ]
+}

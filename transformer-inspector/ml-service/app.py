@@ -15,6 +15,9 @@ import uuid
 import logging
 import sys
 import os
+import json
+import threading
+from datetime import datetime
 
 # Add paths to import the similarity system
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
@@ -77,6 +80,125 @@ CLASS_COLORS = {
     2: [0, 0, 255],      # Blue - faulty_point_overload
     3: [255, 255, 0]     # Yellow - potential_faulty
 }
+
+# Auto fine-tuning configuration
+AUTO_FINETUNE_ENABLED = True
+AUTO_FINETUNE_THRESHOLD = 2  # Number of human annotations to trigger fine-tuning
+finetune_queue = []  # Queue for managing fine-tuning requests
+
+
+def count_total_human_annotations():
+    """Count total human annotations across all feedback files"""
+    feedback_dir = Path("feedback_data")
+    if not feedback_dir.exists():
+        return 0
+        
+    total_count = 0
+    for feedback_file in feedback_dir.glob("feedback_*.json"):
+        try:
+            with open(feedback_file, 'r') as f:
+                feedback = json.load(f)
+                for comparison in feedback.get('comparisons', []):
+                    if comparison.get('humanAnnotation'):
+                        total_count += 1
+        except Exception as e:
+            logger.error(f"Error counting annotations in {feedback_file}: {e}")
+            
+    return total_count
+
+
+def check_auto_finetune_trigger(new_human_annotations):
+    """Check if automatic fine-tuning should be triggered"""
+    if not AUTO_FINETUNE_ENABLED:
+        return
+        
+    total_annotations = count_total_human_annotations()
+    
+    logger.info(f"🤖 Auto fine-tuning check:")
+    logger.info(f"   - New human annotations: {new_human_annotations}")
+    logger.info(f"   - Total human annotations: {total_annotations}")
+    logger.info(f"   - Threshold: {AUTO_FINETUNE_THRESHOLD}")
+    
+    if total_annotations >= AUTO_FINETUNE_THRESHOLD:
+        logger.info("🚀 Auto fine-tuning threshold reached! Queuing fine-tuning...")
+        queue_finetune_task()
+    else:
+        remaining = AUTO_FINETUNE_THRESHOLD - total_annotations
+        logger.info(f"⏳ Need {remaining} more human annotations to trigger fine-tuning")
+
+
+def queue_finetune_task():
+    """Queue a fine-tuning task to run in background"""
+    import threading
+    
+    task_id = f"finetune_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+    
+    finetune_queue.append({
+        'id': task_id,
+        'status': 'queued',
+        'created_at': datetime.now().isoformat(),
+        'started_at': None,
+        'completed_at': None,
+        'error': None
+    })
+    
+    # Start fine-tuning in background thread
+    def run_background_finetune():
+        try:
+            # Update status
+            for task in finetune_queue:
+                if task['id'] == task_id:
+                    task['status'] = 'running'
+                    task['started_at'] = datetime.now().isoformat()
+                    break
+                    
+            logger.info(f"🚀 Starting background fine-tuning: {task_id}")
+            logger.info("🔄 Training runs in background - other images can still be processed")
+            
+            # Import and run fine-tuning (lazy import to avoid startup issues)
+            from fine_tune_with_feedback import FeedbackFineTuner
+            
+            fine_tuner = FeedbackFineTuner(
+                feedback_dir="feedback_data",
+                output_dir="auto_finetune_dataset",
+                base_model_path="../Faulty_Detection/yolov8p2.pt"
+            )
+            
+
+            results = fine_tuner.run_complete_pipeline(epochs=5)
+            
+            # Update status
+            for task in finetune_queue:
+                if task['id'] == task_id:
+                    task['status'] = 'completed' if results else 'failed'
+                    task['completed_at'] = datetime.now().isoformat()
+                    task['results'] = results
+                    break
+                    
+            if results:
+                logger.info(f"🎉 Background fine-tuning completed: {task_id}")
+                logger.info(f"📁 Training model: {results['best_model_path']}")
+                if 'production_model_path' in results:
+                    logger.info(f"🚀 Production model: {results['production_model_path']}")
+                    logger.info(f"🔄 Model deployed - next fine-tuning will use improved version")
+            else:
+                logger.error(f"❌ Background fine-tuning failed: {task_id}")
+                
+        except Exception as e:
+            logger.error(f"❌ Fine-tuning error for {task_id}: {e}")
+            # Update status
+            for task in finetune_queue:
+                if task['id'] == task_id:
+                    task['status'] = 'failed'
+                    task['completed_at'] = datetime.now().isoformat()
+                    task['error'] = str(e)
+                    break
+    
+    # Start background thread
+    thread = threading.Thread(target=run_background_finetune, daemon=True)
+    thread.start()
+    
+    logger.info(f"📋 Fine-tuning task queued: {task_id}")
 
 
 def patch_torch_load():
@@ -524,6 +646,187 @@ def upload_feedback():
         # Add received timestamp
         feedback_data['receivedAt'] = datetime.now().isoformat()
         
+        # Analyze feedback data for human annotations
+        comparisons = feedback_data.get('comparisons', [])
+        human_annotation_count = 0
+        ai_prediction_count = 0
+        action_counts = {}
+        
+        # Extract image and inspection information
+        inspection_id = feedback_data.get('inspectionId')
+        inspection_number = feedback_data.get('inspectionNumber')
+        transformer_code = feedback_data.get('transformerCode')
+        exported_at = feedback_data.get('exportedAt')
+        
+        logger.info("=" * 60)
+        logger.info("ANALYZING FEEDBACK DATA")
+        logger.info("=" * 60)
+        logger.info(f"Inspection ID: {inspection_id}")
+        logger.info(f"Inspection Number: {inspection_number}")
+        logger.info(f"Transformer Code: {transformer_code}")
+        logger.info(f"Exported At: {exported_at}")
+        logger.info("-" * 60)
+        
+        for i, comparison in enumerate(comparisons, 1):
+            has_human = comparison.get('humanAnnotation') is not None
+            has_ai = comparison.get('aiPrediction') is not None
+            action = comparison.get('actionTaken', 'unknown')
+            image_id = comparison.get('imageId')
+            
+            # Count actions
+            action_counts[action] = action_counts.get(action, 0) + 1
+            
+            logger.info(f"Comparison {i}:")
+            logger.info(f"  - Image ID: {image_id}")
+            logger.info(f"  - Has AI Prediction: {has_ai}")
+            logger.info(f"  - Has Human Annotation: {has_human}")
+            logger.info(f"  - Action Taken: {action}")
+            
+            if has_human:
+                human_annotation_count += 1
+                human_ann = comparison['humanAnnotation']
+                bbox = human_ann.get('bbox', {})
+                
+                logger.info(f"  🔴 HUMAN ANNOTATION DETECTED:")
+                logger.info(f"    * Annotation ID: {human_ann.get('id')}")
+                logger.info(f"    * Class Name: {human_ann.get('className')}")
+                logger.info(f"    * Class ID: {human_ann.get('classId')}")
+                logger.info(f"    * Coordinates: x1={bbox.get('x1')}, y1={bbox.get('y1')}, x2={bbox.get('x2')}, y2={bbox.get('y2')}")
+                logger.info(f"    * Box Width: {bbox.get('x2', 0) - bbox.get('x1', 0)} pixels")
+                logger.info(f"    * Box Height: {bbox.get('y2', 0) - bbox.get('y1', 0)} pixels")
+                logger.info(f"    * Confidence: {human_ann.get('confidence')}")
+                logger.info(f"    * Source: {human_ann.get('source')}")
+                logger.info(f"    * Action Type: {human_ann.get('actionType')}")
+                logger.info(f"    * Box Number: {human_ann.get('boxNumber')}")
+                logger.info(f"    * Created By: {human_ann.get('createdBy')}")
+                logger.info(f"    * Created At: {human_ann.get('createdAt')}")
+                logger.info(f"    * Comments: {human_ann.get('comments')}")
+            
+            if has_ai:
+                ai_prediction_count += 1
+                ai_pred = comparison['aiPrediction']
+                bbox = ai_pred.get('bbox', {})
+                
+                logger.info(f"  🤖 AI PREDICTION:")
+                logger.info(f"    * Prediction ID: {ai_pred.get('id')}")
+                logger.info(f"    * Class Name: {ai_pred.get('className')}")
+                logger.info(f"    * Class ID: {ai_pred.get('classId')}")
+                logger.info(f"    * Coordinates: x1={bbox.get('x1')}, y1={bbox.get('y1')}, x2={bbox.get('x2')}, y2={bbox.get('y2')}")
+                logger.info(f"    * Box Width: {bbox.get('x2', 0) - bbox.get('x1', 0)} pixels")
+                logger.info(f"    * Box Height: {bbox.get('y2', 0) - bbox.get('y1', 0)} pixels")
+                logger.info(f"    * Confidence: {ai_pred.get('confidence')}")
+                logger.info(f"    * Source: {ai_pred.get('source')}")
+                logger.info(f"    * Action Type: {ai_pred.get('actionType')}")
+                logger.info(f"    * Box Number: {ai_pred.get('boxNumber')}")
+                logger.info(f"    * Created By: {ai_pred.get('createdBy')}")
+                logger.info(f"    * Modified By: {ai_pred.get('modifiedBy')}")
+                logger.info(f"    * Modified At: {ai_pred.get('modifiedAt')}")
+            
+            logger.info("")
+        
+        logger.info("FEEDBACK ANALYSIS SUMMARY:")
+        logger.info(f"Total Comparisons: {len(comparisons)}")
+        logger.info(f"Human Annotations Found: {human_annotation_count}")
+        logger.info(f"AI Predictions Found: {ai_prediction_count}")
+        logger.info(f"Action Breakdown: {action_counts}")
+        
+        # Check if human annotations exist
+        has_human_annotations = human_annotation_count > 0
+        logger.info(f"HUMAN ANNOTATIONS DETECTED: {'YES' if has_human_annotations else 'NO'}")
+        
+        if has_human_annotations:
+            logger.info("🟢 This feedback contains human annotations - valuable for model training!")
+        else:
+            logger.info("🔵 This feedback contains only AI predictions - can be used for validation")
+        
+        # Extract all unique image IDs and try to get image paths
+        unique_image_ids = set()
+        for comparison in comparisons:
+            image_id = comparison.get('imageId')
+            if image_id:
+                unique_image_ids.add(image_id)
+        
+        logger.info("-" * 60)
+        logger.info("IMAGE INFORMATION EXTRACTION:")
+        logger.info(f"Unique Image IDs found: {len(unique_image_ids)}")
+        
+        for image_id in unique_image_ids:
+            logger.info(f"  📷 Image ID: {image_id}")
+            # Try to construct potential image path (you may need to adjust this based on your backend structure)
+            potential_paths = [
+                f"/Users/jaliya/Desktop/Jaliya/Semester 7/Software/TransX-Transformer-Maintenance-Platform/transformer-inspector/backend/uploads/{inspection_id}/{image_id}.jpg",
+                f"/Users/jaliya/Desktop/Jaliya/Semester 7/Software/TransX-Transformer-Maintenance-Platform/transformer-inspector/backend/uploads/{inspection_id}/{image_id}.png",
+                f"./uploads/{inspection_id}/{image_id}.jpg",
+                f"./uploads/{inspection_id}/{image_id}.png"
+            ]
+            
+            image_found = False
+            for path in potential_paths:
+                if Path(path).exists():
+                    logger.info(f"     ✅ Found image at: {path}")
+                    image_found = True
+                    break
+            
+            if not image_found:
+                logger.info(f"     ❌ Image not found in expected locations")
+                for path in potential_paths[:2]:  # Log first 2 paths tried
+                    logger.info(f"        Tried: {path}")
+        
+        # Create detailed annotation summary
+        logger.info("-" * 60)
+        logger.info("ANNOTATION COORDINATES SUMMARY:")
+        
+        human_annotations = []
+        ai_predictions = []
+        
+        for i, comparison in enumerate(comparisons, 1):
+            if comparison.get('humanAnnotation'):
+                human_ann = comparison['humanAnnotation']
+                bbox = human_ann.get('bbox', {})
+                human_annotations.append({
+                    'comparison_index': i,
+                    'image_id': comparison.get('imageId'),
+                    'annotation_id': human_ann.get('id'),
+                    'class_name': human_ann.get('className'),
+                    'class_id': human_ann.get('classId'),
+                    'coordinates': bbox,
+                    'confidence': human_ann.get('confidence'),
+                    'created_by': human_ann.get('createdBy'),
+                    'action': comparison.get('actionTaken')
+                })
+            
+            if comparison.get('aiPrediction'):
+                ai_pred = comparison['aiPrediction']
+                bbox = ai_pred.get('bbox', {})
+                ai_predictions.append({
+                    'comparison_index': i,
+                    'image_id': comparison.get('imageId'),
+                    'prediction_id': ai_pred.get('id'),
+                    'class_name': ai_pred.get('className'),
+                    'class_id': ai_pred.get('classId'),
+                    'coordinates': bbox,
+                    'confidence': ai_pred.get('confidence'),
+                    'action': comparison.get('actionTaken')
+                })
+        
+        if human_annotations:
+            logger.info(f"🔴 HUMAN ANNOTATIONS ({len(human_annotations)}):")
+            for ann in human_annotations:
+                bbox = ann['coordinates']
+                logger.info(f"  [{ann['comparison_index']}] {ann['class_name']} (ID:{ann['class_id']}) - "
+                           f"({bbox.get('x1')},{bbox.get('y1')}) to ({bbox.get('x2')},{bbox.get('y2')}) - "
+                           f"Action: {ann['action']} - By: {ann['created_by']}")
+        
+        if ai_predictions:
+            logger.info(f"🤖 AI PREDICTIONS ({len(ai_predictions)}):")
+            for pred in ai_predictions:
+                bbox = pred['coordinates']
+                logger.info(f"  [{pred['comparison_index']}] {pred['class_name']} (ID:{pred['class_id']}) - "
+                           f"({bbox.get('x1')},{bbox.get('y1')}) to ({bbox.get('x2')},{bbox.get('y2')}) - "
+                           f"Conf: {pred['confidence']:.3f} - Action: {pred['action']}")
+        
+        logger.info("=" * 60)
+        
         with open(feedback_file, 'w') as f:
             json.dump(feedback_data, f, indent=2)
         
@@ -535,6 +838,11 @@ def upload_feedback():
                    f"Human: {summary.get('totalHumanAnnotations', 0)}, "
                    f"Approved: {summary.get('approved', 0)}, "
                    f"Rejected: {summary.get('rejected', 0)}")
+        
+        # Check if we should trigger automatic fine-tuning
+        if has_human_annotations:
+            logger.info("🤖 Checking auto fine-tuning conditions...")
+            check_auto_finetune_trigger(human_annotation_count)
         
         return jsonify({
             'status': 'success',
@@ -551,6 +859,104 @@ def upload_feedback():
         return jsonify({
             'status': 'error',
             'error': str(e)
+        }), 500
+
+
+@app.route('/api/finetune/trigger', methods=['POST'])
+def trigger_manual_finetune():
+    """Manually trigger fine-tuning process"""
+    try:
+        logger.info("📝 Manual fine-tuning trigger requested")
+        
+        # Check if there are human annotations available
+        total_annotations = count_total_human_annotations()
+        
+        if total_annotations == 0:
+            return jsonify({
+                'error': 'No human annotations available for fine-tuning',
+                'human_annotations': 0
+            }), 400
+        
+        # Queue the fine-tuning task
+        queue_finetune_task()
+        
+        return jsonify({
+            'message': 'Fine-tuning queued successfully',
+            'human_annotations': total_annotations,
+            'queue_length': len(finetune_queue),
+            'timestamp': datetime.now().isoformat()
+        })
+        
+    except Exception as e:
+        logger.error(f"Error triggering manual fine-tuning: {e}")
+        return jsonify({
+            'error': 'Failed to trigger fine-tuning',
+            'details': str(e)
+        }), 500
+
+
+@app.route('/api/finetune/status', methods=['GET'])
+def get_finetune_status():
+    """Get current fine-tuning status"""
+    try:
+        total_annotations = count_total_human_annotations()
+        
+        # Check if training is currently running
+        training_in_progress = any(task['status'] == 'running' for task in finetune_queue)
+        
+        return jsonify({
+            'auto_finetune_enabled': AUTO_FINETUNE_ENABLED,
+            'threshold': AUTO_FINETUNE_THRESHOLD,
+            'total_human_annotations': total_annotations,
+            'annotations_needed': max(0, AUTO_FINETUNE_THRESHOLD - total_annotations),
+            'training_in_progress': training_in_progress,
+            'background_processing': True,  # Always runs in background
+            'detection_available': True,   # Detection is always available during training
+            'queue': finetune_queue,
+            'queue_length': len(finetune_queue),
+            'timestamp': datetime.now().isoformat()
+        })
+        
+    except Exception as e:
+        logger.error(f"Error getting fine-tuning status: {e}")
+        return jsonify({
+            'error': 'Failed to get status',
+            'details': str(e)
+        }), 500
+
+
+@app.route('/api/finetune/config', methods=['POST'])
+def update_finetune_config():
+    """Update fine-tuning configuration"""
+    try:
+        global AUTO_FINETUNE_ENABLED, AUTO_FINETUNE_THRESHOLD
+        
+        data = request.get_json()
+        
+        if 'enabled' in data:
+            AUTO_FINETUNE_ENABLED = bool(data['enabled'])
+            logger.info(f"Auto fine-tuning {'enabled' if AUTO_FINETUNE_ENABLED else 'disabled'}")
+            
+        if 'threshold' in data:
+            threshold = int(data['threshold'])
+            if threshold > 0:
+                AUTO_FINETUNE_THRESHOLD = threshold
+                logger.info(f"Auto fine-tuning threshold set to {AUTO_FINETUNE_THRESHOLD}")
+            else:
+                return jsonify({'error': 'Threshold must be positive'}), 400
+        
+        return jsonify({
+            'message': 'Configuration updated',
+            'auto_finetune_enabled': AUTO_FINETUNE_ENABLED,
+            'threshold': AUTO_FINETUNE_THRESHOLD,
+            'timestamp': datetime.now().isoformat()
+        })
+        
+    except Exception as e:
+        logger.error(f"Error updating fine-tuning config: {e}")
+        return jsonify({
+            'error': 'Failed to update configuration',
+            'details': str(e)
         }), 500
 
 

@@ -1,0 +1,147 @@
+# TransX Platform - Git Ignore File
+
+# ===================================
+# ML Models & Training Data
+# ===================================
+# Fine-tuned model files (auto-generated)
+**/yolov8p2_finetuned_*.pt
+**/yolov8p2_backup_*.pt
+
+# Human feedback and training data
+**/feedback_data/
+**/fine_tune_runs/
+**/clean_detection_results/
+**/__pycache__/
+
+# Large model files (optional - comment out if you want to track base models)
+# **/yolov8*.pt
+
+# ===================================
+# File Uploads & User Data
+# ===================================
+**/uploads/
+transformer-inspector/backend/uploads/
+
+# ===================================
+# Backend (Spring Boot)
+# ===================================
+HELP.md
+.gradle
+build/
+!gradle/wrapper/gradle-wrapper.jar
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+### STS ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+bin/
+!**/src/main/**/bin/
+!**/src/test/**/bin/
+
+### IntelliJ IDEA ###
+.idea
+*.iws
+*.iml
+*.ipr
+out/
+!**/src/main/**/out/
+!**/src/test/**/out/
+
+### NetBeans ###
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+
+# ===================================
+# Frontend (React/Vite)
+# ===================================
+node_modules/
+dist/
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ===================================
+# Python (ML Service)
+# ===================================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
+venv/
+env/
+ENV/
+.venv/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# pyenv
+.python-version
+
+# ===================================
+# Database
+# ===================================
+*.db
+*.sqlite
+*.sqlite3
+
+# ===================================
+# OS Files
+# ===================================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# ===================================
+# IDE & Editor Files
+# ===================================
+.vscode/
+*.swp
+*.swo
+*~
+
+# ===================================
+# Temporary Files
+# ===================================
+*.tmp
+*.temp
+*.log

@@ -1,8 +1,8 @@
 # TransX - Transformer Maintenance Platform
 
-> **Complete 4-Phase Implementation:** Transformer Management, Anomaly Detection, Annotation System, and Comprehensive Inspection Workflow
+> **Complete 4-Phase Implementation:** Transformer Management, Anomaly Detection, Annotation System, Comprehensive Inspection Workflow, and **Human-in-the-Loop AI Fine-tuning**
 
-A full-stack application for managing electrical transformers with AI-powered thermal image analysis, annotation system, and comprehensive inspection workflow. Built with React, TypeScript, Spring Boot, MySQL, and YOLOv8 machine learning.
+A full-stack application for managing electrical transformers with AI-powered thermal image analysis, annotation system, comprehensive inspection workflow, and **continuous model improvement through human feedback**. Built with React, TypeScript, Spring Boot, MySQL, and YOLOv8 machine learning with automated fine-tuning capabilities.
 
 ## Features
 
@@ -97,13 +97,60 @@ A full-stack application for managing electrical transformers with AI-powered th
 ![Anomaly Detection Result](assests/detection05.jpg)
 
 
-### Phase 3: Advanced Annotation System
+### Phase 3: Advanced Annotation System & Human-in-the-Loop AI Fine-tuning
+**Interactive Annotation Interface with Continuous Model Improvement**
+
+#### Core Annotation Features
 - **Interactive Canvas** - Multi-mode annotation interface (View/Edit/Draw)
 - **Bounding Box Annotations** - Manual drawing and editing of fault annotations
 - **Annotation Workflow** - Approve/Reject detected anomalies with validation
 - **Visual Feedback** - Color-coded fault types with legend
 - **Image Scaling** - Automatic scaling for images of any size (handles 640×640 to 3077×1920+)
 - **Zoom & Pan** - Full canvas navigation with zoom controls
+
+#### Human-in-the-Loop AI Fine-tuning System
+**Continuous Model Improvement Through Human Feedback**
+
+- **Automatic Feedback Collection:**
+  - System captures all human annotation decisions (approve/reject/correct)
+  - Tracks user-drawn bounding boxes and class corrections
+  - Stores feedback data in JSON format for training
+
+- **Smart Fine-tuning Triggers:**
+  - **Automatic**: Triggers when ≥2 human annotations accumulated
+  - **Manual**: Engineers can trigger via API endpoint: `POST /api/finetune/trigger`
+  - **Background Processing**: Non-blocking training (5 epochs for fast iteration)
+  - **Status Monitoring**: Real-time training progress via `/api/finetune/status`
+
+- **Intelligent Data Augmentation:**
+  - Creates 50+ variations per human-annotated image using Albumentations
+  - Preserves annotation accuracy across geometric transformations
+  - Maintains class consistency and bounding box coordinates
+
+- **Continuous Model Evolution:**
+  - **Auto-Deployment**: Best fine-tuned model → `/Faulty_Detection/yolov8p2.pt`
+  - **Version Management**: Previous models backed up with timestamps
+  - **Iterative Improvement**: Each fine-tuning builds on previous gains
+  - **Class Mapping**: Proper feedback-to-model class ID mapping
+
+- **Quality Assurance:**
+  - Image-label consistency validation
+  - Mismatch detection (faulty labels on normal images)
+  - Detailed logging of all training decisions
+  - Fallback annotation system for missing images
+
+- **Production Integration:**
+  ```bash
+  # The cycle: User feedback → Auto fine-tuning → Better detections
+  Original Model → Fine-tune #1 → Fine-tune #2 → Fine-tune #3 → ...
+  ```
+
+**Key Benefits:**
+- 🔄 **Self-Improving AI**: Model accuracy increases with usage
+- ⚡ **Fast Training**: 5 epochs per iteration (~2-5 minutes)
+- 🚀 **Zero Downtime**: Background training, live detection continues
+- 📦 **Safe Deployment**: Automatic model versioning and backups
+- 🎯 **Domain Adaptation**: Model learns specific transformer defect patterns
 
 ### Phase 4: Inspection Management & Collaboration
 - **Inspection Lifecycle** - Complete workflow from creation to completion
@@ -126,9 +173,10 @@ A full-stack application for managing electrical transformers with AI-powered th
 | **Frontend** | React 18, TypeScript, Vite, React Router, Konva.js (Canvas) |
 | **Backend** | Spring Boot 3.3, Java 21, Spring Data JPA, RESTful APIs |
 | **ML Service** | Flask, Python, YOLOv8p2, OpenCV, Pillow |
+| **AI Fine-tuning** | Albumentations, PyTorch, Human-in-the-loop training |
 | **Database** | MySQL with comprehensive schema (transformers, inspections, annotations, comments) |
 | **File Storage** | Local disk storage with HTTP serving and organized structure |
-| **AI/ML** | YOLOv8p2 trained model for thermal anomaly detection |
+| **AI/ML** | YOLOv8p2 trained model for thermal anomaly detection + continuous fine-tuning |
 | **CORS** | Configured for development environment |
 
 ## Prerequisites
@@ -214,16 +262,29 @@ transformer-inspector/
 │   ├── package.json (with Konva.js dependencies)
 │   └── tsconfig.json, vite.config.ts
 │
-├── ml-service/                            # Flask ML Microservice
-│   ├── app.py                            # Flask application with YOLOv8
-│   ├── requirements.txt                  # Python dependencies
+├── ml-service/                            # Flask ML Microservice + Fine-tuning
+│   ├── app.py                            # Flask app with YOLOv8 + fine-tuning integration
+│   ├── fine_tune_with_feedback.py       # Human-in-the-loop fine-tuning system
+│   ├── requirements.txt                  # Python dependencies (includes fine-tuning)
 │   ├── setup.sh                          # Setup script
-│   └── README.md                         # ML service documentation
+│   ├── README.md                         # ML service documentation
+│   ├── feedback_data/                    # Human annotation feedback storage
+│   │   ├── feedback_*.json              # Individual feedback files
+│   │   └── ...
+│   ├── fine_tune_runs/                   # Fine-tuning execution logs
+│   │   ├── run_*/                        # Timestamped training runs
+│   │   └── ...
+│   ├── clean_detection_results/          # Processed detection results
+│   │   ├── *_clean_detections.json      # Cleaned feedback data
+│   │   └── ...
+│   └── mlservice/                        # Additional service modules
 │
-├── Faulty_Detection/                     # ML Model Training
-│   ├── train_yolo_fixed.py              # Training script
+├── Faulty_Detection/                     # ML Model Training & Production Models
+│   ├── train_yolo_fixed.py              # Original training script
 │   ├── yolov8p2_single_inference.py     # Inference testing
-│   ├── yolov8n.pt, yolov8p2.pt         # Model files
+│   ├── yolov8n.pt, yolov8p2.pt         # Production model files
+│   ├── yolov8p2_backup_*.pt             # Auto-generated model backups
+│   ├── yolov8p2_finetuned_*.pt          # Fine-tuned model versions
 │   └── samples/                          # Training data
 │
 └── Database-MYSQL/
@@ -432,6 +493,12 @@ cd transformer-inspector/frontend && npm install && npm run dev
 - `POST /api/inspections/{inspectionId}/comments` - Add new comment
 - `PUT /api/inspection-comments/{id}` - Update comment
 - `DELETE /api/inspection-comments/{id}` - Delete comment
+
+#### Human-in-the-Loop Fine-tuning (ML Service)
+- `GET /api/finetune/status` - Get fine-tuning status and progress
+- `POST /api/finetune/trigger` - Manually trigger fine-tuning process
+- `POST /api/finetune/config` - Update fine-tuning configuration
+- `GET /api/health` - ML service health check (includes fine-tuning features)
 
 #### Thermal Image Management
 - `GET /api/images` - List all thermal images

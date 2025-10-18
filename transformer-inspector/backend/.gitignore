@@ -35,3 +35,16 @@ out/
 
 ### VS Code ###
 .vscode/
+
+### ML Models ###
+# Fine-tuned model files (auto-generated)
+**/yolov8p2_finetuned_*.pt
+**/yolov8p2_backup_*.pt
+
+# ML service data directories
+**/feedback_data/
+**/fine_tune_runs/
+**/clean_detection_results/
+
+# Uploaded files
+uploads/

@@ -96,7 +96,7 @@ class TargetedDatasetCreator:
         try:
             # Try to read upload_base from application.properties (app.storage.root)
             upload_base = None
-            properties_path = os.path.join(self.base_dir, '..', 'backend', 'application.properties')
+            properties_path = os.path.join(self.base_dir, '..', 'backend','src','main','resources','application.properties')
             if os.path.exists(properties_path):
                 try:
                     with open(properties_path, 'r') as prop_file:
@@ -109,7 +109,7 @@ class TargetedDatasetCreator:
                     self.logger.warning(f"Could not read application.properties: {prop_err}")
             # Fallback to hardcoded path if not found
             if not upload_base:
-                upload_base = "/Users/jaliya/Desktop/Jaliya/Semester 7/Software/TransX-Transformer-Maintenance-Platform/transformer-inspector/backend/uploads"
+                upload_base = "/Users/jaliya/Desktop/Jaliya/Semester 7/Software/TransXTransformer-Maintenance-Platform/transformer-inspector/backend/uploads"
 
             if not os.path.exists(upload_base):
                 self.logger.error(f"Upload directory does not exist: {upload_base}")

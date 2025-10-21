@@ -94,28 +94,43 @@ class TargetedDatasetCreator:
     def find_latest_inspection_directory(self) -> Optional[str]:
         """Find the most recent inspection directory in uploads"""
         try:
-            upload_base = "/Users/jaliya/Desktop/Jaliya/Semester 7/Software/TransX-Transformer-Maintenance-Platform/transformer-inspector/backend/uploads"
-            
+            # Try to read upload_base from application.properties (app.storage.root)
+            upload_base = None
+            properties_path = os.path.join(self.base_dir, '..', 'backend', 'application.properties')
+            if os.path.exists(properties_path):
+                try:
+                    with open(properties_path, 'r') as prop_file:
+                        for line in prop_file:
+                            if line.strip().startswith('app.storage.root'):
+                                key, value = line.strip().split('=', 1)
+                                upload_base = value.strip()
+                                break
+                except Exception as prop_err:
+                    self.logger.warning(f"Could not read application.properties: {prop_err}")
+            # Fallback to hardcoded path if not found
+            if not upload_base:
+                upload_base = "/Users/jaliya/Desktop/Jaliya/Semester 7/Software/TransX-Transformer-Maintenance-Platform/transformer-inspector/backend/uploads"
+
             if not os.path.exists(upload_base):
                 self.logger.error(f"Upload directory does not exist: {upload_base}")
                 return None
-            
+
             # Find all directories in uploads
             directories = []
             for item in os.listdir(upload_base):
                 item_path = os.path.join(upload_base, item)
                 if os.path.isdir(item_path):
                     directories.append(item_path)
-            
+
             if not directories:
                 self.logger.error("No inspection directories found in uploads")
                 return None
-            
+
             # Sort by modification time, get the latest
             latest_dir = max(directories, key=os.path.getmtime)
             self.logger.info(f"Found latest inspection directory: {latest_dir}")
             return latest_dir
-            
+
         except Exception as e:
             self.logger.error(f"Error finding latest inspection directory: {e}")
             return None

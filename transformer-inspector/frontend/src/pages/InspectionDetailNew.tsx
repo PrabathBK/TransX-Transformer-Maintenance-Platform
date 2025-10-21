@@ -664,6 +664,26 @@ export default function InspectionDetailNew() {
         </div>
       </div>
 
+      {/* Add Side-by-Side Image Comparison here - after header, before main content grid */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: '1fr 1fr',
+        gap: '24px',
+        padding: '24px',
+        paddingTop: '0'
+      }}>
+        <ImageBox 
+          title="Baseline" 
+          imageUrl={baselineImage?.publicUrl || inspection.baselineImageUrl} 
+          timestamp={baselineImage?.uploadedAt || inspection.createdAt}
+        />
+        <ImageBox 
+          title="Inspection" 
+          imageUrl={inspection.inspectionImageUrl} 
+          timestamp={inspection.inspectedAt || inspection.createdAt}
+        />
+      </div>
+
       {/* Main Content Grid */}
       <div style={{
         display: 'grid',
@@ -847,8 +867,8 @@ export default function InspectionDetailNew() {
                   onClick={handleSaveAnnotatedImage}
                   disabled={isSavingImage || !inspection.inspectionImageId || !isCanvasReady}
                   style={{
-                    flex: '1 1 0',
-                    minWidth: '140px',
+                    flex: '1',
+                    minWidth: '200px',
                     background: (isSavingImage || !isCanvasReady) ? '#94a3b8' : 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
                     color: 'white',
                     border: 'none',
@@ -857,9 +877,7 @@ export default function InspectionDetailNew() {
                     fontSize: '15px',
                     fontWeight: '600',
                     cursor: (isSavingImage || !inspection.inspectionImageId || !isCanvasReady) ? 'not-allowed' : 'pointer',
-                    boxShadow: '0 4px 12px rgba(59, 130, 246, 0.3)',
-                    opacity: (!inspection.inspectionImageId || !isCanvasReady) ? 0.6 : 1,
-                    transition: 'all 0.2s'
+                    boxShadow: '0 4px 12px rgba(59, 130, 246, 0.3)'
                   }}
                 >
                   {isSavingImage ? '⏳ Saving...' : !isCanvasReady ? '⏳ Loading...' : '💾 Save Image'}
@@ -870,8 +888,8 @@ export default function InspectionDetailNew() {
                   onClick={handleCompleteInspection}
                   disabled={isCompleting || !inspection.inspectionImageId}
                   style={{
-                    flex: '1 1 0',
-                    minWidth: '160px',
+                    flex: '1',
+                    minWidth: '200px',
                     background: isCompleting ? '#94a3b8' : 'linear-gradient(135deg, #059669 0%, #10b981 100%)',
                     color: 'white',
                     border: 'none',
@@ -880,9 +898,7 @@ export default function InspectionDetailNew() {
                     fontSize: '15px',
                     fontWeight: '600',
                     cursor: isCompleting || !inspection.inspectionImageId ? 'not-allowed' : 'pointer',
-                    boxShadow: '0 4px 12px rgba(5, 150, 105, 0.3)',
-                    opacity: !inspection.inspectionImageId ? 0.6 : 1,
-                    transition: 'all 0.2s'
+                    boxShadow: '0 4px 12px rgba(5, 150, 105, 0.3)'
                   }}
                 >
                   {isCompleting ? '⏳ Processing...' : '✅ Done'}
@@ -893,8 +909,8 @@ export default function InspectionDetailNew() {
                   onClick={handleExportFeedback}
                   disabled={isExportingFeedback}
                   style={{
-                    flex: '1 1 0',
-                    minWidth: '140px',
+                    flex: '1',
+                    minWidth: '200px',
                     background: isExportingFeedback ? '#94a3b8' : 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)',
                     color: 'white',
                     border: 'none',
@@ -903,8 +919,7 @@ export default function InspectionDetailNew() {
                     fontSize: '15px',
                     fontWeight: '600',
                     cursor: isExportingFeedback ? 'not-allowed' : 'pointer',
-                    boxShadow: '0 4px 12px rgba(139, 92, 246, 0.3)',
-                    transition: 'all 0.2s'
+                    boxShadow: '0 4px 12px rgba(139, 92, 246, 0.3)'
                   }}
                 >
                   {isExportingFeedback ? '⏳ Exporting...' : '🤖 Finetune'}

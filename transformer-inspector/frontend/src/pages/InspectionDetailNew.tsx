@@ -673,12 +673,12 @@ export default function InspectionDetailNew() {
         paddingTop: '0'
       }}>
         <ImageBox 
-          title="Baseline" 
+          title="Baseline Image" 
           imageUrl={baselineImage?.publicUrl || inspection.baselineImageUrl} 
           timestamp={baselineImage?.uploadedAt || inspection.createdAt}
         />
         <ImageBox 
-          title="Inspection" 
+          title="Inspection Image" 
           imageUrl={inspection.inspectionImageUrl} 
           timestamp={inspection.inspectedAt || inspection.createdAt}
         />

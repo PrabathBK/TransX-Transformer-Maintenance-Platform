@@ -1,0 +1,132 @@
+{
+  "inspectionId": "348b25d2-7352-4cd5-81fa-958f7f1a00b7",
+  "inspectionNumber": "IN-789",
+  "transformerCode": "TX-004",
+  "exportedAt": "2025-10-21T05:29:28.879508Z",
+  "comparisons": [
+    {
+      "imageId": "eebaf912-262f-4786-b09c-fc03c779e88e",
+      "aiPrediction": {
+        "id": "53f06e8d-fbc0-4316-b220-896e2076e155",
+        "inspectionId": "348b25d2-7352-4cd5-81fa-958f7f1a00b7",
+        "version": 1,
+        "bbox": {
+          "x1": 449,
+          "y1": 283,
+          "x2": 547,
+          "y2": 439
+        },
+        "classId": 3,
+        "className": "potential_faulty",
+        "confidence": 0.93,
+        "source": "ai",
+        "actionType": "approved",
+        "boxNumber": 304,
+        "createdBy": "AI-YOLOv8",
+        "createdAt": "2025-10-21T05:08:37Z",
+        "modifiedBy": "current-user@example.com",
+        "modifiedAt": "2025-10-21T05:17:08Z",
+        "parentAnnotationId": null,
+        "isActive": true,
+        "comments": null
+      },
+      "humanAnnotation": null,
+      "actionTaken": "approved"
+    },
+    {
+      "imageId": "eebaf912-262f-4786-b09c-fc03c779e88e",
+      "aiPrediction": {
+        "id": "964d3241-8f9f-403e-a3a4-0bad11c84c77",
+        "inspectionId": "348b25d2-7352-4cd5-81fa-958f7f1a00b7",
+        "version": 1,
+        "bbox": {
+          "x1": 333,
+          "y1": 281,
+          "x2": 434,
+          "y2": 448
+        },
+        "classId": 0,
+        "className": "faulty",
+        "confidence": 0.897,
+        "source": "ai",
+        "actionType": "approved",
+        "boxNumber": 306,
+        "createdBy": "AI-YOLOv8",
+        "createdAt": "2025-10-21T05:08:37Z",
+        "modifiedBy": "current-user@example.com",
+        "modifiedAt": "2025-10-21T05:17:13Z",
+        "parentAnnotationId": null,
+        "isActive": true,
+        "comments": null
+      },
+      "humanAnnotation": null,
+      "actionTaken": "approved"
+    },
+    {
+      "imageId": "eebaf912-262f-4786-b09c-fc03c779e88e",
+      "aiPrediction": {
+        "id": "ea0a3563-3633-41ea-8999-a506406a54cb",
+        "inspectionId": "348b25d2-7352-4cd5-81fa-958f7f1a00b7",
+        "version": 1,
+        "bbox": {
+          "x1": 219,
+          "y1": 288,
+          "x2": 319,
+          "y2": 451
+        },
+        "classId": 0,
+        "className": "faulty",
+        "confidence": 0.917,
+        "source": "ai",
+        "actionType": "approved",
+        "boxNumber": 305,
+        "createdBy": "AI-YOLOv8",
+        "createdAt": "2025-10-21T05:08:37Z",
+        "modifiedBy": "current-user@example.com",
+        "modifiedAt": "2025-10-21T05:17:15Z",
+        "parentAnnotationId": null,
+        "isActive": true,
+        "comments": null
+      },
+      "humanAnnotation": null,
+      "actionTaken": "approved"
+    },
+    {
+      "imageId": "eebaf912-262f-4786-b09c-fc03c779e88e",
+      "aiPrediction": null,
+      "humanAnnotation": {
+        "id": "30f2301d-8470-4ec6-aab3-f5e2a9dbaef2",
+        "inspectionId": "348b25d2-7352-4cd5-81fa-958f7f1a00b7",
+        "version": 1,
+        "bbox": {
+          "x1": 205,
+          "y1": 214,
+          "x2": 563,
+          "y2": 280
+        },
+        "classId": 4,
+        "className": "potential_faulty",
+        "confidence": 1,
+        "source": "human",
+        "actionType": "created",
+        "boxNumber": 307,
+        "createdBy": "current-user@example.com",
+        "createdAt": "2025-10-21T05:17:26Z",
+        "modifiedBy": null,
+        "modifiedAt": null,
+        "parentAnnotationId": null,
+        "isActive": true,
+        "comments": null
+      },
+      "actionTaken": "added"
+    }
+  ],
+  "summary": {
+    "totalAiDetections": 3,
+    "totalHumanAnnotations": 1,
+    "approved": 3,
+    "rejected": 0,
+    "edited": 0,
+    "added": 1
+  }
+}

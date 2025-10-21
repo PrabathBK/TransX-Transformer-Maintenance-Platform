@@ -1,0 +1,45 @@
+{
+  "inspectionId": "b62e79c4-8ff2-4460-afc5-5374b83021eb",
+  "inspectionNumber": "INS-005",
+  "transformerCode": "TX-005",
+  "exportedAt": "2025-10-21T11:10:49.933411500Z",
+  "comparisons": [
+    {
+      "imageId": "2baff705-532a-4131-ace7-a47afd12a67c",
+      "aiPrediction": null,
+      "humanAnnotation": {
+        "id": "2093f78f-8a6e-4fd0-a298-6c30db4c8a31",
+        "inspectionId": "b62e79c4-8ff2-4460-afc5-5374b83021eb",
+        "version": 1,
+        "bbox": {
+          "x1": 1095,
+          "y1": 1060,
+          "x2": 1446,
+          "y2": 1358
+        },
+        "classId": 4,
+        "className": "potential_faulty",
+        "confidence": 1,
+        "source": "human",
+        "actionType": "created",
+        "boxNumber": 1,
+        "createdBy": "current-user@example.com",
+        "createdAt": "2025-10-21T11:10:09Z",
+        "modifiedBy": null,
+        "modifiedAt": null,
+        "parentAnnotationId": null,
+        "isActive": true,
+        "comments": null
+      },
+      "actionTaken": "added"
+    }
+  ],
+  "summary": {
+    "totalAiDetections": 0,
+    "totalHumanAnnotations": 1,
+    "approved": 0,
+    "rejected": 0,
+    "edited": 0,
+    "added": 1
+  }
+}

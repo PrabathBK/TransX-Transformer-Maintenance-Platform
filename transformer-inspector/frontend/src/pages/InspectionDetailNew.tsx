@@ -57,6 +57,10 @@ export default function InspectionDetailNew() {
   
   // Feedback export state (FR3.3)
   const [isExportingFeedback, setIsExportingFeedback] = useState(false);
+
+  // Add this with other state declarations at the top of the component
+  const [commentsExpanded, setCommentsExpanded] = useState(true);
+  const [historyExpanded, setHistoryExpanded] = useState(true);
   
   // Load inspection and annotations
   useEffect(() => {
@@ -591,7 +595,7 @@ export default function InspectionDetailNew() {
   const imageUrl = inspection.originalInspectionImageUrl || inspection.inspectionImageUrl || 'https://via.placeholder.com/800x600?text=No+Image';
 
   return (
-    <div className="page-container">
+    <div className="inspection-detail">
       {/* Header */}
       <div style={{
         display: 'flex',
@@ -660,33 +664,16 @@ export default function InspectionDetailNew() {
         </div>
       </div>
 
-      {/* Main content - always accessible */}
-      <>
-          {/* Side-by-side Image Comparison */}
-      {(baselineImage || inspection.baselineImageUrl || inspection.inspectionImageUrl || inspection.originalInspectionImageUrl) && (
-        <div style={{ marginBottom: 24 }}>
-          <h3 style={{ margin: '0 0 16px 0', fontSize: '18px', fontWeight: '600', color: '#1f2937' }}>
-            Thermal Image Comparison
-          </h3>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-            <ImageBox 
-              title="Baseline" 
-              imageUrl={baselineImage?.publicUrl || inspection.baselineImageUrl}
-              timestamp={baselineImage?.uploadedAt}
-            />
-            <ImageBox 
-              title="Inspection" 
-              imageUrl={inspection.inspectionImageUrl || inspection.originalInspectionImageUrl}
-              timestamp={inspection.inspectedAt}
-            />
-          </div>
-        </div>
-      )}
-
-      {/* Main Content */}
-      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '24px' }}>
-        {/* Left: Annotation Canvas */}
+      {/* Main Content Grid */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: '2fr 1fr',
+        gap: '24px',
+        padding: '24px'
+      }}>
+        {/* Left Column */}
         <div>
+          {/* Annotation Toolbar */}
           <AnnotationToolbar
             mode={mode}
             onModeChange={setMode}
@@ -810,6 +797,7 @@ export default function InspectionDetailNew() {
             </div>
           )}
 
+          {/* Annotation Canvas */}
           <AnnotationCanvas
             imageUrl={imageUrl}
             annotations={annotations}
@@ -840,21 +828,26 @@ export default function InspectionDetailNew() {
           </div>
 
           {/* Action Buttons Bar */}
-          {inspection.status !== 'COMPLETED' && (
-            <div style={{
-              marginTop: '16px',
-              display: 'flex',
-              gap: '12px',
-              flexWrap: 'wrap'
-            }}>
-              {/* Save Image Button */}
-              {annotations.length > 0 && (
+          <div style={{
+            marginTop: '16px',
+            border: '2px solid #e5e7eb',
+            borderRadius: '12px',
+            padding: '16px',
+            height: '80px',
+            display: 'flex',
+            gap: '12px',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            background: 'white'
+          }}>
+            {inspection.status !== 'COMPLETED' ? (
+              <>
+                {/* Save Image Button */}
                 <button
                   onClick={handleSaveAnnotatedImage}
                   disabled={isSavingImage || !inspection.inspectionImageId || !isCanvasReady}
-                  title="Save the current image with annotations"
                   style={{
-                    flex: '1 1 auto',
+                    flex: '1 1 0',
                     minWidth: '140px',
                     background: (isSavingImage || !isCanvasReady) ? '#94a3b8' : 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
                     color: 'white',
@@ -871,40 +864,36 @@ export default function InspectionDetailNew() {
                 >
                   {isSavingImage ? '⏳ Saving...' : !isCanvasReady ? '⏳ Loading...' : '💾 Save Image'}
                 </button>
-              )}
 
-              {/* Complete Inspection Button */}
-              <button
-                onClick={handleCompleteInspection}
-                disabled={isCompleting || !inspection.inspectionImageId}
-                title="Mark inspection as complete"
-                style={{
-                  flex: '1 1 auto',
-                  minWidth: '140px',
-                  background: isCompleting ? '#94a3b8' : 'linear-gradient(135deg, #059669 0%, #10b981 100%)',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '10px',
-                  padding: '12px 20px',
-                  fontSize: '15px',
-                  fontWeight: '600',
-                  cursor: isCompleting || !inspection.inspectionImageId ? 'not-allowed' : 'pointer',
-                  boxShadow: '0 4px 12px rgba(5, 150, 105, 0.3)',
-                  opacity: !inspection.inspectionImageId ? 0.6 : 1,
-                  transition: 'all 0.2s'
-                }}
-              >
-                {isCompleting ? '⏳ Processing...' : '✅ Done'}
-              </button>
+                {/* Complete Inspection Button */}
+                <button
+                  onClick={handleCompleteInspection}
+                  disabled={isCompleting || !inspection.inspectionImageId}
+                  style={{
+                    flex: '1 1 0',
+                    minWidth: '160px',
+                    background: isCompleting ? '#94a3b8' : 'linear-gradient(135deg, #059669 0%, #10b981 100%)',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '10px',
+                    padding: '12px 20px',
+                    fontSize: '15px',
+                    fontWeight: '600',
+                    cursor: isCompleting || !inspection.inspectionImageId ? 'not-allowed' : 'pointer',
+                    boxShadow: '0 4px 12px rgba(5, 150, 105, 0.3)',
+                    opacity: !inspection.inspectionImageId ? 0.6 : 1,
+                    transition: 'all 0.2s'
+                  }}
+                >
+                  {isCompleting ? '⏳ Processing...' : '✅ Done'}
+                </button>
 
-              {/* Export Feedback Button */}
-              {annotations.length > 0 && (
+                {/* Finetune Button */}
                 <button
                   onClick={handleExportFeedback}
                   disabled={isExportingFeedback}
-                  title="Export feedback for model fine-tuning"
                   style={{
-                    flex: '1 1 auto',
+                    flex: '1 1 0',
                     minWidth: '140px',
                     background: isExportingFeedback ? '#94a3b8' : 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)',
                     color: 'white',
@@ -920,49 +909,143 @@ export default function InspectionDetailNew() {
                 >
                   {isExportingFeedback ? '⏳ Exporting...' : '🤖 Finetune'}
                 </button>
-              )}
-            </div>
-          )}
+              </>
+            ) : (
+              // Show completion message and button when completed
+              <div style={{
+                width: '100%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                background: '#ecfdf5',
+                border: '2px solid #10b981',
+                borderRadius: '10px',
+                padding: '16px 24px'
+              }}>
+                <div>
+                  <h3 style={{ 
+                    margin: '0 0 4px 0', 
+                    fontSize: '16px', 
+                    fontWeight: '600', 
+                    color: '#059669'
+                  }}>
+                    ✅ Inspection Completed
+                  </h3>
+                  <p style={{ 
+                    margin: 0,
+                    fontSize: '14px', 
+                    color: '#047857'
+                  }}>
+                    This inspection has been marked as complete.
+                  </p>
+                </div>
 
-          {/* Comments Section */}
-          <CommentsSection inspectionId={inspection.id} />
-        </div>
+                <button
+                  onClick={() => nav(`/transformers/${inspection.transformerId}`)}
+                  style={{
+                    background: '#2563eb',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '8px',
+                    padding: '10px 20px',
+                    fontSize: '14px',
+                    fontWeight: '800',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px'
+                  }}
+                >
+                  🏠 View on Transformer Page
+                </button>
+              </div>
+            )}
+          </div>
 
-        {/* Right: Annotations List */}
-        <div>
+          {/* Inspection History - MOVED HERE */}
           <div style={{
             background: 'white',
             borderRadius: '12px',
             boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
             padding: '20px',
+            marginTop: '16px'
+          }}>
+            <div 
+              style={{ 
+                display: 'flex', 
+                justifyContent: 'space-between', 
+                alignItems: 'center',
+                cursor: 'pointer',
+                userSelect: 'none',
+                marginBottom: '16px'
+              }}
+              onClick={() => setHistoryExpanded(!historyExpanded)}
+            >
+              <h2 style={{ margin: '0', fontSize: '18px', fontWeight: '600' }}>
+                📋 Inspection History
+              </h2>
+              <span style={{ 
+                transform: historyExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
+                transition: 'transform 0.2s ease'
+              }}>
+                ▼
+              </span>
+            </div>
+            
+            {historyExpanded && (
+              <div style={{ 
+                height: '550px',
+                overflowY: 'auto',
+                overflowX: 'hidden',
+                paddingRight: '8px',
+                scrollbarWidth: 'thin',
+                scrollbarColor: '#cbd5e1 #f1f5f9'
+              }}>
+                {inspection && (
+                  <InspectionHistoryList inspectionId={inspection.id} />
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Right Column */}
+        <div>
+          {/* Annotations List */}
+          <div style={{
+            background: 'white',
+            borderRadius: '12px',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+            padding: '20px',
+            display: 'flex',
+            flexDirection: 'column',
           }}>
             <h2 style={{ margin: '0 0 16px 0', fontSize: '18px', fontWeight: '600' }}>
               Annotations ({annotations.length})
             </h2>
 
-            {annotations.length === 0 && (
-              <div style={{ 
-                textAlign: 'center', 
-                padding: '40px 20px', 
-                color: '#6b7280',
-                fontSize: '14px'
-              }}>
-                No annotations yet. Click "Detect Anomalies" or draw manually.
-              </div>
-            )}
-
-            {/* Scrollable Annotations Container */}
             <div style={{ 
-              maxHeight: '600px', 
-              overflowY: 'auto', 
+              height: '575px',
+              overflowY: 'auto',
               overflowX: 'hidden',
               paddingRight: '8px',
-              // Custom scrollbar styling
               scrollbarWidth: 'thin',
-              scrollbarColor: '#cbd5e1 #f1f5f9'
+              scrollbarColor: '#cbd5e1 #f1f5f9',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '12px',
             }}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                {annotations.map((ann) => (
+              {annotations.length === 0 ? (
+                <div style={{ 
+                  textAlign: 'center', 
+                  padding: '40px 20px', 
+                  color: '#6b7280',
+                  fontSize: '14px'
+                }}>
+                  No annotations yet. Click "Detect Anomalies" or draw manually.
+                </div>
+              ) : 
+                annotations.map((ann) => (
                   <AnnotationCard
                     key={ann.id}
                     annotation={ann}
@@ -971,8 +1054,8 @@ export default function InspectionDetailNew() {
                     onDelete={() => handleAnnotationDelete(ann.id)}
                     onUpdateComment={handleUpdateComment}
                   />
-                ))}
-              </div>
+                ))
+              }
             </div>
           </div>
 
@@ -986,40 +1069,49 @@ export default function InspectionDetailNew() {
             onNotesUpdate={() => loadData()}
           />
 
-          {inspection.status === 'COMPLETED' && (
-            <div style={{
-              background: 'white',
-              borderRadius: '12px',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-              padding: '20px',
-              marginTop: '16px',
-              textAlign: 'center',
-              border: '2px solid #10b981'
-            }}>
-              <h3 style={{ margin: '0 0 8px 0', fontSize: '16px', fontWeight: '600', color: '#059669' }}>
-                ✅ Inspection Completed
-              </h3>
-              <p style={{ fontSize: '14px', color: '#6b7280', marginBottom: '12px' }}>
-                This inspection has been marked as complete.
-              </p>
-              <button
-                onClick={() => nav(`/transformers/${inspection.transformerId}`)}
-                style={{
-                  background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '8px',
-                  padding: '10px 20px',
-                  fontSize: '14px',
-                  fontWeight: '600',
-                  cursor: 'pointer',
-                  boxShadow: '0 2px 8px rgba(59, 130, 246, 0.2)'
-                }}
-              >
-                🏠 View on Transformer Page
-              </button>
+          {/* Comments Section with fixed height and scroll */}
+          <div style={{
+            background: 'white',
+            borderRadius: '12px',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+            padding: '20px',
+            marginTop: '16px'
+          }}>
+            <div 
+              style={{ 
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                cursor: 'pointer',
+                userSelect: 'none',
+                marginBottom: '16px'
+              }}
+              onClick={() => setCommentsExpanded(!commentsExpanded)}
+            >
+              <h2 style={{ margin: '0', fontSize: '18px', fontWeight: '600' }}>
+                💬 Comments
+              </h2>
+              <span style={{ 
+                transform: commentsExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
+                transition: 'transform 0.2s ease'
+              }}>
+                ▼
+              </span>
             </div>
-          )}
+            
+            {commentsExpanded && (
+              <div style={{ 
+                height: '560px',
+                overflowY: 'auto',
+                overflowX: 'hidden',
+                paddingRight: '8px',
+                scrollbarWidth: 'thin',
+                scrollbarColor: '#cbd5e1 #f1f5f9'
+              }}>
+                <CommentsSection inspectionId={inspection.id} />
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
@@ -1150,7 +1242,7 @@ export default function InspectionDetailNew() {
                   border: 'none',
                   borderRadius: '8px',
                   background: isDetecting 
-                    ? '#9ca3af' 
+                    ? '#9ca3b8' 
                     : 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
                   color: 'white',
                   fontSize: '14px',
@@ -1178,12 +1270,6 @@ export default function InspectionDetailNew() {
           </div>
         </div>
       )}
-
-          {/* Inspection History List */}
-          {inspection && (
-            <InspectionHistoryList inspectionId={inspection.id} />
-          )}
-        </>
     </div>
   );
 }
@@ -1477,7 +1563,7 @@ function AnnotationCard({ annotation, onApprove, onReject, onDelete, onUpdateCom
                   padding: '6px',
                   border: 'none',
                   borderRadius: '4px',
-                  background: isSavingComment ? '#9ca3af' : '#3b82f6',
+                  background: isSavingComment ? '#9ca3b8' : '#3b82f6',
                   color: 'white',
                   fontSize: '11px',
                   fontWeight: '600',

@@ -1,0 +1,132 @@
+{
+  "inspectionId": "348b25d2-7352-4cd5-81fa-958f7f1a00b7",
+  "inspectionNumber": "IN-789",
+  "transformerCode": "TX-004",
+  "exportedAt": "2025-10-22T12:00:16.045427Z",
+  "comparisons": [
+    {
+      "imageId": "600df7f6-cb25-403c-8945-1c97575c3992",
+      "aiPrediction": {
+        "id": "06fb1b83-7437-4b20-842f-ea1afa463230",
+        "inspectionId": "348b25d2-7352-4cd5-81fa-958f7f1a00b7",
+        "version": 1,
+        "bbox": {
+          "x1": 366,
+          "y1": 269,
+          "x2": 510,
+          "y2": 530
+        },
+        "classId": 0,
+        "className": "faulty",
+        "confidence": 0.89,
+        "source": "ai",
+        "actionType": "approved",
+        "boxNumber": 352,
+        "createdBy": "AI-YOLOv8",
+        "createdAt": "2025-10-22T11:58:51Z",
+        "modifiedBy": "current-user@example.com",
+        "modifiedAt": "2025-10-22T11:59:09Z",
+        "parentAnnotationId": null,
+        "isActive": true,
+        "comments": null
+      },
+      "humanAnnotation": null,
+      "actionTaken": "approved"
+    },
+    {
+      "imageId": "600df7f6-cb25-403c-8945-1c97575c3992",
+      "aiPrediction": {
+        "id": "37a7938d-2865-401d-b939-70f1253e727a",
+        "inspectionId": "348b25d2-7352-4cd5-81fa-958f7f1a00b7",
+        "version": 1,
+        "bbox": {
+          "x1": 93,
+          "y1": 245,
+          "x2": 232,
+          "y2": 487
+        },
+        "classId": 0,
+        "className": "faulty",
+        "confidence": 0.911,
+        "source": "ai",
+        "actionType": "approved",
+        "boxNumber": 351,
+        "createdBy": "AI-YOLOv8",
+        "createdAt": "2025-10-22T11:58:51Z",
+        "modifiedBy": "current-user@example.com",
+        "modifiedAt": "2025-10-22T11:59:11Z",
+        "parentAnnotationId": null,
+        "isActive": true,
+        "comments": null
+      },
+      "humanAnnotation": null,
+      "actionTaken": "approved"
+    },
+    {
+      "imageId": "600df7f6-cb25-403c-8945-1c97575c3992",
+      "aiPrediction": {
+        "id": "f463e4db-ea80-4075-a1d0-51759122ead0",
+        "inspectionId": "348b25d2-7352-4cd5-81fa-958f7f1a00b7",
+        "version": 1,
+        "bbox": {
+          "x1": 234,
+          "y1": 258,
+          "x2": 379,
+          "y2": 501
+        },
+        "classId": 0,
+        "className": "faulty",
+        "confidence": 0.965,
+        "source": "ai",
+        "actionType": "approved",
+        "boxNumber": 350,
+        "createdBy": "AI-YOLOv8",
+        "createdAt": "2025-10-22T11:58:51Z",
+        "modifiedBy": "current-user@example.com",
+        "modifiedAt": "2025-10-22T11:59:14Z",
+        "parentAnnotationId": null,
+        "isActive": true,
+        "comments": null
+      },
+      "humanAnnotation": null,
+      "actionTaken": "approved"
+    },
+    {
+      "imageId": "600df7f6-cb25-403c-8945-1c97575c3992",
+      "aiPrediction": null,
+      "humanAnnotation": {
+        "id": "1dd54c08-8399-4f1c-8157-1ba451e4ecd7",
+        "inspectionId": "348b25d2-7352-4cd5-81fa-958f7f1a00b7",
+        "version": 1,
+        "bbox": {
+          "x1": 115,
+          "y1": 149,
+          "x2": 572,
+          "y2": 268
+        },
+        "classId": 4,
+        "className": "potential_faulty",
+        "confidence": 1,
+        "source": "human",
+        "actionType": "created",
+        "boxNumber": 353,
+        "createdBy": "current-user@example.com",
+        "createdAt": "2025-10-22T12:00:08Z",
+        "modifiedBy": null,
+        "modifiedAt": null,
+        "parentAnnotationId": null,
+        "isActive": true,
+        "comments": null
+      },
+      "actionTaken": "added"
+    }
+  ],
+  "summary": {
+    "totalAiDetections": 3,
+    "totalHumanAnnotations": 1,
+    "approved": 3,
+    "rejected": 0,
+    "edited": 0,
+    "added": 1
+  }
+}

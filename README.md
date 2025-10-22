@@ -169,6 +169,149 @@ All annotation-related requests are **JSON-based** and persisted in the
 **Python ML Service Endpoints (for Integration)**  
 _Add your Flask/YOLOv8 endpoints here once finalized. 
 
+---
+
+**Database Dump for Record Storage**
+
+
+#### 🧩 Core Tables
+
+| Table | Purpose |
+|--------|----------|
+| **annotations** | Stores bounding box coordinates, class IDs, confidence scores, and metadata for AI and human detections. Each record tracks its source (`ai` or `human`) and action type (`created`, `edited`, `approved`, `rejected`, `deleted`). |
+| **annotation_history** | Maintains full version history for each annotation (snapshot JSON per action). Enables rollback and change traceability. |
+| **box_numbering_sequence** | Tracks incremental bounding-box numbering per inspection session to maintain unique indices. |
+| **inspection_access_log** | Logs inspector session details — including edit/view access, timestamps, and user device/IP metadata. |
+
+#### ⚙️ Schema Extract (MySQL 8.0)
+
+```sql
+-- Table structure for table `annotations`
+CREATE TABLE `annotations` (
+  `id` binary(16) NOT NULL,
+  `inspection_id` binary(16) NOT NULL,
+  `version` int DEFAULT '1',
+  `bbox_x1` int NOT NULL,
+  `bbox_y1` int NOT NULL,
+  `bbox_x2` int NOT NULL,
+  `bbox_y2` int NOT NULL,
+  `class_id` int DEFAULT NULL,
+  `class_name` varchar(50) DEFAULT NULL,
+  `confidence` decimal(5,3) DEFAULT NULL,
+  `source` enum('ai','human') NOT NULL,
+  `action_type` enum('created','edited','deleted','approved','rejected') DEFAULT 'created',
+  `created_by` varchar(100) DEFAULT NULL,
+  `modified_by` varchar(100) DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `modified_at` timestamp NULL DEFAULT NULL,
+  `is_active` tinyint(1) DEFAULT '1',
+  PRIMARY KEY (`id`),
+  KEY `idx_inspection_id` (`inspection_id`),
+  CONSTRAINT `annotations_ibfk_1` FOREIGN KEY (`inspection_id`) REFERENCES `inspections` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Table structure for table `annotation_history`
+CREATE TABLE `annotation_history` (
+  `id` binary(16) NOT NULL,
+  `annotation_id` binary(16) NOT NULL,
+  `inspection_id` binary(16) NOT NULL,
+  `action_type` varchar(50) DEFAULT NULL,
+  `snapshot_data` json DEFAULT NULL,
+  `user_id` varchar(100) DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_annotation_id` (`annotation_id`),
+  CONSTRAINT `annotation_history_ibfk_1` FOREIGN KEY (`annotation_id`) REFERENCES `annotations` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Table structure for table `box_numbering_sequence`
+CREATE TABLE `box_numbering_sequence` (
+  `inspection_id` binary(16) NOT NULL,
+  `next_box_number` int NOT NULL DEFAULT '1',
+  `last_updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`inspection_id`),
+  CONSTRAINT `box_numbering_sequence_ibfk_1` FOREIGN KEY (`inspection_id`) REFERENCES `inspections` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Table structure for table `inspection_access_log`
+CREATE TABLE `inspection_access_log` (
+  `id` binary(16) NOT NULL,
+  `inspection_id` binary(16) NOT NULL,
+  `user_name` varchar(255) NOT NULL,
+  `access_type` enum('VIEW','EDIT','CREATE') NOT NULL,
+  `session_start` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `session_end` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `idx_inspection_id` (`inspection_id`),
+  CONSTRAINT `inspection_access_log_ibfk_1` FOREIGN KEY (`inspection_id`) REFERENCES `inspections` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+```
+
+
+---
+
+### ⚙️ Backend API Controllers
+
+| Controller | Purpose | Key Endpoints |
+|-------------|----------|---------------|
+| **AnnotationController.java** | Core of the annotation module manages bounding box creation, updates, deletions, approvals/rejections, and feedback export. | `POST /api/annotations` • `POST /api/annotations/batch` • `DELETE /api/annotations/{id}` • `POST /api/annotations/{id}/approve` • `POST /api/annotations/{id}/reject` • `GET /api/annotations?inspectionId={inspectionId}` • `GET /api/annotations/feedback/export?inspectionId={inspectionId}` |
+| **InspectionController.java** | Handles inspection creation, image upload, anomaly detection, and YOLOv8 ML service integration. | `POST /api/inspections` • `POST /api/inspections/{id}/detect-anomalies` • `POST /api/inspections/{id}/upload-image` • `POST /api/inspections/{id}/upload-annotated-image` • `PUT /api/inspections/{id}/status` • `GET /api/inspections/ml-service/health` |
+| **InspectionCommentController.java** | Enables threaded comments and notes for collaborative engineer feedback. | `POST /api/inspection-comments` • `GET /api/inspection-comments/inspection/{inspectionId}` • `DELETE /api/inspection-comments/{commentId}` |
+| **InspectionHistoryController.java** | Tracks revision history, inspector access, and inspection statistics for auditability. | `POST /api/inspections/{inspectionId}/history/access` • `GET /api/inspections/{inspectionId}/history` • `GET /api/inspections/{inspectionId}/history/summary` • `GET /api/inspections/{inspectionId}/history/stats` |
+| **ThermalImageController.java** | Manages upload and retrieval of transformer thermal images (Baseline / Inspection). | `POST /api/images` • `GET /api/images` |
+| **TransformerController.java** | CRUD operations for transformer metadata (ID, location, capacity). | `POST /api/transformers` • `GET /api/transformers` • `PUT /api/transformers/{id}` • `DELETE /api/transformers/{id}` |
+| **ApiExceptionHandler.java** | Global exception handler for consistent REST error responses. | *(Handles `DataIntegrityViolationException` → returns `409 Conflict`)* |
+| **HealthController.java** | Quick backend status check for integration and CI/CD probes. | `GET /api/health` |
+
+All controllers belong to the package  
+`com.acme.backend.api` and communicate with their corresponding service classes in  
+`com.acme.backend.service`.
+
+All annotation-related requests are **JSON-based** and persisted in the  
+`annotations` and `annotation_history` tables of the `en3350_db` MySQL database.
+
+---
+
+### 🧠 Backend Processing
+
+- The **Spring Boot backend** receives JSON payloads (from frontend API calls) and maps them to JPA entities such as `Annotation`, `Inspection`, and `InspectionComment`.  
+- Metadata such as `user_id`, `inspection_id`, `transformer_id`, and `timestamp` are automatically appended.  
+- The updated records are persisted via **Spring Data JPA** in the relational database (`en3350_db`).  
+- All actions — add, edit, approve, reject are versioned for traceability through the `InspectionHistoryController`.
+
+---
+- **Annotation Retrieval:**
+  - When an inspection is reopened, the frontend calls the **annotations API client** (`frontend/src/api/annotations.ts`) to fetch all boxes for that inspection.
+  - Endpoint used:
+    ```
+    GET /api/annotations?inspectionId={inspectionId}
+    ```
+  - The response is rendered back onto the canvas with correct coordinates, labels, and fault types.
+
+- **Feedback Export & Dataset Generation:**
+  - All annotation logs (AI + user) are exported as structured JSON:
+    ```
+    GET /api/annotations/export/{inspectionId}
+    ```
+  - These JSON files are automatically saved under:
+    ```
+    /ml-service/feedback_data/
+    ```
+    (Each file is named as `feedback_<inspection_id>_<timestamp>.json`)
+  - The script **targeted_dataset_creator.py** processes these JSONs and converts them into **YOLO-format datasets** (`.txt` label files with bounding box coordinates and class IDs).
+  - The generated dataset is then used by the **quick_finetune/** or **train_yolo_fixed.py** script to **fine-tune the YOLOv8 model**, improving accuracy using real user feedback.
+  - After finetuning, new weights are saved at:
+    ```
+    runs/detect/feedback_finetune/weights/best.pt
+    ```
+  - The **Flask ML service (`app.py`)** is automatically updated to use the new model weights for future detections.
+
+
+---
+
+**Python ML Service Endpoints (for Integration)**  
+_Add your Flask/YOLOv8 endpoints here once finalized. 
+
 **Database Dump for Record Storage**
 
 

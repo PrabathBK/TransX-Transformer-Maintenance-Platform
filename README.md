@@ -169,10 +169,83 @@ All annotation-related requests are **JSON-based** and persisted in the
 **Python ML Service Endpoints (for Integration)**  
 _Add your Flask/YOLOv8 endpoints here once finalized. 
 
+---
+
 **Database Dump for Record Storage**
 
 
+#### 🧩 Core Tables
 
+| Table | Purpose |
+|--------|----------|
+| **annotations** | Stores bounding box coordinates, class IDs, confidence scores, and metadata for AI and human detections. Each record tracks its source (`ai` or `human`) and action type (`created`, `edited`, `approved`, `rejected`, `deleted`). |
+| **annotation_history** | Maintains full version history for each annotation (snapshot JSON per action). Enables rollback and change traceability. |
+| **box_numbering_sequence** | Tracks incremental bounding-box numbering per inspection session to maintain unique indices. |
+| **inspection_access_log** | Logs inspector session details — including edit/view access, timestamps, and user device/IP metadata. |
+
+#### ⚙️ Schema Extract (MySQL 8.0)
+
+```sql
+-- Table structure for table `annotations`
+CREATE TABLE `annotations` (
+  `id` binary(16) NOT NULL,
+  `inspection_id` binary(16) NOT NULL,
+  `version` int DEFAULT '1',
+  `bbox_x1` int NOT NULL,
+  `bbox_y1` int NOT NULL,
+  `bbox_x2` int NOT NULL,
+  `bbox_y2` int NOT NULL,
+  `class_id` int DEFAULT NULL,
+  `class_name` varchar(50) DEFAULT NULL,
+  `confidence` decimal(5,3) DEFAULT NULL,
+  `source` enum('ai','human') NOT NULL,
+  `action_type` enum('created','edited','deleted','approved','rejected') DEFAULT 'created',
+  `created_by` varchar(100) DEFAULT NULL,
+  `modified_by` varchar(100) DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `modified_at` timestamp NULL DEFAULT NULL,
+  `is_active` tinyint(1) DEFAULT '1',
+  PRIMARY KEY (`id`),
+  KEY `idx_inspection_id` (`inspection_id`),
+  CONSTRAINT `annotations_ibfk_1` FOREIGN KEY (`inspection_id`) REFERENCES `inspections` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Table structure for table `annotation_history`
+CREATE TABLE `annotation_history` (
+  `id` binary(16) NOT NULL,
+  `annotation_id` binary(16) NOT NULL,
+  `inspection_id` binary(16) NOT NULL,
+  `action_type` varchar(50) DEFAULT NULL,
+  `snapshot_data` json DEFAULT NULL,
+  `user_id` varchar(100) DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_annotation_id` (`annotation_id`),
+  CONSTRAINT `annotation_history_ibfk_1` FOREIGN KEY (`annotation_id`) REFERENCES `annotations` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Table structure for table `box_numbering_sequence`
+CREATE TABLE `box_numbering_sequence` (
+  `inspection_id` binary(16) NOT NULL,
+  `next_box_number` int NOT NULL DEFAULT '1',
+  `last_updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`inspection_id`),
+  CONSTRAINT `box_numbering_sequence_ibfk_1` FOREIGN KEY (`inspection_id`) REFERENCES `inspections` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Table structure for table `inspection_access_log`
+CREATE TABLE `inspection_access_log` (
+  `id` binary(16) NOT NULL,
+  `inspection_id` binary(16) NOT NULL,
+  `user_name` varchar(255) NOT NULL,
+  `access_type` enum('VIEW','EDIT','CREATE') NOT NULL,
+  `session_start` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `session_end` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `idx_inspection_id` (`inspection_id`),
+  CONSTRAINT `inspection_access_log_ibfk_1` FOREIGN KEY (`inspection_id`) REFERENCES `inspections` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+```
 
 ### Phase 4: Inspection Management & Collaboration
 - **Inspection Lifecycle** - Complete workflow from creation to completion

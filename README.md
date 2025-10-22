@@ -97,13 +97,111 @@ A full-stack application for managing electrical transformers with AI-powered th
 ![Anomaly Detection Result](assests/detection05.jpg)
 
 
-### Phase 3: Advanced Annotation System
-- **Interactive Canvas** - Multi-mode annotation interface (View/Edit/Draw)
-- **Bounding Box Annotations** - Manual drawing and editing of fault annotations
-- **Annotation Workflow** - Approve/Reject detected anomalies with validation
-- **Visual Feedback** - Color-coded fault types with legend
-- **Image Scaling** - Automatic scaling for images of any size (handles 640×640 to 3077×1920+)
-- **Zoom & Pan** - Full canvas navigation with zoom controls
+### Phase 3: Interactive Annotation & Feedback System 
+
+**Annotation and Feedback Workflow**
+
+- **Annotation Creation & Editing:**
+  - When a user draws or edits a bounding box on the annotation canvas (**AnnotationCanvas.tsx**), the coordinates, class label, and optional note are captured.
+  - Each action (`ADD`, `EDIT`, `DELETE`, `APPROVE`, `REJECT`) is automatically sent to the backend via:
+    ```
+    POST /api/annotations
+    PUT /api/annotations/{id}
+    DELETE /api/annotations/{id}
+    ```
+  - No manual “Save” button is required — every modification triggers an API call that immediately updates the database.
+
+- **Backend Processing:**
+  - The **Spring Boot** backend receives the JSON payload and maps it to the `Annotation` entity.
+  - Metadata such as `user_id`, `inspection_id`, `transformer_id`, and `timestamp` are automatically appended.
+  - The updated annotations are persisted in the relational database.
+
+- **Annotation Retrieval:**
+  - When the same inspection is re-opened, the frontend calls:
+    ```
+    GET /api/annotations/inspection/{inspectionId}
+    ```
+  - All previously stored annotations are reloaded with their coordinates, labels, and fault types for continued editing or review.
+
+- **Feedback Export & Dataset Generation:**
+  - All annotation logs (AI + user) are exported as structured JSON using:
+    ```
+    GET /api/annotations/export/{inspectionId}
+    ```
+  - These JSONs are stored under `/ml-service/auto_feedback_INS_xx/`.
+  - The script **targeted_dataset_creator.py** converts the JSONs into YOLO-format datasets (`.txt` labels with bounding boxes).
+  - The **quick_finetune/** script then uses these augmented samples to retrain the YOLOv8 model and update `best.pt`.
+
+---
+
+**Database Schema for Record Storage**
+
+- **Table – annotations**
+
+  | Column | Type | Description |
+  |--------|------|-------------|
+  | `id` | VARCHAR(36) | Unique UUID for annotation |
+  | `inspection_id` | VARCHAR(36) | Linked inspection |
+  | `transformer_id` | VARCHAR(36) | Transformer identifier |
+  | `x1`, `y1`, `x2`, `y2` | DOUBLE | Bounding box coordinates |
+  | `fault_type` | VARCHAR(50) | Class label (Faulty, Loose Joint, etc.) |
+  | `confidence` | DOUBLE | AI confidence score |
+  | `source` | ENUM('ai','user') | Indicates whether AI or user created it |
+  | `action_type` | ENUM('added','edited','deleted','approved','rejected') | Operation performed |
+  | `comment` | TEXT | Optional notes |
+  | `user_id` | VARCHAR(36) | User or engineer ID |
+  | `timestamp` | DATETIME | Time of action |
+
+- **Table – annotation_feedback_log**
+
+  | Column | Type | Description |
+  |--------|------|-------------|
+  | `id` | VARCHAR(36) | Feedback log ID |
+  | `annotation_id` | VARCHAR(36) | Linked annotation |
+  | `inspection_id` | VARCHAR(36) | Linked inspection |
+  | `transformer_id` | VARCHAR(36) | Linked transformer |
+  | `action` | ENUM('add','edit','delete','approve','reject') | Logged action |
+  | `user_id` | VARCHAR(36) | Performed by user |
+  | `timestamp` | DATETIME | Recorded automatically |
+  | `exported` | BOOLEAN | Flag for dataset export |
+
+- **Relationships:**
+  - **Inspection (1)** → **(M) Annotation**
+  - **Annotation (1)** → **(M) FeedbackLog**
+  - **Transformer (1)** → **(M) Inspection**
+
+---
+
+**Feedback JSON Example**
+~~~json
+{
+  "inspection_id": "INS_005_20251022",
+  "transformer_id": "TX_005",
+  "annotations": [
+    {
+      "id": "ann_001",
+      "bbox": [134, 220, 290, 375],
+      "fault_type": "faulty_loose_joint",
+      "action": "edited",
+      "source": "user",
+      "user_id": "engineerA",
+      "timestamp": "2025-10-22T12:57:00Z"
+    }
+  ]
+}
+~~~
+
+**Visual Workflow**
+
+- React Konva canvas for drawing/editing bounding boxes.  
+- REST API auto-saves each interaction in the backend.  
+- Spring Boot + MySQL store full annotation metadata.  
+- JSON feedback exported to `/ml-service/auto_feedback_INS_xx/`.  
+- `targeted_dataset_creator.py` → builds augmented dataset.  
+- `quick_finetune/` → YOLOv8 fine-tuning → new weights (`best.pt`).  
+
+![Annotation Workflow](assets/annotation_workflow.jpg)
+
 
 ### Phase 4: Inspection Management & Collaboration
 - **Inspection Lifecycle** - Complete workflow from creation to completion

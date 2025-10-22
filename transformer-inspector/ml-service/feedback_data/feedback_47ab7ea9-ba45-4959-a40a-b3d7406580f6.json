@@ -1,0 +1,74 @@
+{
+  "inspectionId": "47ab7ea9-ba45-4959-a40a-b3d7406580f6",
+  "inspectionNumber": "INS-005",
+  "transformerCode": "TX-003",
+  "exportedAt": "2025-10-22T08:47:39.132417Z",
+  "comparisons": [
+    {
+      "imageId": "2e7f5142-4507-4d8c-86d6-beb95261660e",
+      "aiPrediction": {
+        "id": "48801899-b618-43c2-8729-4cfbf68c2365",
+        "inspectionId": "47ab7ea9-ba45-4959-a40a-b3d7406580f6",
+        "version": 1,
+        "bbox": {
+          "x1": 66,
+          "y1": 145,
+          "x2": 166,
+          "y2": 328
+        },
+        "classId": 0,
+        "className": "Faulty",
+        "confidence": 0.959,
+        "source": "ai",
+        "actionType": "approved",
+        "boxNumber": 1,
+        "createdBy": "AI-YOLOv8",
+        "createdAt": "2025-10-05T12:37:33Z",
+        "modifiedBy": "current-user@example.com",
+        "modifiedAt": "2025-10-05T12:37:36Z",
+        "parentAnnotationId": null,
+        "isActive": true,
+        "comments": null
+      },
+      "humanAnnotation": null,
+      "actionTaken": "approved"
+    },
+    {
+      "imageId": "2e7f5142-4507-4d8c-86d6-beb95261660e",
+      "aiPrediction": {
+        "id": "a8d65775-f54f-44e6-b961-6f83d4cb23d0",
+        "inspectionId": "47ab7ea9-ba45-4959-a40a-b3d7406580f6",
+        "version": 2,
+        "bbox": {
+          "x1": 172,
+          "y1": 151,
+          "x2": 256,
+          "y2": 286
+        },
+        "classId": 4,
+        "className": "potential_faulty",
+        "confidence": 0.935,
+        "source": "ai",
+        "actionType": "edited",
+        "boxNumber": 2,
+        "createdBy": null,
+        "createdAt": "2025-10-22T08:47:17Z",
+        "modifiedBy": "current-user@example.com",
+        "modifiedAt": "2025-10-22T08:47:17Z",
+        "parentAnnotationId": "64f66ff8-123f-451e-bca8-eb9e67ead162",
+        "isActive": true,
+        "comments": null
+      },
+      "humanAnnotation": null,
+      "actionTaken": "edited"
+    }
+  ],
+  "summary": {
+    "totalAiDetections": 2,
+    "totalHumanAnnotations": 0,
+    "approved": 1,
+    "rejected": 0,
+    "edited": 1,
+    "added": 0
+  }
+}

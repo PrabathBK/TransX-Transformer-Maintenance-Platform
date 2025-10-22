@@ -1,0 +1,74 @@
+{
+  "inspectionId": "adbf1a42-4989-4b68-b376-c7308d5ddc88",
+  "inspectionNumber": "INS-009",
+  "transformerCode": "TX-003",
+  "exportedAt": "2025-10-22T11:18:16.191935100Z",
+  "comparisons": [
+    {
+      "imageId": "e3ab9da8-79c5-40b7-a798-ab871732c278",
+      "aiPrediction": {
+        "id": "8d09f78a-f949-440a-aa59-c9ffc44b7955",
+        "inspectionId": "adbf1a42-4989-4b68-b376-c7308d5ddc88",
+        "version": 7,
+        "bbox": {
+          "x1": 255,
+          "y1": 136,
+          "x2": 322,
+          "y2": 223
+        },
+        "classId": 1,
+        "className": "faulty",
+        "confidence": 0.025,
+        "source": "ai",
+        "actionType": "edited",
+        "boxNumber": 2,
+        "createdBy": null,
+        "createdAt": "2025-10-22T11:16:55Z",
+        "modifiedBy": "current-user@example.com",
+        "modifiedAt": "2025-10-22T11:16:55Z",
+        "parentAnnotationId": "37097013-fdc4-460e-994c-d1bf3b0fe5fd",
+        "isActive": true,
+        "comments": null
+      },
+      "humanAnnotation": null,
+      "actionTaken": "edited"
+    },
+    {
+      "imageId": "e3ab9da8-79c5-40b7-a798-ab871732c278",
+      "aiPrediction": {
+        "id": "c972462d-d7d0-4b88-88d5-17f59117fca5",
+        "inspectionId": "adbf1a42-4989-4b68-b376-c7308d5ddc88",
+        "version": 7,
+        "bbox": {
+          "x1": 163,
+          "y1": 129,
+          "x2": 234,
+          "y2": 216
+        },
+        "classId": 1,
+        "className": "faulty",
+        "confidence": 0.037,
+        "source": "ai",
+        "actionType": "edited",
+        "boxNumber": 1,
+        "createdBy": null,
+        "createdAt": "2025-10-22T11:17:07Z",
+        "modifiedBy": "current-user@example.com",
+        "modifiedAt": "2025-10-22T11:17:07Z",
+        "parentAnnotationId": "27c97a3d-84b7-4609-94be-e866711dbab7",
+        "isActive": true,
+        "comments": null
+      },
+      "humanAnnotation": null,
+      "actionTaken": "edited"
+    }
+  ],
+  "summary": {
+    "totalAiDetections": 2,
+    "totalHumanAnnotations": 0,
+    "approved": 0,
+    "rejected": 0,
+    "edited": 2,
+    "added": 0
+  }
+}

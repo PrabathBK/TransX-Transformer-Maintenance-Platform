@@ -956,7 +956,10 @@ export default function InspectionDetailNew() {
                 </div>
 
                 <button
-                  onClick={() => nav(`/transformers/${inspection.transformerId}`)}
+                  onClick={() => {
+                    // Force navigation with page refresh for reliability
+                    window.location.href = `/transformers/${inspection.transformerId}`;
+                  }}
                   style={{
                     background: '#2563eb',
                     color: 'white',

@@ -1,0 +1,11 @@
+{
+  "dataset_name": "auto_feedback_INS-009_20251022_164714",
+  "inspection_number": "INS-009",
+  "created_at": "2025-10-22T16:47:15.558748",
+  "source_image": "E:\\\\sem7\\\\software\\\\TransX-Transformer-Maintenance-Platform\\\\transformer-inspector\\\\backend\\\\uploads\\efbfbdef-bfbd-31ef-bfbd-134dcb83efbf\\inspection\\fa56c49c-1318-4c49-88ae-b812304e4926_annotated_INS-004_1761071391923.png",
+  "total_images": 20,
+  "total_annotations": 40,
+  "real_annotations_count": 2,
+  "source_inspection_dir": "E:\\\\sem7\\\\software\\\\TransX-Transformer-Maintenance-Platform\\\\transformer-inspector\\\\backend\\\\uploads\\efbfbdef-bfbd-31ef-bfbd-134dcb83efbf",
+  "feedback_source": "current_upload"
+}

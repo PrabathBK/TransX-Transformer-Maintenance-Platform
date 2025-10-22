@@ -99,44 +99,49 @@ A full-stack application for managing electrical transformers with AI-powered th
 
 ### Phase 3: Interactive Annotation & Feedback System 
 
-**Annotation and Feedback Workflow**
 
-- **Annotation Creation & Editing:**
-  - When a user draws or edits a bounding box on the annotation canvas (**AnnotationCanvas.tsx**), the coordinates, class label, and optional note are captured.
-  - Each action (`ADD`, `EDIT`, `DELETE`, `APPROVE`, `REJECT`) is automatically sent to the backend.
-  - The following backend API controllers handle annotation, inspection, and image operations:
+**Annotation Creation & Editing**
 
-    **Backend API Controllers (Milestone 3)**  
-
-    | Controller | Purpose | Key Endpoints |
-    |-------------|----------|---------------|
-    | **AnnotationController.java** | Core of the annotation module — manages bounding-box creation, updates, deletions, and feedback export. | `POST /api/annotations` • `PUT /api/annotations/{id}` • `DELETE /api/annotations/{id}` • `GET /api/annotations/inspection/{inspectionId}` • `GET /api/annotations/export/{inspectionId}` |
-    | **InspectionController.java** | Handles inspection creation, detection trigger, and connection to the ML service for YOLOv8 analysis. | `POST /api/inspections` • `POST /api/inspections/{id}/detect-anomalies` • `PUT /api/inspections/{id}/status` |
-    | **InspectionCommentController.java** | Enables threaded comments and notes under each inspection record. | `GET /api/inspections/{inspectionId}/comments` • `POST /api/inspections/{inspectionId}/comments` |
-    | **InspectionHistoryController.java** | Stores and retrieves historical revisions of inspection data and annotations for traceability. | `GET /api/inspection-history/{inspectionId}` |
-    | **ThermalImageController.java** | Manages upload and retrieval of transformer thermal images (baseline + maintenance). | `POST /api/images` • `GET /api/images/{id}` |
-    | **TransformerController.java** | CRUD operations for transformer metadata (ID, location, capacity). | `GET /api/transformers` • `POST /api/transformers` • `PUT /api/transformers/{id}` • `DELETE /api/transformers/{id}` |
-    | **ApiExceptionHandler.java** | Global error handling for REST API exceptions. | — |
-    | **HealthController.java** | Quick status check for backend service availability. | `GET /api/health` |
-
-  - Each controller belongs to `com.acme.backend.api` and communicates with service classes in `com.acme.backend.service`.
-  - All annotation-related requests are JSON-based and stored in the **`annotations`** and **`annotation_feedback_log`** tables.
-  - No manual “Save” button is required — every modification triggers an API call that immediately updates the database.
+- When a user draws or edits a bounding box on the annotation canvas (**AnnotationCanvas.tsx**), the coordinates, class label, and optional note are captured.
+- Each action (`ADD`, `EDIT`, `DELETE`, `APPROVE`, `REJECT`) is automatically sent to the backend, no manual “Save” button is required.  
+  Every modification triggers an API call that immediately updates the database.
 
 ---
 
-- **Backend Processing:**
-  - The **Spring Boot** backend receives the JSON payload and maps it to the `Annotation` entity.
-  - Metadata such as `user_id`, `inspection_id`, `transformer_id`, and `timestamp` are automatically appended.
-  - The updated annotations are persisted in the relational database (**en3350_db**).
+### ⚙️ Backend API Controllers
 
+| Controller | Purpose | Key Endpoints |
+|-------------|----------|---------------|
+| **AnnotationController.java** | Core of the annotation module manages bounding box creation, updates, deletions, and feedback export. | `POST /api/annotations` • `PUT /api/annotations/{id}` • `DELETE /api/annotations/{id}` • `GET /api/annotations?inspectionId={inspectionId}` • `GET /api/annotations/feedback/export?inspectionId={inspectionId}` |
+| **InspectionController.java** | Handles inspection creation, image upload, anomaly detection, and YOLOv8 ML service integration. | `POST /api/inspections` • `POST /api/inspections/{id}/detect-anomalies` • `PUT /api/inspections/{id}/status` • `GET /api/inspections/ml-service/health` |
+| **InspectionCommentController.java** | Enables threaded comments and notes for collaborative engineer feedback. | `POST /api/inspection-comments` • `GET /api/inspection-comments/inspection/{inspectionId}` • `DELETE /api/inspection-comments/{commentId}` |
+| **InspectionHistoryController.java** | Tracks revision history, inspector access, and inspection statistics for auditability. | `POST /api/inspections/{inspectionId}/history/access` • `GET /api/inspections/{inspectionId}/history` • `GET /api/inspections/{inspectionId}/history/summary` • `GET /api/inspections/{inspectionId}/history/stats` |
+| **ThermalImageController.java** | Manages upload and retrieval of transformer thermal images (Baseline / Inspection). | `POST /api/images` • `GET /api/images` |
+| **TransformerController.java** | CRUD operations for transformer metadata (ID, location, capacity). | `POST /api/transformers` • `GET /api/transformers` • `PUT /api/transformers/{id}` • `DELETE /api/transformers/{id}` |
+| **ApiExceptionHandler.java** | Global exception handler for consistent REST error responses. | *(Automatic handling for `DataIntegrityViolationException` → returns 409 Conflict)* |
+| **HealthController.java** | Quick backend status check for integration and CI/CD probes. | `GET /api/health` |
+
+All controllers belong to the package  
+`com.acme.backend.api` and communicate with their corresponding service classes in  
+`com.acme.backend.service`.
+
+All annotation-related requests are **JSON-based** and persisted in the  
+`annotations` and `annotation_feedback_log` tables of the `en3350_db` MySQL database.
+
+---
+
+### 🧠 Backend Processing
+
+- The **Spring Boot backend** receives JSON payloads (from frontend API calls) and maps them to JPA entities such as `Annotation`, `Inspection`, and `InspectionComment`.
+- Metadata such as `user_id`, `inspection_id`, `transformer_id`, and `timestamp` are automatically appended.
+- The updated records are persisted via **Spring Data JPA** in the relational database (`en3350_db`).
+- All actions — add, edit, approve, reject are versioned for traceability through the `InspectionHistoryController`.
 - **Annotation Retrieval:**
   - When an inspection is reopened, the frontend calls the **annotations API client** (`frontend/src/api/annotations.ts`) to fetch all boxes for that inspection.
   - Endpoint used:
     ```
     GET /api/annotations?inspectionId={inspectionId}
     ```
-    *(If you’ve also exposed a path variant, `GET /api/annotations/inspection/{inspectionId}`, either is fine — the frontend client wraps whichever your backend exposes.)*
   - The response is rendered back onto the canvas with correct coordinates, labels, and fault types.
 
 - **Feedback Export & Dataset Generation:**
@@ -163,8 +168,7 @@ A full-stack application for managing electrical transformers with AI-powered th
 **Python ML Service Endpoints (for Integration)**  
 _Add your Flask/YOLOv8 endpoints here once finalized. 
 
-**Database Schema for Record Storage**
-
+**Database Dump for Record Storage**
 
 
 

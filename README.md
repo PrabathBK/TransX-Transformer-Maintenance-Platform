@@ -102,7 +102,7 @@ A full-stack application for managing electrical transformers with AI-powered th
 **Annotation Creation & Editing**
 
 - When a user draws or edits a bounding box on the annotation canvas (**AnnotationCanvas.tsx**), the coordinates, class label, and optional note are captured.  
-- Each action (`ADD`, `EDIT`, `DELETE`, `APPROVE`, `REJECT`) is automatically sent to the backend — no manual “Save” button is required.  
+- Each action (`ADD`, `EDIT`, `DELETE`, `APPROVE`, `REJECT`) is automatically sent to the backend no manual “Save” button is required.  
   Every modification triggers an API call that immediately updates the database.
 
 ---
@@ -111,8 +111,8 @@ A full-stack application for managing electrical transformers with AI-powered th
 
 | Controller | Purpose | Key Endpoints |
 |-------------|----------|---------------|
-| **AnnotationController.java** | Core of the annotation module — manages bounding-box creation, updates, deletions, approvals/rejections, and feedback export. | `POST /api/annotations` • `POST /api/annotations/batch` • `DELETE /api/annotations/{id}` • `POST /api/annotations/{id}/approve` • `POST /api/annotations/{id}/reject` • `GET /api/annotations?inspectionId={inspectionId}` • `GET /api/annotations/feedback/export?inspectionId={inspectionId}` |
-| **InspectionController.java** | Handles inspection creation, image upload, anomaly detection, and YOLOv8 ML-service integration. | `POST /api/inspections` • `POST /api/inspections/{id}/detect-anomalies` • `POST /api/inspections/{id}/upload-image` • `POST /api/inspections/{id}/upload-annotated-image` • `PUT /api/inspections/{id}/status` • `GET /api/inspections/ml-service/health` |
+| **AnnotationController.java** | Core of the annotation module manages bounding box creation, updates, deletions, approvals/rejections, and feedback export. | `POST /api/annotations` • `POST /api/annotations/batch` • `DELETE /api/annotations/{id}` • `POST /api/annotations/{id}/approve` • `POST /api/annotations/{id}/reject` • `GET /api/annotations?inspectionId={inspectionId}` • `GET /api/annotations/feedback/export?inspectionId={inspectionId}` |
+| **InspectionController.java** | Handles inspection creation, image upload, anomaly detection, and YOLOv8 ML service integration. | `POST /api/inspections` • `POST /api/inspections/{id}/detect-anomalies` • `POST /api/inspections/{id}/upload-image` • `POST /api/inspections/{id}/upload-annotated-image` • `PUT /api/inspections/{id}/status` • `GET /api/inspections/ml-service/health` |
 | **InspectionCommentController.java** | Enables threaded comments and notes for collaborative engineer feedback. | `POST /api/inspection-comments` • `GET /api/inspection-comments/inspection/{inspectionId}` • `DELETE /api/inspection-comments/{commentId}` |
 | **InspectionHistoryController.java** | Tracks revision history, inspector access, and inspection statistics for auditability. | `POST /api/inspections/{inspectionId}/history/access` • `GET /api/inspections/{inspectionId}/history` • `GET /api/inspections/{inspectionId}/history/summary` • `GET /api/inspections/{inspectionId}/history/stats` |
 | **ThermalImageController.java** | Manages upload and retrieval of transformer thermal images (Baseline / Inspection). | `POST /api/images` • `GET /api/images` |
@@ -134,7 +134,7 @@ All annotation-related requests are **JSON-based** and persisted in the
 - The **Spring Boot backend** receives JSON payloads (from frontend API calls) and maps them to JPA entities such as `Annotation`, `Inspection`, and `InspectionComment`.  
 - Metadata such as `user_id`, `inspection_id`, `transformer_id`, and `timestamp` are automatically appended.  
 - The updated records are persisted via **Spring Data JPA** in the relational database (`en3350_db`).  
-- All actions — add, edit, approve, reject — are versioned for traceability through the `InspectionHistoryController`.
+- All actions — add, edit, approve, reject are versioned for traceability through the `InspectionHistoryController`.
 
 ---
 - **Annotation Retrieval:**
@@ -157,7 +157,7 @@ All annotation-related requests are **JSON-based** and persisted in the
     (Each file is named as `feedback_<inspection_id>_<timestamp>.json`)
   - The script **targeted_dataset_creator.py** processes these JSONs and converts them into **YOLO-format datasets** (`.txt` label files with bounding box coordinates and class IDs).
   - The generated dataset is then used by the **quick_finetune/** or **train_yolo_fixed.py** script to **fine-tune the YOLOv8 model**, improving accuracy using real user feedback.
-  - After fine-tuning, new weights are saved at:
+  - After finetuning, new weights are saved at:
     ```
     runs/detect/feedback_finetune/weights/best.pt
     ```

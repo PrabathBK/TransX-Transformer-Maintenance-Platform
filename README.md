@@ -167,7 +167,14 @@ All annotation-related requests are **JSON-based** and persisted in the
 ---
 
 **Python ML Service Endpoints (for Integration)**  
-_Add your Flask/YOLOv8 endpoints here once finalized. 
+These endpoints are implemented in **`ml-service/app.py`** and provide detection, feedback handling, and class management for YOLOv8 integration.
+
+| Method | Endpoint | Description |
+|---------|-----------|-------------|
+| **GET** | `/api/health` | Returns ML service health status and readiness. Used by the backend for periodic integration checks. |
+| **POST** | `/api/detect` | Accepts uploaded thermal image(s) and performs YOLOv8 inference. Responds with bounding boxes, class IDs, confidence scores, and fault type predictions. |
+| **GET** | `/api/classes` | Returns the list of supported transformer fault classes and their numeric IDs for frontend labeling. |
+| **POST** | `/api/feedback/upload` | Receives feedback export JSON (from `/api/annotations/feedback/export`), saves it under `ml-service/feedback_data/feedback_<inspection_id>.json`, and triggers YOLOv8 dataset creation and fine-tuning. |
 
 ---
 
@@ -246,73 +253,6 @@ CREATE TABLE `inspection_access_log` (
   CONSTRAINT `inspection_access_log_ibfk_1` FOREIGN KEY (`inspection_id`) REFERENCES `inspections` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 ```
-
-
----
-
-### ⚙️ Backend API Controllers
-
-| Controller | Purpose | Key Endpoints |
-|-------------|----------|---------------|
-| **AnnotationController.java** | Core of the annotation module manages bounding box creation, updates, deletions, approvals/rejections, and feedback export. | `POST /api/annotations` • `POST /api/annotations/batch` • `DELETE /api/annotations/{id}` • `POST /api/annotations/{id}/approve` • `POST /api/annotations/{id}/reject` • `GET /api/annotations?inspectionId={inspectionId}` • `GET /api/annotations/feedback/export?inspectionId={inspectionId}` |
-| **InspectionController.java** | Handles inspection creation, image upload, anomaly detection, and YOLOv8 ML service integration. | `POST /api/inspections` • `POST /api/inspections/{id}/detect-anomalies` • `POST /api/inspections/{id}/upload-image` • `POST /api/inspections/{id}/upload-annotated-image` • `PUT /api/inspections/{id}/status` • `GET /api/inspections/ml-service/health` |
-| **InspectionCommentController.java** | Enables threaded comments and notes for collaborative engineer feedback. | `POST /api/inspection-comments` • `GET /api/inspection-comments/inspection/{inspectionId}` • `DELETE /api/inspection-comments/{commentId}` |
-| **InspectionHistoryController.java** | Tracks revision history, inspector access, and inspection statistics for auditability. | `POST /api/inspections/{inspectionId}/history/access` • `GET /api/inspections/{inspectionId}/history` • `GET /api/inspections/{inspectionId}/history/summary` • `GET /api/inspections/{inspectionId}/history/stats` |
-| **ThermalImageController.java** | Manages upload and retrieval of transformer thermal images (Baseline / Inspection). | `POST /api/images` • `GET /api/images` |
-| **TransformerController.java** | CRUD operations for transformer metadata (ID, location, capacity). | `POST /api/transformers` • `GET /api/transformers` • `PUT /api/transformers/{id}` • `DELETE /api/transformers/{id}` |
-| **ApiExceptionHandler.java** | Global exception handler for consistent REST error responses. | *(Handles `DataIntegrityViolationException` → returns `409 Conflict`)* |
-| **HealthController.java** | Quick backend status check for integration and CI/CD probes. | `GET /api/health` |
-
-All controllers belong to the package  
-`com.acme.backend.api` and communicate with their corresponding service classes in  
-`com.acme.backend.service`.
-
-All annotation-related requests are **JSON-based** and persisted in the  
-`annotations` and `annotation_history` tables of the `en3350_db` MySQL database.
-
----
-
-### 🧠 Backend Processing
-
-- The **Spring Boot backend** receives JSON payloads (from frontend API calls) and maps them to JPA entities such as `Annotation`, `Inspection`, and `InspectionComment`.  
-- Metadata such as `user_id`, `inspection_id`, `transformer_id`, and `timestamp` are automatically appended.  
-- The updated records are persisted via **Spring Data JPA** in the relational database (`en3350_db`).  
-- All actions — add, edit, approve, reject are versioned for traceability through the `InspectionHistoryController`.
-
----
-- **Annotation Retrieval:**
-  - When an inspection is reopened, the frontend calls the **annotations API client** (`frontend/src/api/annotations.ts`) to fetch all boxes for that inspection.
-  - Endpoint used:
-    ```
-    GET /api/annotations?inspectionId={inspectionId}
-    ```
-  - The response is rendered back onto the canvas with correct coordinates, labels, and fault types.
-
-- **Feedback Export & Dataset Generation:**
-  - All annotation logs (AI + user) are exported as structured JSON:
-    ```
-    GET /api/annotations/export/{inspectionId}
-    ```
-  - These JSON files are automatically saved under:
-    ```
-    /ml-service/feedback_data/
-    ```
-    (Each file is named as `feedback_<inspection_id>_<timestamp>.json`)
-  - The script **targeted_dataset_creator.py** processes these JSONs and converts them into **YOLO-format datasets** (`.txt` label files with bounding box coordinates and class IDs).
-  - The generated dataset is then used by the **quick_finetune/** or **train_yolo_fixed.py** script to **fine-tune the YOLOv8 model**, improving accuracy using real user feedback.
-  - After finetuning, new weights are saved at:
-    ```
-    runs/detect/feedback_finetune/weights/best.pt
-    ```
-  - The **Flask ML service (`app.py`)** is automatically updated to use the new model weights for future detections.
-
-
----
-
-**Python ML Service Endpoints (for Integration)**  
-_Add your Flask/YOLOv8 endpoints here once finalized. 
-
-**Database Dump for Record Storage**
 
 
 

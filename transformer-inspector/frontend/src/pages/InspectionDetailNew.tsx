@@ -541,13 +541,13 @@ export default function InspectionDetailNew() {
       const result = await response.json();
       
       alert(`✅ Feedback exported successfully!\n\n` +
-            `📊 Summary:\n` +
+            `Summary:\n` +
             `- AI Detections: ${result.summary?.totalAiDetections || 0}\n` +
             `- Human Annotations: ${result.summary?.totalHumanAnnotations || 0}\n` +
             `- Approved: ${result.summary?.approved || 0}\n` +
             `- Rejected: ${result.summary?.rejected || 0}\n\n` +
-            `📁 Files downloaded to your Downloads folder\n` +
-            `🤖 Data sent to ML service for fine-tuning\n\n` +
+            `Files downloaded to your Downloads folder\n` +
+            `Data sent to ML service for fine-tuning\n\n` +
             `Note: The ML model can now be fine-tuned using this feedback data.`);
       
     } catch (e: any) {

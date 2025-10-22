@@ -275,12 +275,27 @@ cd TransX-Transformer-Maintenance-Platform
    cd ml-service
    ```
 
-2. **Install Python dependencies**
+2. **Create and activate virtual environment**
    ```bash
+   # Create virtual environment
+   python -m venv venv
+
+   # Activate virtual environment
+   .\venv\Scripts\activate
+   ```
+
+   You should see `(venv)` in your terminal prompt indicating the virtual environment is active.
+
+3. **Install Python dependencies**
+   ```bash
+   # Ensure pip is up to date
+   python -m pip install --upgrade pip
+
+   # Install requirements
    pip install -r requirements.txt
    ```
 
-3. **Start the ML service**
+4. **Start the ML service**
    ```bash
    python app.py
    ```

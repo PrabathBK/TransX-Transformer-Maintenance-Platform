@@ -1,0 +1,12 @@
+# Dataset from current feedback for INS-006
+# Created: 2025-10-22T08:05:08.831475
+# Source image: E:\\sem7\\software\\TransX-Transformer-Maintenance-Platform\\transformer-inspector\\backend\\uploads\efbfbdef-bfbd-31ef-bfbd-134dcb83efbf\inspection\fa56c49c-1318-4c49-88ae-b812304e4926_annotated_INS-004_1761071391923.png
+# Real annotations: 3
+# Total images: 20
+# Total annotations: 60
+
+path: 'E:\sem7\software\TransX-Transformer-Maintenance-Platform\transformer-inspector\ml-service\auto_feedback_INS-006_20251022_080507'
+train: 'images/train'
+val: 'images/train'
+nc: 4
+names: ['faulty', 'faulty_loose_joint', 'faulty_point_overload', 'potential_faulty']

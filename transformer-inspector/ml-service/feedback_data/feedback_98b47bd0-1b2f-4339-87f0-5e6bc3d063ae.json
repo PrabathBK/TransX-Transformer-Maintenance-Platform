@@ -1,0 +1,103 @@
+{
+  "inspectionId": "98b47bd0-1b2f-4339-87f0-5e6bc3d063ae",
+  "inspectionNumber": "INS-006",
+  "transformerCode": "TX-004",
+  "exportedAt": "2025-10-22T02:35:06.371585400Z",
+  "comparisons": [
+    {
+      "imageId": "73314881-7a2b-4c51-b6be-ddb7674c211e",
+      "aiPrediction": {
+        "id": "2111058c-a704-405c-9e6f-68bc5941207c",
+        "inspectionId": "98b47bd0-1b2f-4339-87f0-5e6bc3d063ae",
+        "version": 1,
+        "bbox": {
+          "x1": 75,
+          "y1": 128,
+          "x2": 145,
+          "y2": 233
+        },
+        "classId": 0,
+        "className": "Faulty",
+        "confidence": 0.951,
+        "source": "ai",
+        "actionType": "approved",
+        "boxNumber": 1,
+        "createdBy": "AI-YOLOv8",
+        "createdAt": "2025-10-05T12:38:34Z",
+        "modifiedBy": "current-user@example.com",
+        "modifiedAt": "2025-10-05T12:38:36Z",
+        "parentAnnotationId": null,
+        "isActive": true,
+        "comments": null
+      },
+      "humanAnnotation": null,
+      "actionTaken": "approved"
+    },
+    {
+      "imageId": "73314881-7a2b-4c51-b6be-ddb7674c211e",
+      "aiPrediction": {
+        "id": "81668e01-91dd-4d9c-b836-11d6d001d759",
+        "inspectionId": "98b47bd0-1b2f-4339-87f0-5e6bc3d063ae",
+        "version": 1,
+        "bbox": {
+          "x1": 224,
+          "y1": 121,
+          "x2": 292,
+          "y2": 228
+        },
+        "classId": 0,
+        "className": "Faulty",
+        "confidence": 0.913,
+        "source": "ai",
+        "actionType": "approved",
+        "boxNumber": 2,
+        "createdBy": "AI-YOLOv8",
+        "createdAt": "2025-10-05T12:38:34Z",
+        "modifiedBy": "current-user@example.com",
+        "modifiedAt": "2025-10-05T12:38:37Z",
+        "parentAnnotationId": null,
+        "isActive": true,
+        "comments": null
+      },
+      "humanAnnotation": null,
+      "actionTaken": "approved"
+    },
+    {
+      "imageId": "73314881-7a2b-4c51-b6be-ddb7674c211e",
+      "aiPrediction": {
+        "id": "ae960646-6837-48fa-9ee7-630782cd07ef",
+        "inspectionId": "98b47bd0-1b2f-4339-87f0-5e6bc3d063ae",
+        "version": 1,
+        "bbox": {
+          "x1": 149,
+          "y1": 123,
+          "x2": 220,
+          "y2": 233
+        },
+        "classId": 0,
+        "className": "Faulty",
+        "confidence": 0.905,
+        "source": "ai",
+        "actionType": "approved",
+        "boxNumber": 3,
+        "createdBy": "AI-YOLOv8",
+        "createdAt": "2025-10-05T12:38:34Z",
+        "modifiedBy": "current-user@example.com",
+        "modifiedAt": "2025-10-05T12:38:38Z",
+        "parentAnnotationId": null,
+        "isActive": true,
+        "comments": null
+      },
+      "humanAnnotation": null,
+      "actionTaken": "approved"
+    }
+  ],
+  "summary": {
+    "totalAiDetections": 3,
+    "totalHumanAnnotations": 0,
+    "approved": 3,
+    "rejected": 0,
+    "edited": 0,
+    "added": 0
+  }
+}

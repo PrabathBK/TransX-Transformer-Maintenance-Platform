@@ -69,11 +69,11 @@ public class MaintenanceRecordService {
         record.setInspection(inspection);
         
         // Pre-populate system-generated fields
-        record.setInspectionDate(
-            inspection.getInspectedAt() != null 
+        LocalDate inspectionDate = inspection.getInspectedAt() != null 
                 ? LocalDate.ofInstant(inspection.getInspectedAt(), ZoneId.systemDefault())
-                : LocalDate.now()
-        );
+                : LocalDate.now();
+        
+        record.setInspectionDate(inspectionDate);
         record.setWeatherCondition(
             inspection.getWeatherCondition() != null 
                 ? inspection.getWeatherCondition().name()
@@ -86,11 +86,18 @@ public class MaintenanceRecordService {
         );
         record.setAnomalyCount(annotations.size());
         
-        // Pre-populate some engineer-editable fields from inspection/transformer data
+        // Pre-populate engineer-editable fields from inspection/transformer data
         record.setBranch(inspection.getBranch());
         record.setTransformerNo(transformer.getCode());
+        record.setPoleNo(transformer.getPoleNo());
         record.setInspectedBy(inspection.getInspectedBy());
-        record.setDateOfInspection(record.getInspectionDate());
+        record.setDateOfInspection(inspectionDate);
+        record.setInspectedDate(inspectionDate); // Auto-fill with inspection date
+        
+        // Auto-fill transformer data from transformer entity
+        if (transformer.getLocation() != null) {
+            record.setTransformerType(MaintenanceRecord.TransformerType.DISTRIBUTION); // Default
+        }
         
         // Set metadata
         record.setStatus(MaintenanceRecord.Status.DRAFT);
@@ -128,86 +135,97 @@ public class MaintenanceRecordService {
      * Only allowed for DRAFT records
      */
     public MaintenanceRecord updateRecord(UUID recordId, MaintenanceRecord updates, String updatedBy) {
-        MaintenanceRecord record = maintenanceRecordRepo.findById(recordId)
-                .orElseThrow(() -> new RuntimeException("Maintenance record not found with id: " + recordId));
-        
-        if (record.getStatus() == MaintenanceRecord.Status.FINALIZED) {
-            throw new RuntimeException("Cannot update finalized maintenance record");
+        try {
+            MaintenanceRecord record = maintenanceRecordRepo.findById(recordId)
+                    .orElseThrow(() -> new RuntimeException("Maintenance record not found with id: " + recordId));
+            
+            if (record.getStatus() == MaintenanceRecord.Status.FINALIZED) {
+                throw new RuntimeException("Cannot update finalized maintenance record");
+            }
+            
+            log.info("Updating maintenance record: {}, version: {}", record.getRecordNumber(), record.getVersion());
+            
+            // Update all engineer-editable fields from Tab 1
+            if (updates.getDateOfInspection() != null) record.setDateOfInspection(updates.getDateOfInspection());
+            if (updates.getStartTime() != null) record.setStartTime(updates.getStartTime());
+            if (updates.getCompletionTime() != null) record.setCompletionTime(updates.getCompletionTime());
+            if (updates.getSupervisedBy() != null) record.setSupervisedBy(updates.getSupervisedBy());
+            if (updates.getGangTech1() != null) record.setGangTech1(updates.getGangTech1());
+            if (updates.getGangTech2() != null) record.setGangTech2(updates.getGangTech2());
+            if (updates.getGangTech3() != null) record.setGangTech3(updates.getGangTech3());
+            if (updates.getGangHelpers() != null) record.setGangHelpers(updates.getGangHelpers());
+            if (updates.getInspectedBy() != null) record.setInspectedBy(updates.getInspectedBy());
+            if (updates.getInspectedDate() != null) record.setInspectedDate(updates.getInspectedDate());
+            if (updates.getRectifiedBy() != null) record.setRectifiedBy(updates.getRectifiedBy());
+            if (updates.getRectifiedDate() != null) record.setRectifiedDate(updates.getRectifiedDate());
+            if (updates.getCssInspector() != null) record.setCssInspector(updates.getCssInspector());
+            if (updates.getCssInspectorDate() != null) record.setCssInspectorDate(updates.getCssInspectorDate());
+            
+            // Update all engineer-editable fields from Tab 2
+            if (updates.getBranch() != null) record.setBranch(updates.getBranch());
+            if (updates.getTransformerNo() != null) record.setTransformerNo(updates.getTransformerNo());
+            if (updates.getPoleNo() != null) record.setPoleNo(updates.getPoleNo());
+            if (updates.getBaselineRight() != null) record.setBaselineRight(updates.getBaselineRight());
+            if (updates.getBaselineLeft() != null) record.setBaselineLeft(updates.getBaselineLeft());
+            if (updates.getBaselineFront() != null) record.setBaselineFront(updates.getBaselineFront());
+            if (updates.getLoadGrowthKva() != null) record.setLoadGrowthKva(updates.getLoadGrowthKva());
+            if (updates.getBaselineCondition() != null) record.setBaselineCondition(updates.getBaselineCondition());
+            if (updates.getTransformerStatus() != null) record.setTransformerStatus(updates.getTransformerStatus());
+            if (updates.getTransformerType() != null) record.setTransformerType(updates.getTransformerType());
+            if (updates.getMeterSerialNo() != null) record.setMeterSerialNo(updates.getMeterSerialNo());
+            if (updates.getMeterMaker() != null) record.setMeterMaker(updates.getMeterMaker());
+            if (updates.getMeterMake() != null) record.setMeterMake(updates.getMeterMake());
+            if (updates.getWorkContent() != null) {
+                log.info("Setting workContent: {}", updates.getWorkContent());
+                record.setWorkContent(updates.getWorkContent());
+            }
+            
+            // Update first inspection readings
+            if (updates.getFirstVoltageR() != null) record.setFirstVoltageR(updates.getFirstVoltageR());
+            if (updates.getFirstVoltageY() != null) record.setFirstVoltageY(updates.getFirstVoltageY());
+            if (updates.getFirstVoltageB() != null) record.setFirstVoltageB(updates.getFirstVoltageB());
+            if (updates.getFirstCurrentR() != null) record.setFirstCurrentR(updates.getFirstCurrentR());
+            if (updates.getFirstCurrentY() != null) record.setFirstCurrentY(updates.getFirstCurrentY());
+            if (updates.getFirstCurrentB() != null) record.setFirstCurrentB(updates.getFirstCurrentB());
+            if (updates.getFirstPowerFactorR() != null) record.setFirstPowerFactorR(updates.getFirstPowerFactorR());
+            if (updates.getFirstPowerFactorY() != null) record.setFirstPowerFactorY(updates.getFirstPowerFactorY());
+            if (updates.getFirstPowerFactorB() != null) record.setFirstPowerFactorB(updates.getFirstPowerFactorB());
+            if (updates.getFirstKwR() != null) record.setFirstKwR(updates.getFirstKwR());
+            if (updates.getFirstKwY() != null) record.setFirstKwY(updates.getFirstKwY());
+            if (updates.getFirstKwB() != null) record.setFirstKwB(updates.getFirstKwB());
+            
+            // Update second inspection readings
+            if (updates.getSecondVoltageR() != null) record.setSecondVoltageR(updates.getSecondVoltageR());
+            if (updates.getSecondVoltageY() != null) record.setSecondVoltageY(updates.getSecondVoltageY());
+            if (updates.getSecondVoltageB() != null) record.setSecondVoltageB(updates.getSecondVoltageB());
+            if (updates.getSecondCurrentR() != null) record.setSecondCurrentR(updates.getSecondCurrentR());
+            if (updates.getSecondCurrentY() != null) record.setSecondCurrentY(updates.getSecondCurrentY());
+            if (updates.getSecondCurrentB() != null) record.setSecondCurrentB(updates.getSecondCurrentB());
+            if (updates.getSecondPowerFactorR() != null) record.setSecondPowerFactorR(updates.getSecondPowerFactorR());
+            if (updates.getSecondPowerFactorY() != null) record.setSecondPowerFactorY(updates.getSecondPowerFactorY());
+            if (updates.getSecondPowerFactorB() != null) record.setSecondPowerFactorB(updates.getSecondPowerFactorB());
+            if (updates.getSecondKwR() != null) record.setSecondKwR(updates.getSecondKwR());
+            if (updates.getSecondKwY() != null) record.setSecondKwY(updates.getSecondKwY());
+            if (updates.getSecondKwB() != null) record.setSecondKwB(updates.getSecondKwB());
+            if (updates.getSecondInspectionDate() != null) record.setSecondInspectionDate(updates.getSecondInspectionDate());
+            
+            // Update notes
+            if (updates.getNotes() != null) record.setNotes(updates.getNotes());
+            if (updates.getEngineerRemarks() != null) record.setEngineerRemarks(updates.getEngineerRemarks());
+            
+            // Update metadata
+            record.setUpdatedBy(updatedBy);
+            record.setVersion(record.getVersion() + 1);
+            
+            log.info("Saving updated maintenance record...");
+            record = maintenanceRecordRepo.save(record);
+            log.info("Updated maintenance record successfully: {}", record.getRecordNumber());
+            
+            return record;
+        } catch (Exception e) {
+            log.error("Error updating maintenance record {}: {}", recordId, e.getMessage(), e);
+            throw new RuntimeException("Failed to update maintenance record: " + e.getMessage(), e);
         }
-        
-        // Update all engineer-editable fields from Tab 1
-        if (updates.getDateOfInspection() != null) record.setDateOfInspection(updates.getDateOfInspection());
-        if (updates.getStartTime() != null) record.setStartTime(updates.getStartTime());
-        if (updates.getCompletionTime() != null) record.setCompletionTime(updates.getCompletionTime());
-        if (updates.getSupervisedBy() != null) record.setSupervisedBy(updates.getSupervisedBy());
-        if (updates.getGangTech1() != null) record.setGangTech1(updates.getGangTech1());
-        if (updates.getGangTech2() != null) record.setGangTech2(updates.getGangTech2());
-        if (updates.getGangTech3() != null) record.setGangTech3(updates.getGangTech3());
-        if (updates.getGangHelpers() != null) record.setGangHelpers(updates.getGangHelpers());
-        if (updates.getInspectedBy() != null) record.setInspectedBy(updates.getInspectedBy());
-        if (updates.getInspectedDate() != null) record.setInspectedDate(updates.getInspectedDate());
-        if (updates.getRectifiedBy() != null) record.setRectifiedBy(updates.getRectifiedBy());
-        if (updates.getRectifiedDate() != null) record.setRectifiedDate(updates.getRectifiedDate());
-        if (updates.getCssInspector() != null) record.setCssInspector(updates.getCssInspector());
-        if (updates.getCssInspectorDate() != null) record.setCssInspectorDate(updates.getCssInspectorDate());
-        
-        // Update all engineer-editable fields from Tab 2
-        if (updates.getBranch() != null) record.setBranch(updates.getBranch());
-        if (updates.getTransformerNo() != null) record.setTransformerNo(updates.getTransformerNo());
-        if (updates.getPoleNo() != null) record.setPoleNo(updates.getPoleNo());
-        if (updates.getBaselineRight() != null) record.setBaselineRight(updates.getBaselineRight());
-        if (updates.getBaselineLeft() != null) record.setBaselineLeft(updates.getBaselineLeft());
-        if (updates.getBaselineFront() != null) record.setBaselineFront(updates.getBaselineFront());
-        if (updates.getLoadGrowthKva() != null) record.setLoadGrowthKva(updates.getLoadGrowthKva());
-        if (updates.getBaselineCondition() != null) record.setBaselineCondition(updates.getBaselineCondition());
-        if (updates.getTransformerStatus() != null) record.setTransformerStatus(updates.getTransformerStatus());
-        if (updates.getTransformerType() != null) record.setTransformerType(updates.getTransformerType());
-        if (updates.getMeterSerialNo() != null) record.setMeterSerialNo(updates.getMeterSerialNo());
-        if (updates.getMeterMaker() != null) record.setMeterMaker(updates.getMeterMaker());
-        if (updates.getMeterMake() != null) record.setMeterMake(updates.getMeterMake());
-        if (updates.getWorkContent() != null) record.setWorkContent(updates.getWorkContent());
-        
-        // Update first inspection readings
-        if (updates.getFirstVoltageR() != null) record.setFirstVoltageR(updates.getFirstVoltageR());
-        if (updates.getFirstVoltageY() != null) record.setFirstVoltageY(updates.getFirstVoltageY());
-        if (updates.getFirstVoltageB() != null) record.setFirstVoltageB(updates.getFirstVoltageB());
-        if (updates.getFirstCurrentR() != null) record.setFirstCurrentR(updates.getFirstCurrentR());
-        if (updates.getFirstCurrentY() != null) record.setFirstCurrentY(updates.getFirstCurrentY());
-        if (updates.getFirstCurrentB() != null) record.setFirstCurrentB(updates.getFirstCurrentB());
-        if (updates.getFirstPowerFactorR() != null) record.setFirstPowerFactorR(updates.getFirstPowerFactorR());
-        if (updates.getFirstPowerFactorY() != null) record.setFirstPowerFactorY(updates.getFirstPowerFactorY());
-        if (updates.getFirstPowerFactorB() != null) record.setFirstPowerFactorB(updates.getFirstPowerFactorB());
-        if (updates.getFirstKwR() != null) record.setFirstKwR(updates.getFirstKwR());
-        if (updates.getFirstKwY() != null) record.setFirstKwY(updates.getFirstKwY());
-        if (updates.getFirstKwB() != null) record.setFirstKwB(updates.getFirstKwB());
-        
-        // Update second inspection readings
-        if (updates.getSecondVoltageR() != null) record.setSecondVoltageR(updates.getSecondVoltageR());
-        if (updates.getSecondVoltageY() != null) record.setSecondVoltageY(updates.getSecondVoltageY());
-        if (updates.getSecondVoltageB() != null) record.setSecondVoltageB(updates.getSecondVoltageB());
-        if (updates.getSecondCurrentR() != null) record.setSecondCurrentR(updates.getSecondCurrentR());
-        if (updates.getSecondCurrentY() != null) record.setSecondCurrentY(updates.getSecondCurrentY());
-        if (updates.getSecondCurrentB() != null) record.setSecondCurrentB(updates.getSecondCurrentB());
-        if (updates.getSecondPowerFactorR() != null) record.setSecondPowerFactorR(updates.getSecondPowerFactorR());
-        if (updates.getSecondPowerFactorY() != null) record.setSecondPowerFactorY(updates.getSecondPowerFactorY());
-        if (updates.getSecondPowerFactorB() != null) record.setSecondPowerFactorB(updates.getSecondPowerFactorB());
-        if (updates.getSecondKwR() != null) record.setSecondKwR(updates.getSecondKwR());
-        if (updates.getSecondKwY() != null) record.setSecondKwY(updates.getSecondKwY());
-        if (updates.getSecondKwB() != null) record.setSecondKwB(updates.getSecondKwB());
-        if (updates.getSecondInspectionDate() != null) record.setSecondInspectionDate(updates.getSecondInspectionDate());
-        
-        // Update notes
-        if (updates.getNotes() != null) record.setNotes(updates.getNotes());
-        if (updates.getEngineerRemarks() != null) record.setEngineerRemarks(updates.getEngineerRemarks());
-        
-        // Update metadata
-        record.setUpdatedBy(updatedBy);
-        record.setVersion(record.getVersion() + 1);
-        
-        record = maintenanceRecordRepo.save(record);
-        log.info("Updated maintenance record: {}", record.getRecordNumber());
-        
-        return record;
     }
     
     /**

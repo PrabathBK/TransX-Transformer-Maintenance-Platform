@@ -1141,7 +1141,7 @@ export default function InspectionDetailNew() {
             
             {commentsExpanded && (
               <div style={{ 
-                height: '400px',
+                height: '550px',
                 overflowY: 'auto',
                 overflowX: 'hidden',
                 paddingRight: '8px',
@@ -1697,7 +1697,7 @@ function ImageBox({ title, imageUrl, timestamp }: { title: string; imageUrl: str
         )}
       </div>
       <div style={{ 
-        height: 220, 
+        height: 400, 
         display: 'flex', 
         alignItems: 'center', 
         justifyContent: 'center', 

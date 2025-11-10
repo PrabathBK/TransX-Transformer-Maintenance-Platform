@@ -143,7 +143,7 @@ public class MaintenanceRecordController {
             @PathVariable UUID id,
             @Valid @RequestBody UpdateMaintenanceRecordRequest request) {
         try {
-            log.info("Updating maintenance record: {}", id);
+            log.info("Updating maintenance record: {} with data: {}", id, request);
             
             // Convert request to entity for update
             MaintenanceRecord updates = new MaintenanceRecord();
@@ -169,13 +169,29 @@ public class MaintenanceRecordController {
             updates.setBaselineLeft(request.baselineLeft());
             updates.setBaselineFront(request.baselineFront());
             updates.setLoadGrowthKva(request.loadGrowthKva());
-            updates.setBaselineCondition(request.baselineCondition());
-            updates.setTransformerStatus(request.transformerStatus());
-            updates.setTransformerType(request.transformerType());
+            
+            // Handle enum fields safely
+            if (request.baselineCondition() != null) {
+                updates.setBaselineCondition(request.baselineCondition());
+            }
+            if (request.transformerStatus() != null) {
+                updates.setTransformerStatus(request.transformerStatus());
+            }
+            if (request.transformerType() != null) {
+                updates.setTransformerType(request.transformerType());
+            }
+            
             updates.setMeterSerialNo(request.meterSerialNo());
             updates.setMeterMaker(request.meterMaker());
             updates.setMeterMake(request.meterMake());
-            updates.setWorkContent(request.workContent());
+            
+            // Handle workContent map - log it
+            if (request.workContent() != null) {
+                log.info("WorkContent received: {}", request.workContent());
+                updates.setWorkContent(request.workContent());
+            } else {
+                log.info("WorkContent is null, skipping");
+            }
             
             updates.setFirstVoltageR(request.firstVoltageR());
             updates.setFirstVoltageY(request.firstVoltageY());

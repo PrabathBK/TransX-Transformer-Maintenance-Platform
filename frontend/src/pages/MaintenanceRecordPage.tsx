@@ -102,13 +102,30 @@ export default function MaintenanceRecordPage() {
       setSaving(true);
       setError(null);
 
+      console.log('Saving maintenance record with data:', JSON.stringify(updates, null, 2));
       const updated = await updateMaintenanceRecord(record.id, updates);
+      console.log('Save successful, updated record:', updated);
+      
       setRecord(updated);
       
       alert('Maintenance record saved successfully!');
     } catch (e: any) {
-      setError(e?.message || 'Failed to save maintenance record');
-      alert('Failed to save: ' + (e?.message || 'Unknown error'));
+      console.error('Save error:', e);
+      
+      // Try to extract detailed error message
+      let errorMsg = 'Failed to save maintenance record';
+      if (e?.message) {
+        errorMsg = e.message;
+      }
+      if (e?.response?.data?.message) {
+        errorMsg = e.response.data.message;
+      }
+      
+      console.error('Detailed error:', errorMsg);
+      setError(errorMsg);
+      
+      // Show more helpful error message
+      alert('Failed to save: ' + errorMsg + '\n\nCheck browser console for details.');
     } finally {
       setSaving(false);
     }

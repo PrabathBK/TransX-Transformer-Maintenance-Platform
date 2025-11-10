@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Input from './Input';
 import Select from './Select';
+import TimeInput from './TimeInput';
 import type { MaintenanceRecord, UpdateMaintenanceRecordRequest } from '../api/maintenanceRecords';
 
 type Props = {
@@ -13,10 +14,23 @@ type Props = {
 export default function MaintenanceRecordForm({ record, onSave, onDownloadPDF, inspectionImageUrl }: Props) {
   const [activeTab, setActiveTab] = useState<'tab1' | 'tab2'>('tab1');
   const [isEditing, setIsEditing] = useState(true);
-  const [formData, setFormData] = useState<UpdateMaintenanceRecordRequest>({
-    // Tab 1 fields
-    dateOfInspection: record.dateOfInspection || '',
-    startTime: record.startTime || '',
+  
+  // Helper to get current time in HH:MM format
+  const getCurrentTime = () => {
+    const now = new Date();
+    return now.toTimeString().slice(0, 5); // HH:MM
+  };
+  
+  // Helper to get current date in YYYY-MM-DD format
+  const getCurrentDate = () => {
+    const now = new Date();
+    return now.toISOString().split('T')[0];
+  };
+  
+  const initializeFormData = (): UpdateMaintenanceRecordRequest => ({
+    // Tab 1 fields - Auto-fill with current time if empty
+    dateOfInspection: record.dateOfInspection || getCurrentDate(),
+    startTime: record.startTime || getCurrentTime(),
     completionTime: record.completionTime || '',
     supervisedBy: record.supervisedBy || '',
     gangTech1: record.gangTech1 || '',
@@ -24,7 +38,7 @@ export default function MaintenanceRecordForm({ record, onSave, onDownloadPDF, i
     gangTech3: record.gangTech3 || '',
     gangHelpers: record.gangHelpers || '',
     inspectedBy: record.inspectedBy || '',
-    inspectedDate: record.inspectedDate || '',
+    inspectedDate: record.inspectedDate || getCurrentDate(),
     rectifiedBy: record.rectifiedBy || '',
     rectifiedDate: record.rectifiedDate || '',
     cssInspector: record.cssInspector || '',
@@ -44,7 +58,7 @@ export default function MaintenanceRecordForm({ record, onSave, onDownloadPDF, i
     meterSerialNo: record.meterSerialNo || '',
     meterMaker: record.meterMaker || '',
     meterMake: record.meterMake || '',
-    workContent: record.workContent || {},
+    workContent: record.workContent && Object.keys(record.workContent).length > 0 ? record.workContent : undefined,
     
     firstVoltageR: record.firstVoltageR,
     firstVoltageY: record.firstVoltageY,
@@ -78,13 +92,78 @@ export default function MaintenanceRecordForm({ record, onSave, onDownloadPDF, i
     
     updatedBy: 'engineer', // TODO: Get from auth context
   });
+  
+  const [formData, setFormData] = useState<UpdateMaintenanceRecordRequest>(initializeFormData());
+  
+  // Update form data when record changes (after successful save)
+  useEffect(() => {
+    setFormData(initializeFormData());
+  }, [record.updatedAt]); // Re-initialize when record is updated
 
   const handleInputChange = (field: keyof UpdateMaintenanceRecordRequest, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
+  const cleanFormData = (data: UpdateMaintenanceRecordRequest): UpdateMaintenanceRecordRequest => {
+    // Create a clean copy and remove all undefined/null/empty values
+    const cleaned: any = {};
+    
+    // Numeric field names that need conversion
+    const numericFields = [
+      'baselineRight', 'baselineLeft', 'baselineFront', 'loadGrowthKva',
+      'firstVoltageR', 'firstVoltageY', 'firstVoltageB',
+      'firstCurrentR', 'firstCurrentY', 'firstCurrentB',
+      'firstPowerFactorR', 'firstPowerFactorY', 'firstPowerFactorB',
+      'firstKwR', 'firstKwY', 'firstKwB',
+      'secondVoltageR', 'secondVoltageY', 'secondVoltageB',
+      'secondCurrentR', 'secondCurrentY', 'secondCurrentB',
+      'secondPowerFactorR', 'secondPowerFactorY', 'secondPowerFactorB',
+      'secondKwR', 'secondKwY', 'secondKwB'
+    ];
+    
+    Object.keys(data).forEach(key => {
+      const value = (data as any)[key];
+      
+      // Skip undefined, null, and empty strings
+      if (value === undefined || value === null || value === '') {
+        return;
+      }
+      
+      // Handle numeric fields - convert strings to numbers, keep numbers as-is
+      if (numericFields.includes(key)) {
+        if (typeof value === 'number') {
+          // Already a number, keep it
+          cleaned[key] = value;
+        } else if (typeof value === 'string' && value.trim() !== '') {
+          // String that needs conversion
+          const numValue = Number(value);
+          if (!isNaN(numValue)) {
+            cleaned[key] = numValue;
+          }
+        }
+        return;
+      }
+      
+      // Skip empty workContent map
+      if (key === 'workContent' && typeof value === 'object' && Object.keys(value).length === 0) {
+        return;
+      }
+      
+      // Include the value (strings, enums, etc.)
+      cleaned[key] = value;
+    });
+    
+    // Always include updatedBy
+    cleaned.updatedBy = 'engineer';
+    
+    console.log('Cleaned form data:', cleaned);
+    
+    return cleaned as UpdateMaintenanceRecordRequest;
+  };
+
   const handleSave = () => {
-    onSave(formData);
+    const cleanedData = cleanFormData(formData);
+    onSave(cleanedData);
     setIsEditing(false);
   };
 
@@ -145,7 +224,7 @@ export default function MaintenanceRecordForm({ record, onSave, onDownloadPDF, i
           />
         ) : (
           <div style={{ color: '#94a3b8', textAlign: 'center', padding: '60px' }}>
-            <div style={{ fontSize: '48px', marginBottom: '12px' }}>📷</div>
+            <div style={{ fontSize: '48px', marginBottom: '12px' }}>[ Image ]</div>
             <div style={{ fontSize: '16px' }}>No inspection image available</div>
           </div>
         )}
@@ -169,7 +248,7 @@ export default function MaintenanceRecordForm({ record, onSave, onDownloadPDF, i
             gap: '8px'
           }}
         >
-          <span>📥</span> Download PDF
+          Download PDF
         </button>
         
         {!isEditing && (
@@ -210,7 +289,7 @@ export default function MaintenanceRecordForm({ record, onSave, onDownloadPDF, i
               gap: '8px'
             }}
           >
-            <span>💾</span> Save Changes
+            Save Changes
           </button>
         )}
       </div>
@@ -260,18 +339,16 @@ export default function MaintenanceRecordForm({ record, onSave, onDownloadPDF, i
               onChange={(e) => handleInputChange('dateOfInspection', e.target.value)}
               disabled={!isEditing}
             />
-            <Input
+            <TimeInput
               label="Start Time"
-              type="time"
-              value={formData.startTime}
-              onChange={(e) => handleInputChange('startTime', e.target.value)}
+              value={formData.startTime || ''}
+              onChange={(value) => handleInputChange('startTime', value)}
               disabled={!isEditing}
             />
-            <Input
+            <TimeInput
               label="Completion Time"
-              type="time"
-              value={formData.completionTime}
-              onChange={(e) => handleInputChange('completionTime', e.target.value)}
+              value={formData.completionTime || ''}
+              onChange={(value) => handleInputChange('completionTime', value)}
               disabled={!isEditing}
             />
             <Input
@@ -495,12 +572,20 @@ export default function MaintenanceRecordForm({ record, onSave, onDownloadPDF, i
           />
 
           <h4 style={{ marginTop: '20px' }}>First Inspection Readings</h4>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
+          <div style={{ 
+            display: 'grid', 
+            gridTemplateColumns: '80px repeat(4, 1fr)', 
+            gap: '10px',
+            alignItems: 'center'
+          }}>
             <div><strong>Phase</strong></div>
             <div><strong>Voltage (V)</strong></div>
             <div><strong>Current (A)</strong></div>
+            <div><strong>Power Factor</strong></div>
+            <div><strong>kW</strong></div>
             
-            <div>R</div>
+            {/* Phase R */}
+            <div style={{ fontWeight: '600', fontSize: '16px' }}>R</div>
             <Input
               type="number"
               step="0.01"
@@ -515,8 +600,24 @@ export default function MaintenanceRecordForm({ record, onSave, onDownloadPDF, i
               onChange={(e) => handleInputChange('firstCurrentR', parseFloat(e.target.value))}
               disabled={!isEditing}
             />
+            <Input
+              type="number"
+              step="0.001"
+              value={formData.firstPowerFactorR || ''}
+              onChange={(e) => handleInputChange('firstPowerFactorR', parseFloat(e.target.value))}
+              disabled={!isEditing}
+              placeholder="0.000-1.000"
+            />
+            <Input
+              type="number"
+              step="0.01"
+              value={formData.firstKwR || ''}
+              onChange={(e) => handleInputChange('firstKwR', parseFloat(e.target.value))}
+              disabled={!isEditing}
+            />
             
-            <div>Y</div>
+            {/* Phase Y */}
+            <div style={{ fontWeight: '600', fontSize: '16px' }}>Y</div>
             <Input
               type="number"
               step="0.01"
@@ -531,8 +632,24 @@ export default function MaintenanceRecordForm({ record, onSave, onDownloadPDF, i
               onChange={(e) => handleInputChange('firstCurrentY', parseFloat(e.target.value))}
               disabled={!isEditing}
             />
+            <Input
+              type="number"
+              step="0.001"
+              value={formData.firstPowerFactorY || ''}
+              onChange={(e) => handleInputChange('firstPowerFactorY', parseFloat(e.target.value))}
+              disabled={!isEditing}
+              placeholder="0.000-1.000"
+            />
+            <Input
+              type="number"
+              step="0.01"
+              value={formData.firstKwY || ''}
+              onChange={(e) => handleInputChange('firstKwY', parseFloat(e.target.value))}
+              disabled={!isEditing}
+            />
             
-            <div>B</div>
+            {/* Phase B */}
+            <div style={{ fontWeight: '600', fontSize: '16px' }}>B</div>
             <Input
               type="number"
               step="0.01"
@@ -547,15 +664,48 @@ export default function MaintenanceRecordForm({ record, onSave, onDownloadPDF, i
               onChange={(e) => handleInputChange('firstCurrentB', parseFloat(e.target.value))}
               disabled={!isEditing}
             />
+            <Input
+              type="number"
+              step="0.001"
+              value={formData.firstPowerFactorB || ''}
+              onChange={(e) => handleInputChange('firstPowerFactorB', parseFloat(e.target.value))}
+              disabled={!isEditing}
+              placeholder="0.000-1.000"
+            />
+            <Input
+              type="number"
+              step="0.01"
+              value={formData.firstKwB || ''}
+              onChange={(e) => handleInputChange('firstKwB', parseFloat(e.target.value))}
+              disabled={!isEditing}
+            />
           </div>
 
           <h4 style={{ marginTop: '20px' }}>Second Inspection Readings</h4>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
+          
+          <Input
+            label="Second Inspection Date"
+            type="date"
+            value={formData.secondInspectionDate}
+            onChange={(e) => handleInputChange('secondInspectionDate', e.target.value)}
+            disabled={!isEditing}
+            style={{ marginBottom: '15px' }}
+          />
+          
+          <div style={{ 
+            display: 'grid', 
+            gridTemplateColumns: '80px repeat(4, 1fr)', 
+            gap: '10px',
+            alignItems: 'center'
+          }}>
             <div><strong>Phase</strong></div>
             <div><strong>Voltage (V)</strong></div>
             <div><strong>Current (A)</strong></div>
+            <div><strong>Power Factor</strong></div>
+            <div><strong>kW</strong></div>
             
-            <div>R</div>
+            {/* Phase R */}
+            <div style={{ fontWeight: '600', fontSize: '16px' }}>R</div>
             <Input
               type="number"
               step="0.01"
@@ -570,8 +720,24 @@ export default function MaintenanceRecordForm({ record, onSave, onDownloadPDF, i
               onChange={(e) => handleInputChange('secondCurrentR', parseFloat(e.target.value))}
               disabled={!isEditing}
             />
+            <Input
+              type="number"
+              step="0.001"
+              value={formData.secondPowerFactorR || ''}
+              onChange={(e) => handleInputChange('secondPowerFactorR', parseFloat(e.target.value))}
+              disabled={!isEditing}
+              placeholder="0.000-1.000"
+            />
+            <Input
+              type="number"
+              step="0.01"
+              value={formData.secondKwR || ''}
+              onChange={(e) => handleInputChange('secondKwR', parseFloat(e.target.value))}
+              disabled={!isEditing}
+            />
             
-            <div>Y</div>
+            {/* Phase Y */}
+            <div style={{ fontWeight: '600', fontSize: '16px' }}>Y</div>
             <Input
               type="number"
               step="0.01"
@@ -586,8 +752,24 @@ export default function MaintenanceRecordForm({ record, onSave, onDownloadPDF, i
               onChange={(e) => handleInputChange('secondCurrentY', parseFloat(e.target.value))}
               disabled={!isEditing}
             />
+            <Input
+              type="number"
+              step="0.001"
+              value={formData.secondPowerFactorY || ''}
+              onChange={(e) => handleInputChange('secondPowerFactorY', parseFloat(e.target.value))}
+              disabled={!isEditing}
+              placeholder="0.000-1.000"
+            />
+            <Input
+              type="number"
+              step="0.01"
+              value={formData.secondKwY || ''}
+              onChange={(e) => handleInputChange('secondKwY', parseFloat(e.target.value))}
+              disabled={!isEditing}
+            />
             
-            <div>B</div>
+            {/* Phase B */}
+            <div style={{ fontWeight: '600', fontSize: '16px' }}>B</div>
             <Input
               type="number"
               step="0.01"
@@ -602,16 +784,22 @@ export default function MaintenanceRecordForm({ record, onSave, onDownloadPDF, i
               onChange={(e) => handleInputChange('secondCurrentB', parseFloat(e.target.value))}
               disabled={!isEditing}
             />
+            <Input
+              type="number"
+              step="0.001"
+              value={formData.secondPowerFactorB || ''}
+              onChange={(e) => handleInputChange('secondPowerFactorB', parseFloat(e.target.value))}
+              disabled={!isEditing}
+              placeholder="0.000-1.000"
+            />
+            <Input
+              type="number"
+              step="0.01"
+              value={formData.secondKwB || ''}
+              onChange={(e) => handleInputChange('secondKwB', parseFloat(e.target.value))}
+              disabled={!isEditing}
+            />
           </div>
-
-          <Input
-            label="Second Inspection Date"
-            type="date"
-            value={formData.secondInspectionDate}
-            onChange={(e) => handleInputChange('secondInspectionDate', e.target.value)}
-            disabled={!isEditing}
-            style={{ marginTop: '15px' }}
-          />
 
           <h4 style={{ marginTop: '20px' }}>Notes & Remarks</h4>
           <div style={{ marginBottom: '12px' }}>

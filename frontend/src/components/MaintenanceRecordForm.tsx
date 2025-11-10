@@ -93,64 +93,62 @@ export default function MaintenanceRecordForm({ record, onSave, onDownloadPDF, i
   };
 
   return (
-    <div style={{ padding: '20px' }}>
-      {/* Header Info with Inspection Image */}
-      <div style={{ marginBottom: '20px', background: '#f5f5f5', borderRadius: '8px', overflow: 'hidden' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '300px 1fr', gap: '0' }}>
-          {/* Inspection Image Section */}
-          <div style={{ 
-            background: '#1e293b', 
-            display: 'flex', 
-            alignItems: 'center', 
-            justifyContent: 'center',
-            minHeight: '200px',
-            padding: '10px'
-          }}>
-            {inspectionImageUrl ? (
-              <img 
-                src={inspectionImageUrl} 
-                alt="Inspection thermal image" 
-                style={{ 
-                  maxWidth: '100%', 
-                  maxHeight: '200px', 
-                  objectFit: 'contain',
-                  borderRadius: '6px'
-                }}
-              />
-            ) : (
-              <div style={{ color: '#94a3b8', textAlign: 'center' }}>
-                <div style={{ fontSize: '32px', marginBottom: '8px' }}>📷</div>
-                <div style={{ fontSize: '13px' }}>No inspection image</div>
-              </div>
-            )}
+    <div style={{ padding: '20px' }} className="maintenance-record-container">
+      {/* Header Info */}
+      <div style={{ marginBottom: '20px', background: '#f5f5f5', borderRadius: '8px', padding: '15px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '15px' }}>
+          <div>
+            <strong>Record Number:</strong><br />{record.recordNumber}
           </div>
-
-          {/* Record Info Section */}
-          <div style={{ padding: '15px', display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '15px', alignContent: 'center' }}>
-            <div>
-              <strong>Record Number:</strong><br />{record.recordNumber}
-            </div>
-            <div>
-              <strong>Transformer:</strong><br />{record.transformerCode}
-            </div>
-            <div>
-              <strong>Status:</strong><br />
-              <span style={{ 
-                color: record.status === 'FINALIZED' ? '#28a745' : '#ffc107',
-                fontWeight: 'bold'
-              }}>{record.status}</span>
-            </div>
-            <div>
-              <strong>Inspection Date:</strong><br />{record.inspectionDate || 'N/A'}
-            </div>
-            <div>
-              <strong>Weather:</strong><br />{record.weatherCondition || 'N/A'}
-            </div>
-            <div>
-              <strong>Anomalies:</strong><br />{record.anomalyCount}
-            </div>
+          <div>
+            <strong>Transformer:</strong><br />{record.transformerCode}
+          </div>
+          <div>
+            <strong>Status:</strong><br />
+            <span style={{ 
+              color: record.status === 'FINALIZED' ? '#28a745' : '#ffc107',
+              fontWeight: 'bold'
+            }}>{record.status}</span>
+          </div>
+          <div>
+            <strong>Inspection Date:</strong><br />{record.inspectionDate || 'N/A'}
+          </div>
+          <div>
+            <strong>Weather:</strong><br />{record.weatherCondition || 'N/A'}
+          </div>
+          <div>
+            <strong>Anomalies:</strong><br />{record.anomalyCount}
           </div>
         </div>
+      </div>
+
+      {/* Inspection Image Section - Centered and Large */}
+      <div style={{ 
+        marginBottom: '30px', 
+        display: 'flex', 
+        justifyContent: 'center',
+        background: '#1e293b',
+        borderRadius: '12px',
+        padding: '20px'
+      }} className="inspection-image-section">
+        {inspectionImageUrl ? (
+          <img 
+            src={inspectionImageUrl} 
+            alt="Inspection thermal image" 
+            style={{ 
+              maxWidth: '800px',
+              width: '100%',
+              height: 'auto',
+              borderRadius: '8px',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.3)'
+            }}
+          />
+        ) : (
+          <div style={{ color: '#94a3b8', textAlign: 'center', padding: '60px' }}>
+            <div style={{ fontSize: '48px', marginBottom: '12px' }}>📷</div>
+            <div style={{ fontSize: '16px' }}>No inspection image available</div>
+          </div>
+        )}
       </div>
 
       {/* Action Buttons - Download PDF and Edit */}

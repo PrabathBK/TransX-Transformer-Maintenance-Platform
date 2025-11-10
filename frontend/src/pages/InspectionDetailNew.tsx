@@ -668,8 +668,8 @@ export default function InspectionDetailNew() {
       <div style={{
         display: 'grid',
         gridTemplateColumns: '1fr 1fr',
-        gap: '24px',
-        padding: '24px',
+        gap: '16px',
+        padding: '16px',
         paddingTop: '0'
       }}>
         <ImageBox 
@@ -688,8 +688,8 @@ export default function InspectionDetailNew() {
       <div style={{
         display: 'grid',
         gridTemplateColumns: '2fr 1fr',
-        gap: '24px',
-        padding: '24px'
+        gap: '16px',
+        padding: '16px'
       }}>
         {/* Left Column */}
         <div>
@@ -852,12 +852,11 @@ export default function InspectionDetailNew() {
             marginTop: '16px',
             border: '2px solid #e5e7eb',
             borderRadius: '12px',
-            padding: '16px',
-            height: '80px',
+            padding: '12px',
             display: 'flex',
-            gap: '12px',
+            gap: '10px',
             alignItems: 'center',
-            justifyContent: 'space-between',
+            flexWrap: 'wrap',
             background: 'white'
           }}>
             {inspection.status !== 'COMPLETED' ? (
@@ -868,16 +867,16 @@ export default function InspectionDetailNew() {
                   disabled={isSavingImage || !inspection.inspectionImageId || !isCanvasReady}
                   style={{
                     flex: '1',
-                    minWidth: '200px',
+                    minWidth: '180px',
                     background: (isSavingImage || !isCanvasReady) ? '#94a3b8' : 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
                     color: 'white',
                     border: 'none',
-                    borderRadius: '10px',
-                    padding: '12px 20px',
-                    fontSize: '15px',
+                    borderRadius: '8px',
+                    padding: '10px 16px',
+                    fontSize: '14px',
                     fontWeight: '600',
                     cursor: (isSavingImage || !inspection.inspectionImageId || !isCanvasReady) ? 'not-allowed' : 'pointer',
-                    boxShadow: '0 4px 12px rgba(59, 130, 246, 0.3)'
+                    boxShadow: '0 2px 8px rgba(59, 130, 246, 0.3)'
                   }}
                 >
                   {isSavingImage ? '⏳ Saving...' : !isCanvasReady ? '⏳ Loading...' : '💾 Save Image'}
@@ -889,16 +888,16 @@ export default function InspectionDetailNew() {
                   disabled={isCompleting || !inspection.inspectionImageId}
                   style={{
                     flex: '1',
-                    minWidth: '200px',
+                    minWidth: '180px',
                     background: isCompleting ? '#94a3b8' : 'linear-gradient(135deg, #059669 0%, #10b981 100%)',
                     color: 'white',
                     border: 'none',
-                    borderRadius: '10px',
-                    padding: '12px 20px',
-                    fontSize: '15px',
+                    borderRadius: '8px',
+                    padding: '10px 16px',
+                    fontSize: '14px',
                     fontWeight: '600',
                     cursor: isCompleting || !inspection.inspectionImageId ? 'not-allowed' : 'pointer',
-                    boxShadow: '0 4px 12px rgba(5, 150, 105, 0.3)'
+                    boxShadow: '0 2px 8px rgba(5, 150, 105, 0.3)'
                   }}
                 >
                   {isCompleting ? '⏳ Processing...' : '✅ Done'}
@@ -910,74 +909,95 @@ export default function InspectionDetailNew() {
                   disabled={isExportingFeedback}
                   style={{
                     flex: '1',
-                    minWidth: '200px',
+                    minWidth: '180px',
                     background: isExportingFeedback ? '#94a3b8' : 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)',
                     color: 'white',
                     border: 'none',
-                    borderRadius: '10px',
-                    padding: '12px 20px',
-                    fontSize: '15px',
+                    borderRadius: '8px',
+                    padding: '10px 16px',
+                    fontSize: '14px',
                     fontWeight: '600',
                     cursor: isExportingFeedback ? 'not-allowed' : 'pointer',
-                    boxShadow: '0 4px 12px rgba(139, 92, 246, 0.3)'
+                    boxShadow: '0 2px 8px rgba(139, 92, 246, 0.3)'
                   }}
                 >
                   {isExportingFeedback ? '⏳ Exporting...' : '🤖 Finetune'}
                 </button>
               </>
             ) : (
-              // Show completion message and button when completed
+              // Show completion status badge when completed
               <div style={{
-                width: '100%',
+                flex: '1',
                 display: 'flex',
                 alignItems: 'center',
-                justifyContent: 'space-between',
+                gap: '8px',
                 background: '#ecfdf5',
                 border: '2px solid #10b981',
-                borderRadius: '10px',
-                padding: '16px 24px'
+                borderRadius: '8px',
+                padding: '10px 16px'
               }}>
+                <span style={{ fontSize: '18px' }}>✅</span>
                 <div>
-                  <h3 style={{ 
-                    margin: '0 0 4px 0', 
-                    fontSize: '16px', 
+                  <div style={{ 
+                    fontSize: '14px', 
                     fontWeight: '600', 
                     color: '#059669'
                   }}>
-                    ✅ Inspection Completed
-                  </h3>
-                  <p style={{ 
-                    margin: 0,
-                    fontSize: '14px', 
+                    Inspection Completed
+                  </div>
+                  <div style={{ 
+                    fontSize: '12px', 
                     color: '#047857'
                   }}>
-                    This inspection has been marked as complete.
-                  </p>
+                    {new Date(inspection.inspectedAt || inspection.createdAt).toLocaleDateString()}
+                  </div>
                 </div>
-
-                <button
-                  onClick={() => {
-                    // Force navigation with page refresh for reliability
-                    window.location.href = `/transformers/${inspection.transformerId}`;
-                  }}
-                  style={{
-                    background: '#2563eb',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '8px',
-                    padding: '10px 20px',
-                    fontSize: '14px',
-                    fontWeight: '800',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '6px'
-                  }}
-                >
-                  🏠 View on Transformer Page
-                </button>
               </div>
             )}
+            
+            {/* Maintenance Record Button - Always visible for both statuses */}
+            <button
+              onClick={() => {
+                // Navigate and force page reload to ensure fresh data
+                window.location.href = `/inspections/${id}/maintenance-record`;
+              }}
+              disabled={!inspection.inspectionImageId}
+              style={{
+                flex: '1',
+                minWidth: '180px',
+                background: !inspection.inspectionImageId ? '#94a3b8' : 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+                color: 'white',
+                border: 'none',
+                borderRadius: '8px',
+                padding: '10px 16px',
+                fontSize: '14px',
+                fontWeight: '600',
+                cursor: !inspection.inspectionImageId ? 'not-allowed' : 'pointer',
+                boxShadow: !inspection.inspectionImageId ? 'none' : '0 2px 8px rgba(245, 158, 11, 0.3)'
+              }}
+            >
+              📋 Maintenance Record
+            </button>
+
+            {/* View Transformer Button - Always visible */}
+            <button
+              onClick={() => window.location.href = `/transformers/${inspection.transformerId}`}
+              style={{
+                flex: '1',
+                minWidth: '180px',
+                background: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)',
+                color: 'white',
+                border: 'none',
+                borderRadius: '8px',
+                padding: '10px 16px',
+                fontSize: '14px',
+                fontWeight: '600',
+                cursor: 'pointer',
+                boxShadow: '0 2px 8px rgba(99, 102, 241, 0.3)'
+              }}
+            >
+              🏠 View Transformer
+            </button>
           </div>
 
           {/* Inspection History - MOVED HERE */}
@@ -985,7 +1005,7 @@ export default function InspectionDetailNew() {
             background: 'white',
             borderRadius: '12px',
             boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-            padding: '20px',
+            padding: '16px',
             marginTop: '16px'
           }}>
             <div 
@@ -995,16 +1015,17 @@ export default function InspectionDetailNew() {
                 alignItems: 'center',
                 cursor: 'pointer',
                 userSelect: 'none',
-                marginBottom: '16px'
+                marginBottom: '12px'
               }}
               onClick={() => setHistoryExpanded(!historyExpanded)}
             >
-              <h2 style={{ margin: '0', fontSize: '18px', fontWeight: '600' }}>
+              <h2 style={{ margin: '0', fontSize: '16px', fontWeight: '600' }}>
                 📋 Inspection History
               </h2>
               <span style={{ 
                 transform: historyExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
-                transition: 'transform 0.2s ease'
+                transition: 'transform 0.2s ease',
+                fontSize: '12px'
               }}>
                 ▼
               </span>
@@ -1012,7 +1033,7 @@ export default function InspectionDetailNew() {
             
             {historyExpanded && (
               <div style={{ 
-                height: '550px',
+                height: '400px',
                 overflowY: 'auto',
                 overflowX: 'hidden',
                 paddingRight: '8px',
@@ -1034,16 +1055,16 @@ export default function InspectionDetailNew() {
             background: 'white',
             borderRadius: '12px',
             boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-            padding: '20px',
+            padding: '16px',
             display: 'flex',
             flexDirection: 'column',
           }}>
-            <h2 style={{ margin: '0 0 16px 0', fontSize: '18px', fontWeight: '600' }}>
+            <h2 style={{ margin: '0 0 12px 0', fontSize: '16px', fontWeight: '600' }}>
               Annotations ({annotations.length})
             </h2>
 
             <div style={{ 
-              height: '575px',
+              height: '450px',
               overflowY: 'auto',
               overflowX: 'hidden',
               paddingRight: '8px',
@@ -1051,7 +1072,7 @@ export default function InspectionDetailNew() {
               scrollbarColor: '#cbd5e1 #f1f5f9',
               display: 'flex',
               flexDirection: 'column',
-              gap: '12px',
+              gap: '10px',
             }}>
               {annotations.length === 0 ? (
                 <div style={{ 
@@ -1092,7 +1113,7 @@ export default function InspectionDetailNew() {
             background: 'white',
             borderRadius: '12px',
             boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-            padding: '20px',
+            padding: '16px',
             marginTop: '16px'
           }}>
             <div 
@@ -1102,16 +1123,17 @@ export default function InspectionDetailNew() {
                 alignItems: 'center',
                 cursor: 'pointer',
                 userSelect: 'none',
-                marginBottom: '16px'
+                marginBottom: '12px'
               }}
               onClick={() => setCommentsExpanded(!commentsExpanded)}
             >
-              <h2 style={{ margin: '0', fontSize: '18px', fontWeight: '600' }}>
+              <h2 style={{ margin: '0', fontSize: '16px', fontWeight: '600' }}>
                 💬 Comments
               </h2>
               <span style={{ 
                 transform: commentsExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
-                transition: 'transform 0.2s ease'
+                transition: 'transform 0.2s ease',
+                fontSize: '12px'
               }}>
                 ▼
               </span>
@@ -1119,7 +1141,7 @@ export default function InspectionDetailNew() {
             
             {commentsExpanded && (
               <div style={{ 
-                height: '560px',
+                height: '400px',
                 overflowY: 'auto',
                 overflowX: 'hidden',
                 paddingRight: '8px',
@@ -1645,37 +1667,37 @@ function ImageBox({ title, imageUrl, timestamp }: { title: string; imageUrl: str
     <div style={{ 
       background: '#fff', 
       border: '1px solid #e5e7eb', 
-      borderRadius: 12, 
-      padding: 16,
+      borderRadius: 10, 
+      padding: 12,
       boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)'
     }}>
       <div style={{ 
         display: 'flex', 
         justifyContent: 'space-between', 
         alignItems: 'center',
-        marginBottom: 12 
+        marginBottom: 10 
       }}>
         <div style={{ 
           fontWeight: 600, 
-          fontSize: '16px',
+          fontSize: '14px',
           color: '#1f2937'
         }}>
           {title}
         </div>
         {timestamp && (
           <div style={{ 
-            fontSize: 12, 
+            fontSize: 11, 
             color: '#6b7280',
             background: '#f3f4f6',
-            padding: '4px 8px',
+            padding: '3px 6px',
             borderRadius: '4px'
           }}>
-            {new Date(timestamp).toLocaleString()}
+            {new Date(timestamp).toLocaleDateString()}
           </div>
         )}
       </div>
       <div style={{ 
-        height: 280, 
+        height: 220, 
         display: 'flex', 
         alignItems: 'center', 
         justifyContent: 'center', 
@@ -1698,11 +1720,11 @@ function ImageBox({ title, imageUrl, timestamp }: { title: string; imageUrl: str
           <div style={{ 
             color: '#94a3b8',
             textAlign: 'center',
-            fontSize: '14px',
+            fontSize: '13px',
             fontWeight: '500'
           }}>
-            <div style={{ fontSize: '32px', marginBottom: '8px' }}>📷</div>
-            <div>No {title.toLowerCase()} image</div>
+            <div style={{ fontSize: '28px', marginBottom: '6px' }}>📷</div>
+            <div>No {title.toLowerCase()}</div>
           </div>
         )}
       </div>

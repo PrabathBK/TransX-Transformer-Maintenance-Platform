@@ -18,18 +18,17 @@ export default function AnnotationLegend({
   const isVertical = layout === 'vertical';
   
   return (
-    <div style={{
-      background: 'white',
+    <div className="detail-card" style={{
       borderRadius: '8px',
       padding: compact ? '12px' : '16px',
-      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
-      border: '1px solid #e5e7eb'
+      boxShadow: 'var(--shadow-sm)',
+      marginTop: '16px'
     }}>
       <h4 style={{ 
         margin: '0 0 12px 0', 
         fontSize: compact ? '13px' : '14px', 
         fontWeight: '600', 
-        color: '#374151',
+        color: 'var(--text-primary)',
         display: compact ? 'none' : 'block'
       }}>
         Fault Types
@@ -61,7 +60,7 @@ export default function AnnotationLegend({
               flexShrink: 0
             }} />
             <span style={{ 
-              color: '#374151', 
+              color: 'var(--text-primary)', 
               fontSize: compact ? '12px' : '13px', 
               fontWeight: '500',
               lineHeight: 1.2

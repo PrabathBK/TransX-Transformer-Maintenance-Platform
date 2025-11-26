@@ -1,12 +1,14 @@
 // src/components/Layout.tsx
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from './Toast';
 import { useState, useRef, useEffect } from 'react';
 
 export default function Layout() {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, logout, isLoading } = useAuth();
+  const toast = useToast();
   const [showUserMenu, setShowUserMenu] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -40,7 +42,9 @@ export default function Layout() {
 
   const handleLogout = () => {
     setShowUserMenu(false);
-    logout();
+    toast.info('Goodbye!', 'You have been signed out successfully');
+    // Small delay to show toast before redirect
+    setTimeout(() => logout(), 500);
   };
 
   const getInitials = (name: string): string => {
@@ -158,12 +162,6 @@ export default function Layout() {
           </div>
           
           <div className="top-bar-right">
-            {/* Notifications */}
-            <button className="top-bar-icon-btn" title="Notifications">
-              <span>🔔</span>
-              <span className="notification-badge">3</span>
-            </button>
-            
             {/* User Menu */}
             {user && (
               <div className="user-menu-container" ref={menuRef}>
@@ -255,23 +253,26 @@ export default function Layout() {
           </div>
         </header>
         
-        <main style={{
-          flex: 1,
-          width: '100%',
-          maxWidth: '100%',
-          margin: '0',
-          padding: '1rem',
-        }}>
+        <main className="main-content">
           <Outlet />
         </main>
-        <footer style={{
-          textAlign: 'center',
-          color: '#a0aec0',
-          fontSize: '0.85rem',
-          padding: '1rem 0 0.5rem 0',
-        }}>
-          &copy; {new Date().getFullYear()} TransX Platform
-          {user && <span> | Logged in as {user.name}</span>}
+        
+        <footer className="app-footer">
+          <div className="footer-content">
+            <div className="footer-left">
+              <span className="footer-brand">⚡ TransX Platform</span>
+              <span className="footer-divider">|</span>
+              <span className="footer-copyright">&copy; {new Date().getFullYear()} All rights reserved</span>
+            </div>
+            <div className="footer-right">
+              {user && (
+                <span className="footer-user">
+                  Logged in as <strong>{user.name}</strong>
+                </span>
+              )}
+              <span className="footer-version">v1.0.0</span>
+            </div>
+          </div>
         </footer>
       </div>
     </div>

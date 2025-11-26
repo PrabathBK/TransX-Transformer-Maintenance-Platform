@@ -1,7 +1,9 @@
 // src/pages/Settings.tsx
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 import type { UserPreferences } from '../context/AuthContext';
+import type { Theme } from '../context/ThemeContext';
 
 interface TabConfig {
   id: string;
@@ -12,13 +14,13 @@ interface TabConfig {
 const tabs: TabConfig[] = [
   { id: 'profile', label: 'Profile', icon: '👤' },
   { id: 'preferences', label: 'Preferences', icon: '⚙️' },
-  { id: 'notifications', label: 'Notifications', icon: '🔔' },
   { id: 'security', label: 'Security', icon: '🔐' },
   { id: 'activity', label: 'Activity Log', icon: '📋' },
 ];
 
 export default function Settings() {
   const { user, updateUser, updatePreferences, logout } = useAuth();
+  const { theme: currentTheme, setTheme: applyTheme } = useTheme();
   const [activeTab, setActiveTab] = useState('profile');
   const [isSaving, setIsSaving] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
@@ -28,8 +30,8 @@ export default function Settings() {
   const [email, setEmail] = useState(user?.email || '');
   const [avatarPreview, setAvatarPreview] = useState(user?.avatar || '');
 
-  // Preferences state
-  const [theme, setTheme] = useState<'light' | 'dark' | 'system'>(user?.preferences?.theme || 'system');
+  // Preferences state - sync with actual theme
+  const [theme, setTheme] = useState<Theme>(currentTheme);
   const [language, setLanguage] = useState(user?.preferences?.language || 'en');
   const [timezone, setTimezone] = useState(user?.preferences?.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone);
 
@@ -48,7 +50,6 @@ export default function Settings() {
       setEmail(user.email);
       setAvatarPreview(user.avatar || '');
       if (user.preferences) {
-        setTheme(user.preferences.theme);
         setLanguage(user.preferences.language);
         setTimezone(user.preferences.timezone);
         setNotifications(user.preferences.notifications);
@@ -56,6 +57,17 @@ export default function Settings() {
       }
     }
   }, [user]);
+
+  // Sync local theme state with context
+  useEffect(() => {
+    setTheme(currentTheme);
+  }, [currentTheme]);
+
+  // Apply theme immediately when changed
+  const handleThemeChange = (newTheme: Theme) => {
+    setTheme(newTheme);
+    applyTheme(newTheme);
+  };
 
   const showMessage = (type: 'success' | 'error', text: string) => {
     setMessage({ type, text });
@@ -244,17 +256,34 @@ export default function Settings() {
 
             <div className="preference-group">
               <h3 className="preference-title">🎨 Appearance</h3>
+              <p className="preference-description">Choose your preferred color theme</p>
               <div className="theme-options">
-                {(['light', 'dark', 'system'] as const).map((t) => (
+                {(['light', 'dark'] as const).map((t) => (
                   <button
                     key={t}
                     className={`theme-option ${theme === t ? 'active' : ''}`}
-                    onClick={() => setTheme(t)}
+                    onClick={() => handleThemeChange(t)}
                   >
+                    <div className="theme-preview">
+                      {t === 'light' ? (
+                        <div className="theme-preview-light">
+                          <div className="preview-header"></div>
+                          <div className="preview-sidebar"></div>
+                          <div className="preview-content"></div>
+                        </div>
+                      ) : (
+                        <div className="theme-preview-dark">
+                          <div className="preview-header"></div>
+                          <div className="preview-sidebar"></div>
+                          <div className="preview-content"></div>
+                        </div>
+                      )}
+                    </div>
                     <span className="theme-icon">
-                      {t === 'light' ? '☀️' : t === 'dark' ? '🌙' : '💻'}
+                      {t === 'light' ? '☀️' : '🌙'}
                     </span>
-                    <span className="theme-label">{t.charAt(0).toUpperCase() + t.slice(1)}</span>
+                    <span className="theme-label">{t === 'light' ? 'Light Mode' : 'Dark Mode'}</span>
+                    {theme === t && <span className="theme-check">✓</span>}
                   </button>
                 ))}
               </div>
@@ -298,74 +327,6 @@ export default function Settings() {
             <div className="section-actions">
               <button className="btn-primary" onClick={handleSavePreferences} disabled={isSaving}>
                 {isSaving ? 'Saving...' : 'Save Preferences'}
-              </button>
-            </div>
-          </div>
-        );
-
-      case 'notifications':
-        return (
-          <div className="settings-section">
-            <h2 className="section-title">Notification Settings</h2>
-            <p className="section-description">Manage how you receive notifications</p>
-
-            <div className="notification-options">
-              <div className="notification-item">
-                <div className="notification-info">
-                  <h4>Push Notifications</h4>
-                  <p>Receive notifications in the browser</p>
-                </div>
-                <label className="toggle-switch">
-                  <input
-                    type="checkbox"
-                    checked={notifications}
-                    onChange={(e) => setNotifications(e.target.checked)}
-                  />
-                  <span className="toggle-slider"></span>
-                </label>
-              </div>
-
-              <div className="notification-item">
-                <div className="notification-info">
-                  <h4>Email Notifications</h4>
-                  <p>Receive updates via email</p>
-                </div>
-                <label className="toggle-switch">
-                  <input
-                    type="checkbox"
-                    checked={emailNotifications}
-                    onChange={(e) => setEmailNotifications(e.target.checked)}
-                  />
-                  <span className="toggle-slider"></span>
-                </label>
-              </div>
-
-              <div className="notification-item">
-                <div className="notification-info">
-                  <h4>Inspection Alerts</h4>
-                  <p>Get notified when inspections are due</p>
-                </div>
-                <label className="toggle-switch">
-                  <input type="checkbox" defaultChecked />
-                  <span className="toggle-slider"></span>
-                </label>
-              </div>
-
-              <div className="notification-item">
-                <div className="notification-info">
-                  <h4>Anomaly Detection Alerts</h4>
-                  <p>Get notified when anomalies are detected</p>
-                </div>
-                <label className="toggle-switch">
-                  <input type="checkbox" defaultChecked />
-                  <span className="toggle-slider"></span>
-                </label>
-              </div>
-            </div>
-
-            <div className="section-actions">
-              <button className="btn-primary" onClick={handleSavePreferences} disabled={isSaving}>
-                {isSaving ? 'Saving...' : 'Save Notification Settings'}
               </button>
             </div>
           </div>

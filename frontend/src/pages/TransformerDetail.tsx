@@ -323,11 +323,10 @@ export default function TransformerDetail() {
       {loadErr && <div style={{ color:'#b00020', marginBottom: 12 }}>Error: {loadErr}</div>}
 
       {/* Basics (all fields) */}
-      <div style={{
+      <div className="detail-card" style={{
         display:'grid',
         gridTemplateColumns:'1fr 1fr 1fr',
-        gap: 12, background:'#fff', border:'1px solid #eee',
-        borderRadius:12, padding:16, marginBottom:16
+        gap: 12
       }}>
         <Input label="Transformer Code" value={code} onChange={e=>setCode(e.target.value)} placeholder="TX-001" />
         <Input label="Location" value={location} onChange={e=>setLocation(e.target.value)} placeholder="Substation A" />
@@ -357,12 +356,13 @@ export default function TransformerDetail() {
         />
 
         <div style={{ gridColumn:'1 / -1' }}>
-          <label style={{ display:'block', fontWeight:600, marginBottom:6 }}>Location Details</label>
+          <label style={{ display:'block', fontWeight:600, marginBottom:6, color: 'var(--text-primary)' }}>Location Details</label>
           <textarea
             value={locationDetails}
             onChange={e=>setLocationDetails(e.target.value)}
             placeholder="Notes / directions"
-            style={{ width:'100%', minHeight: 80, padding:8, borderRadius:6, border:'1px solid #ccc', resize:'vertical' }}
+            className="comment-input"
+            style={{ width:'100%', minHeight: 80, padding:8, borderRadius:6, resize:'vertical' }}
           />
         </div>
 
@@ -409,16 +409,14 @@ export default function TransformerDetail() {
       {t && (
         <div>
           {/* Compact Upload Bar */}
-          <div style={{ 
-            background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)', 
-            border: '1px solid rgba(148, 163, 184, 0.3)', 
+          <div className="upload-section" style={{ 
             borderRadius: 8, 
             padding: 12,
             marginBottom: 24,
-            boxShadow: '0 2px 8px rgba(30, 64, 175, 0.05)'
+            boxShadow: 'var(--shadow-sm)'
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
-              <span style={{ fontWeight: '600', color: '#374151', fontSize: '16px', whiteSpace: 'nowrap' }}>
+              <span className="upload-section-label" style={{ whiteSpace: 'nowrap' }}>
                 📤 Upload Image:
               </span>
               
@@ -429,9 +427,10 @@ export default function TransformerDetail() {
                   minWidth: '120px',
                   padding: '8px 12px', 
                   borderRadius: '6px', 
-                  border: '1px solid #ccc',
+                  border: '1px solid var(--border-light)',
                   fontSize: '14px',
-                  background: '#fff'
+                  background: 'var(--bg-input)',
+                  color: 'var(--text-primary)'
                 }}
               >
                 <option value="BASELINE">Baseline</option>
@@ -446,9 +445,10 @@ export default function TransformerDetail() {
                     minWidth: '120px',
                     padding: '8px 12px', 
                     borderRadius: '6px', 
-                    border: '1px solid #ccc',
+                    border: '1px solid var(--border-light)',
                     fontSize: '14px',
-                    background: '#fff'
+                    background: 'var(--bg-input)',
+                    color: 'var(--text-primary)'
                   }}
                 >
                   <option value=" ">Select weather...</option>
@@ -467,9 +467,10 @@ export default function TransformerDetail() {
                   minWidth: '120px',
                   padding: '8px 12px', 
                   borderRadius: '6px', 
-                  border: '1px solid #ccc',
+                  border: '1px solid var(--border-light)',
                   fontSize: '14px',
-                  background: '#fff'
+                  background: 'var(--bg-input)',
+                  color: 'var(--text-primary)'
                 }}
               />
               
@@ -481,9 +482,10 @@ export default function TransformerDetail() {
                   minWidth: '180px',
                   fontSize: '13px',
                   padding: '6px 8px',
-                  border: '1px solid #ccc',
+                  border: '1px solid var(--border-light)',
                   borderRadius: '6px',
-                  background: '#fff'
+                  background: 'var(--bg-input)',
+                  color: 'var(--text-primary)'
                 }}
               />
                 
@@ -519,16 +521,14 @@ export default function TransformerDetail() {
           </div>
 
           {/* Inspections section */}
-          <div style={{ 
-            background: 'linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)', 
-            border: '1px solid rgba(124, 58, 237, 0.1)', 
+          <div className="detail-section" style={{ 
             borderRadius: 16, 
             padding: 24,
             marginTop: 24,
-            boxShadow: '0 4px 20px rgba(30, 64, 175, 0.08)'
+            boxShadow: 'var(--shadow-md)'
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-              <h3 style={{ margin: 0, fontFamily: 'Montserrat', color: '#1e40af', display: 'flex', alignItems: 'center', gap: 8 }}>
+              <h3 className="section-header" style={{ margin: 0 }}>
                 📋 Inspections for this Transformer
               </h3>
               <button 
@@ -560,25 +560,23 @@ export default function TransformerDetail() {
             
             {inspectionsError && <div style={{ color:'#b00020', marginBottom: 16 }}>Error: {inspectionsError}</div>}
             {inspectionsLoading && <div>Loading inspections…</div>}
-            {!inspectionsLoading && inspections.length === 0 && <div style={{ color:'#666' }}>No inspections yet. Create one to get started.</div>}
+            {!inspectionsLoading && inspections.length === 0 && <div style={{ color:'var(--text-secondary)' }}>No inspections yet. Create one to get started.</div>}
             {!inspectionsLoading && inspections.length > 0 && (
               <div style={{ display: 'grid', gap: 12 }}>
                 {inspections.map(inspection => (
-                  <div key={inspection.id} style={{ 
-                    border: '1px solid #e5e7eb', 
+                  <div key={inspection.id} className="inspection-item" style={{ 
                     borderRadius: 8, 
                     padding: 16,
-                    background: '#ffffff',
                     display: 'grid',
                     gridTemplateColumns: '1fr auto auto',
                     alignItems: 'center',
                     gap: 16
                   }}>
                     <div>
-                      <div style={{ fontWeight: 'bold', color: '#1f2937', marginBottom: 4 }}>
+                      <div className="inspection-item-title" style={{ marginBottom: 4 }}>
                         {inspection.inspectionNumber}
                       </div>
-                      <div style={{ fontSize: '14px', color: '#6b7280', display: 'flex', gap: 16 }}>
+                      <div className="inspection-item-meta" style={{ fontSize: '14px', display: 'flex', gap: 16 }}>
                         <span>Status: <span style={{ 
                           color: inspection.status === 'COMPLETED' ? '#10b981' : 
                                 inspection.status === 'IN_PROGRESS' ? '#f59e0b' : '#6b7280',
@@ -632,10 +630,10 @@ export default function TransformerDetail() {
       {/* Create Inspection Modal */}
       <Modal open={showCreateModal} onClose={() => { setShowCreateModal(false); resetInspectionForm(); }}>
         <div style={{ padding: 24, maxWidth: 500 }}>
-          <h2 style={{ marginTop: 0, marginBottom: 20, color: '#1f2937' }}>Create New Inspection</h2>
+          <h2 style={{ marginTop: 0, marginBottom: 20, color: 'var(--text-heading)' }}>Create New Inspection</h2>
           
           {createInspectionErr && (
-            <div style={{ color: '#b00020', marginBottom: 16, padding: 12, background: '#fef2f2', borderRadius: 6 }}>
+            <div style={{ color: '#ef4444', marginBottom: 16, padding: 12, background: 'rgba(239, 68, 68, 0.1)', borderRadius: 6, border: '1px solid rgba(239, 68, 68, 0.3)' }}>
               {createInspectionErr}
             </div>
           )}
@@ -689,9 +687,9 @@ export default function TransformerDetail() {
                 style={{ 
                   borderRadius: 6, 
                   padding: '8px 16px',
-                  background: '#f3f4f6',
-                  color: '#374151',
-                  border: '1px solid #d1d5db',
+                  background: 'var(--bg-tertiary)',
+                  color: 'var(--text-primary)',
+                  border: '1px solid var(--border-light)',
                   cursor: 'pointer',
                   fontWeight: '500'
                 }}
@@ -724,15 +722,15 @@ export default function TransformerDetail() {
 
 function ImageBox({ title, img }: { title: string; img: ThermalImage | null }) {
   return (
-    <div style={{ background:'#fff', border:'1px solid #eee', borderRadius:12, padding:12 }}>
-      <div style={{ display:'flex', justifyContent:'space-between', marginBottom:8 }}>
-        <div style={{ fontWeight:600 }}>{title}</div>
-        {img && <div style={{ fontSize:12, color:'#666' }}>{new Date(img.uploadedAt).toLocaleString()}</div>}
+    <div className="image-box" style={{ borderRadius:12, padding:12 }}>
+      <div className="image-box-header" style={{ display:'flex', justifyContent:'space-between', marginBottom:8 }}>
+        <div className="image-box-title">{title}</div>
+        {img && <div className="image-box-timestamp">{new Date(img.uploadedAt).toLocaleString()}</div>}
       </div>
-      <div style={{ height:320, display:'flex', alignItems:'center', justifyContent:'center', background:'#0a0f3b', borderRadius:8 }}>
+      <div className="image-box-content" style={{ height:320, display:'flex', alignItems:'center', justifyContent:'center', borderRadius:8 }}>
         {img
           ? <img src={img.publicUrl} alt={img.originalFilename} style={{ maxHeight:'100%', maxWidth:'100%', objectFit:'contain' }} />
-          : <div style={{ color:'#cbd5ff' }}>No image</div>}
+          : <div className="image-box-placeholder">No image</div>}
       </div>
     </div>
   );

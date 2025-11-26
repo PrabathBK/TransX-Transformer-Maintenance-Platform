@@ -1,21 +1,32 @@
 // src/pages/Login.tsx
 import { useState, useEffect, useRef } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../components/Toast';
 
 // Google OAuth Client ID
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
 
 export default function Login() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { login, loginWithGoogle } = useAuth();
+  const toast = useToast();
   const googleButtonRef = useRef<HTMLDivElement>(null);
   
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+
+  // Check for session expiration
+  useEffect(() => {
+    if (searchParams.get('expired') === 'true') {
+      toast.warning('Session Expired', 'Your session has expired due to inactivity. Please sign in again.');
+    }
+  }, [searchParams, toast]);
 
   // Load Google Sign-In script and render button
   useEffect(() => {
@@ -38,7 +49,7 @@ export default function Login() {
           size: 'large',
           text: 'continue_with',
           shape: 'rectangular',
-          width: '100%',
+          width: 300, // Fixed width in pixels to avoid GSI warning
         });
       }
     };
@@ -67,9 +78,12 @@ export default function Login() {
     setError(null);
     try {
       await loginWithGoogle(response.credential);
+      toast.success('Welcome!', 'Successfully signed in with Google');
       navigate('/');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Google login failed');
+      const msg = err instanceof Error ? err.message : 'Google login failed';
+      setError(msg);
+      toast.error('Login Failed', msg);
     } finally {
       setIsLoading(false);
     }
@@ -81,10 +95,13 @@ export default function Login() {
     setIsLoading(true);
 
     try {
-      await login(email, password);
+      await login(email, password, rememberMe);
+      toast.success('Welcome back!', rememberMe ? 'You will stay signed in for 30 days' : 'Successfully signed in');
       navigate('/');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Login failed. Please try again.');
+      const errorMessage = err instanceof Error ? err.message : 'Login failed. Please try again.';
+      setError(errorMessage);
+      toast.error('Login Failed', errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -157,8 +174,13 @@ export default function Login() {
 
           <div className="form-options">
             <label className="checkbox-label">
-              <input type="checkbox" className="checkbox-input" />
-              <span>Remember me</span>
+              <input 
+                type="checkbox" 
+                className="checkbox-input" 
+                checked={rememberMe}
+                onChange={(e) => setRememberMe(e.target.checked)}
+              />
+              <span>Remember me for 30 days</span>
             </label>
             <Link to="/forgot-password" className="forgot-link">
               Forgot password?

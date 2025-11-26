@@ -1,6 +1,13 @@
 // src/context/AuthContext.tsx
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import type { ReactNode } from 'react';
+import { 
+  setCookie, 
+  getCookie, 
+  deleteCookie, 
+  COOKIE_NAMES, 
+  SESSION_DURATION 
+} from '../utils/cookies';
 
 export interface User {
   id: string;
@@ -26,33 +33,141 @@ interface AuthContextType {
   user: User | null;
   isLoading: boolean;
   isAuthenticated: boolean;
-  login: (email: string, password: string) => Promise<void>;
+  login: (email: string, password: string, rememberMe?: boolean) => Promise<void>;
   loginWithGoogle: (credential: string) => Promise<void>;
   signup: (name: string, email: string, password: string) => Promise<void>;
   logout: () => void;
   updateUser: (updates: Partial<User>) => Promise<void>;
   updatePreferences: (preferences: Partial<UserPreferences>) => Promise<void>;
   refreshUser: () => Promise<void>;
+  updateLastActivity: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
 const API_BASE = (import.meta.env.VITE_API_BASE as string) || 'http://localhost:8080';
 
-// Helper to get stored token
+// Helper to get stored token (checks both cookie and localStorage for migration)
 const getStoredToken = (): string | null => {
-  return localStorage.getItem('transx_token');
+  // First check cookies (preferred)
+  const cookieToken = getCookie(COOKIE_NAMES.AUTH_TOKEN);
+  if (cookieToken) return cookieToken;
+  
+  // Fallback to localStorage for backward compatibility
+  const localToken = localStorage.getItem('transx_token');
+  if (localToken) {
+    // Migrate to cookie
+    setCookie(COOKIE_NAMES.AUTH_TOKEN, localToken, { expires: SESSION_DURATION.DEFAULT });
+    localStorage.removeItem('transx_token');
+    return localToken;
+  }
+  
+  return null;
 };
 
 // Helper to get stored user
 const getStoredUser = (): User | null => {
-  const stored = localStorage.getItem('transx_user');
-  return stored ? JSON.parse(stored) : null;
+  // First check cookies
+  const cookieUser = getCookie(COOKIE_NAMES.USER_DATA);
+  if (cookieUser) {
+    try {
+      return JSON.parse(cookieUser);
+    } catch {
+      return null;
+    }
+  }
+  
+  // Fallback to localStorage
+  const localUser = localStorage.getItem('transx_user');
+  if (localUser) {
+    try {
+      const user = JSON.parse(localUser);
+      // Migrate to cookie
+      setCookie(COOKIE_NAMES.USER_DATA, localUser, { expires: SESSION_DURATION.DEFAULT });
+      localStorage.removeItem('transx_user');
+      return user;
+    } catch {
+      return null;
+    }
+  }
+  
+  return null;
+};
+
+// Store auth data in cookies
+const storeAuthData = (token: string, user: User, rememberMe: boolean = false) => {
+  const duration = rememberMe ? SESSION_DURATION.REMEMBER_ME : SESSION_DURATION.DEFAULT;
+  
+  setCookie(COOKIE_NAMES.AUTH_TOKEN, token, { expires: duration });
+  setCookie(COOKIE_NAMES.USER_DATA, JSON.stringify(user), { expires: duration });
+  
+  if (rememberMe) {
+    setCookie(COOKIE_NAMES.REMEMBER_ME, 'true', { expires: SESSION_DURATION.REMEMBER_ME });
+  }
+  
+  // Update last activity
+  setCookie(COOKIE_NAMES.LAST_ACTIVITY, Date.now().toString(), { expires: duration });
+};
+
+// Clear all auth data
+const clearAuthData = () => {
+  deleteCookie(COOKIE_NAMES.AUTH_TOKEN);
+  deleteCookie(COOKIE_NAMES.USER_DATA);
+  deleteCookie(COOKIE_NAMES.SESSION_ID);
+  deleteCookie(COOKIE_NAMES.REMEMBER_ME);
+  deleteCookie(COOKIE_NAMES.LAST_ACTIVITY);
+  
+  // Also clear localStorage for complete cleanup
+  localStorage.removeItem('transx_token');
+  localStorage.removeItem('transx_user');
 };
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(getStoredUser);
   const [isLoading, setIsLoading] = useState(true);
+
+  // Update last activity timestamp
+  const updateLastActivity = useCallback(() => {
+    const rememberMe = getCookie(COOKIE_NAMES.REMEMBER_ME) === 'true';
+    const duration = rememberMe ? SESSION_DURATION.REMEMBER_ME : SESSION_DURATION.DEFAULT;
+    setCookie(COOKIE_NAMES.LAST_ACTIVITY, Date.now().toString(), { expires: duration });
+  }, []);
+
+  // Check for session timeout (30 min of inactivity for non-remember-me sessions)
+  useEffect(() => {
+    const checkSession = () => {
+      const lastActivity = getCookie(COOKIE_NAMES.LAST_ACTIVITY);
+      const rememberMe = getCookie(COOKIE_NAMES.REMEMBER_ME) === 'true';
+      
+      if (lastActivity && !rememberMe) {
+        const inactiveTime = Date.now() - parseInt(lastActivity, 10);
+        const thirtyMinutes = 30 * 60 * 1000;
+        
+        if (inactiveTime > thirtyMinutes && user) {
+          console.log('Session expired due to inactivity');
+          clearAuthData();
+          setUser(null);
+          window.location.href = '/login?expired=true';
+        }
+      }
+    };
+
+    // Check every minute
+    const interval = setInterval(checkSession, 60 * 1000);
+    
+    // Update activity on user interaction
+    const handleActivity = () => updateLastActivity();
+    window.addEventListener('click', handleActivity);
+    window.addEventListener('keypress', handleActivity);
+    window.addEventListener('scroll', handleActivity);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('click', handleActivity);
+      window.removeEventListener('keypress', handleActivity);
+      window.removeEventListener('scroll', handleActivity);
+    };
+  }, [user, updateLastActivity]);
 
   // Validate token on mount
   useEffect(() => {
@@ -73,16 +188,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (res.ok) {
           const userData = await res.json();
           setUser(userData);
-          localStorage.setItem('transx_user', JSON.stringify(userData));
+          
+          // Refresh cookie expiration
+          const rememberMe = getCookie(COOKIE_NAMES.REMEMBER_ME) === 'true';
+          storeAuthData(token, userData, rememberMe);
         } else {
-          // Token invalid, clear storage
-          localStorage.removeItem('transx_token');
-          localStorage.removeItem('transx_user');
+          // Token invalid or expired - silently clear and redirect to login
+          // This is expected when token expires or user session is invalid
+          clearAuthData();
           setUser(null);
         }
       } catch (error) {
-        console.error('Session validation error:', error);
-        // Keep existing user data on network error
+        // Network error - keep existing user data to allow offline-first behavior
+        // User will need to re-authenticate when network is restored if token is invalid
+        console.warn('Session validation network error - keeping cached session');
       } finally {
         setIsLoading(false);
       }
@@ -91,7 +210,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     validateSession();
   }, []);
 
-  const login = useCallback(async (email: string, password: string) => {
+  const login = useCallback(async (email: string, password: string, rememberMe: boolean = false) => {
     const res = await fetch(`${API_BASE}/api/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -99,13 +218,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
 
     if (!res.ok) {
-      const error = await res.text();
-      throw new Error(error || 'Login failed');
+      const data = await res.json().catch(() => ({}));
+      throw new Error(data.error || 'Login failed');
     }
 
     const { token, user: userData } = await res.json();
-    localStorage.setItem('transx_token', token);
-    localStorage.setItem('transx_user', JSON.stringify(userData));
+    storeAuthData(token, userData, rememberMe);
     setUser(userData);
   }, []);
 
@@ -117,13 +235,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
 
     if (!res.ok) {
-      const error = await res.text();
-      throw new Error(error || 'Google login failed');
+      const data = await res.json().catch(() => ({}));
+      throw new Error(data.error || 'Google login failed');
     }
 
     const { token, user: userData } = await res.json();
-    localStorage.setItem('transx_token', token);
-    localStorage.setItem('transx_user', JSON.stringify(userData));
+    storeAuthData(token, userData, true); // Google login always remembers
     setUser(userData);
   }, []);
 
@@ -135,19 +252,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
 
     if (!res.ok) {
-      const error = await res.text();
-      throw new Error(error || 'Signup failed');
+      const data = await res.json().catch(() => ({}));
+      throw new Error(data.error || 'Signup failed');
     }
 
     const { token, user: userData } = await res.json();
-    localStorage.setItem('transx_token', token);
-    localStorage.setItem('transx_user', JSON.stringify(userData));
+    storeAuthData(token, userData, false);
     setUser(userData);
   }, []);
 
   const logout = useCallback(() => {
-    localStorage.removeItem('transx_token');
-    localStorage.removeItem('transx_user');
+    clearAuthData();
     setUser(null);
     window.location.href = '/login';
   }, []);
@@ -166,12 +281,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
 
     if (!res.ok) {
-      const error = await res.text();
-      throw new Error(error || 'Failed to update profile');
+      const data = await res.json().catch(() => ({}));
+      throw new Error(data.error || 'Failed to update profile');
     }
 
     const updatedUser = await res.json();
-    localStorage.setItem('transx_user', JSON.stringify(updatedUser));
+    const rememberMe = getCookie(COOKIE_NAMES.REMEMBER_ME) === 'true';
+    storeAuthData(token, updatedUser, rememberMe);
     setUser(updatedUser);
   }, [user]);
 
@@ -189,13 +305,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
 
     if (!res.ok) {
-      const error = await res.text();
-      throw new Error(error || 'Failed to update preferences');
+      const data = await res.json().catch(() => ({}));
+      throw new Error(data.error || 'Failed to update preferences');
     }
 
     const updatedUser = await res.json();
-    localStorage.setItem('transx_user', JSON.stringify(updatedUser));
+    const rememberMe = getCookie(COOKIE_NAMES.REMEMBER_ME) === 'true';
+    storeAuthData(token, updatedUser, rememberMe);
     setUser(updatedUser);
+    
+    // Also store theme preference separately for quick access
+    if (preferences.theme) {
+      setCookie(COOKIE_NAMES.THEME, preferences.theme, { expires: SESSION_DURATION.PREFERENCES });
+    }
   }, [user]);
 
   const refreshUser = useCallback(async () => {
@@ -210,7 +332,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     if (res.ok) {
       const userData = await res.json();
-      localStorage.setItem('transx_user', JSON.stringify(userData));
+      const rememberMe = getCookie(COOKIE_NAMES.REMEMBER_ME) === 'true';
+      storeAuthData(token, userData, rememberMe);
       setUser(userData);
     }
   }, []);
@@ -228,6 +351,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         updateUser,
         updatePreferences,
         refreshUser,
+        updateLastActivity,
       }}
     >
       {children}
@@ -259,4 +383,13 @@ export function getCurrentUserId(): string | null {
 export function getCurrentUserName(): string {
   const user = getStoredUser();
   return user?.name || 'Unknown User';
+}
+
+// Helper to get stored theme preference
+export function getStoredTheme(): 'light' | 'dark' | 'system' {
+  const theme = getCookie(COOKIE_NAMES.THEME);
+  if (theme === 'light' || theme === 'dark' || theme === 'system') {
+    return theme;
+  }
+  return 'system';
 }

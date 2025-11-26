@@ -181,12 +181,27 @@ export default function AnnotationCanvas({
     }
   }, [onCaptureReady, captureCanvas, image]);
 
-  // Expose zoom functions to parent component
+  // Expose zoom functions to parent component - use ref to prevent infinite loops
+  const zoomFunctionsRef = useRef({ zoomIn, zoomOut, resetView });
+  
+  // Update ref when functions change
   useEffect(() => {
-    if (onZoomChange) {
-      onZoomChange(zoomIn, zoomOut, resetView);
+    zoomFunctionsRef.current = { zoomIn, zoomOut, resetView };
+  }, [zoomIn, zoomOut, resetView]);
+  
+  // Only call onZoomChange once on mount
+  const hasCalledZoomChange = useRef(false);
+  useEffect(() => {
+    if (onZoomChange && !hasCalledZoomChange.current) {
+      hasCalledZoomChange.current = true;
+      // Wrap functions to always use latest from ref
+      onZoomChange(
+        () => zoomFunctionsRef.current.zoomIn(),
+        () => zoomFunctionsRef.current.zoomOut(),
+        () => zoomFunctionsRef.current.resetView()
+      );
     }
-  }, [onZoomChange, zoomIn, zoomOut, resetView]);
+  }, [onZoomChange]);
 
   const handleMouseDown = (e: any) => {
     if (mode !== 'draw') return;

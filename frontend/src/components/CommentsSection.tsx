@@ -90,22 +90,15 @@ export default function CommentsSection({ inspectionId }: CommentsSectionProps) 
   };
 
   return (
-    <div style={{
-      background: 'white',
+    <div className="comments-section" style={{
       borderRadius: '12px',
-      boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+      boxShadow: 'var(--shadow-sm)',
       padding: '20px',
-      marginTop: '24px',
-      border: '1px solid #e5e7eb'
+      marginTop: '24px'
     }}>
-      <h3 style={{ 
+      <h3 className="comments-header" style={{ 
         margin: '0 0 20px 0', 
-        fontSize: '18px', 
-        fontWeight: '600', 
-        color: '#374151',
-        display: 'flex',
-        alignItems: 'center',
-        gap: '8px'
+        fontSize: '18px'
       }}>
         💬 Comments ({comments.length})
       </h3>
@@ -121,10 +114,12 @@ export default function CommentsSection({ inspectionId }: CommentsSectionProps) 
             style={{
               width: '200px',
               padding: '8px 12px',
-              border: '1px solid #d1d5db',
+              border: '1px solid var(--border-light)',
               borderRadius: '6px',
               fontSize: '14px',
-              marginBottom: '8px'
+              marginBottom: '8px',
+              background: 'var(--bg-input)',
+              color: 'var(--text-primary)'
             }}
           />
         </div>
@@ -133,10 +128,10 @@ export default function CommentsSection({ inspectionId }: CommentsSectionProps) 
           value={newComment}
           onChange={(e) => setNewComment(e.target.value)}
           rows={3}
+          className="comment-input"
           style={{
             width: '100%',
             padding: '12px',
-            border: '1px solid #d1d5db',
             borderRadius: '6px',
             fontSize: '14px',
             lineHeight: '1.5',
@@ -148,7 +143,7 @@ export default function CommentsSection({ inspectionId }: CommentsSectionProps) 
         {submitError && (
           <div style={{ 
             marginTop: '8px', 
-            color: '#dc2626', 
+            color: '#ef4444', 
             fontSize: '13px',
             display: 'flex',
             alignItems: 'center',
@@ -186,7 +181,7 @@ export default function CommentsSection({ inspectionId }: CommentsSectionProps) 
         {loading && (
           <div style={{ 
             textAlign: 'center', 
-            color: '#6b7280', 
+            color: 'var(--text-secondary)', 
             fontSize: '14px',
             padding: '20px'
           }}>
@@ -196,11 +191,11 @@ export default function CommentsSection({ inspectionId }: CommentsSectionProps) 
         
         {loadError && (
           <div style={{ 
-            color: '#dc2626', 
+            color: '#ef4444', 
             fontSize: '14px',
             padding: '12px',
-            background: '#fef2f2',
-            border: '1px solid #fecaca',
+            background: 'rgba(239, 68, 68, 0.1)',
+            border: '1px solid rgba(239, 68, 68, 0.3)',
             borderRadius: '6px'
           }}>
             ❌ {loadError}
@@ -208,12 +203,10 @@ export default function CommentsSection({ inspectionId }: CommentsSectionProps) 
         )}
         
         {!loading && !loadError && comments.length === 0 && (
-          <div style={{ 
+          <div className="no-comments" style={{ 
             textAlign: 'center', 
-            color: '#6b7280', 
             fontSize: '14px',
-            padding: '40px 20px',
-            fontStyle: 'italic'
+            padding: '40px 20px'
           }}>
             No comments yet. Be the first to add a comment!
           </div>
@@ -223,11 +216,11 @@ export default function CommentsSection({ inspectionId }: CommentsSectionProps) 
           <div
             key={comment.id}
             style={{
-              border: '1px solid #e5e7eb',
+              border: '1px solid var(--border-light)',
               borderRadius: '8px',
               padding: '16px',
               marginBottom: '12px',
-              background: '#f9fafb'
+              background: 'var(--bg-tertiary)'
             }}
           >
             <div style={{
@@ -243,27 +236,27 @@ export default function CommentsSection({ inspectionId }: CommentsSectionProps) 
               }}>
                 <span style={{
                   fontWeight: '600',
-                  color: '#1f2937',
+                  color: 'var(--text-primary)',
                   fontSize: '14px'
                 }}>
                   👤 {comment.author}
                 </span>
                 <span style={{
-                  color: '#6b7280',
+                  color: 'var(--text-secondary)',
                   fontSize: '12px'
                 }}>
                   {getTimeAgo(comment.createdAt)}
                 </span>
               </div>
               <span style={{
-                color: '#9ca3af',
+                color: 'var(--text-tertiary)',
                 fontSize: '11px'
               }}>
                 {formatDateTime(comment.createdAt)}
               </span>
             </div>
             <div style={{
-              color: '#374151',
+              color: 'var(--text-primary)',
               fontSize: '14px',
               lineHeight: '1.5',
               whiteSpace: 'pre-wrap'

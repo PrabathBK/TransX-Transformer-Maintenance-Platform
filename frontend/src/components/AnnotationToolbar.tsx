@@ -30,21 +30,21 @@ export default function AnnotationToolbar({
   isDetecting = false,
 }: AnnotationToolbarProps) {
   return (
-    <div style={{
+    <div className="canvas-toolbar" style={{
       display: 'flex',
       flexDirection: 'column',
       gap: '16px',
       padding: '20px',
-      background: '#ffffff',
+      background: 'var(--bg-secondary)',
       borderRadius: '12px',
-      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
+      boxShadow: 'var(--shadow-sm)',
       marginBottom: '16px',
-      border: '1px solid #e5e7eb'
+      border: '1px solid var(--border-light)'
     }}>
       {/* Top Row: Mode Controls and AI Detection */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <span style={{ fontSize: '14px', fontWeight: '600', color: '#374151', marginRight: '8px' }}>
+          <span style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-primary)', marginRight: '8px' }}>
             Mode:
           </span>
           <div style={{ display: 'flex', gap: '6px' }}>
@@ -102,7 +102,7 @@ export default function AnnotationToolbar({
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
         {mode === 'draw' && (
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <span style={{ fontSize: '14px', fontWeight: '600', color: '#374151' }}>
+            <span style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-primary)' }}>
               Fault Type:
             </span>
             <select
@@ -111,9 +111,9 @@ export default function AnnotationToolbar({
               style={{
                 padding: '8px 12px',
                 borderRadius: '6px',
-                border: '1px solid #d1d5db',
-                background: 'white',
-                color: '#374151',
+                border: '1px solid var(--border-light)',
+                background: 'var(--bg-input)',
+                color: 'var(--text-primary)',
                 fontSize: '14px',
                 cursor: 'pointer',
                 minWidth: '150px'
@@ -130,7 +130,7 @@ export default function AnnotationToolbar({
 
         {/* Zoom Controls */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginLeft: mode === 'draw' ? '0' : 'auto' }}>
-          <span style={{ fontSize: '14px', fontWeight: '600', color: '#374151' }}>
+          <span style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-primary)' }}>
             Zoom:
           </span>
           <div style={{ display: 'flex', gap: '6px' }}>
@@ -158,9 +158,9 @@ function ToolButton({ active = false, onClick, icon, label }: ToolButtonProps) {
       style={{
         padding: '8px 12px',
         borderRadius: '6px',
-        border: active ? '2px solid #3b82f6' : '1px solid #d1d5db',
-        background: active ? '#eff6ff' : 'white',
-        color: active ? '#1d4ed8' : '#374151',
+        border: active ? '2px solid var(--primary)' : '1px solid var(--border-light)',
+        background: active ? 'var(--primary-light-bg)' : 'var(--bg-tertiary)',
+        color: active ? 'var(--primary)' : 'var(--text-primary)',
         fontSize: '14px',
         fontWeight: active ? '600' : '500',
         cursor: 'pointer',

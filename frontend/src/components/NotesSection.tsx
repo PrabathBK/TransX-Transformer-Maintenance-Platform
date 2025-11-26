@@ -45,16 +45,14 @@ export default function NotesSection({ inspectionId, initialNotes, onNotesUpdate
   };
 
   return (
-    <div style={{
-      background: 'white',
+    <div className="notes-section" style={{
       borderRadius: '12px',
-      boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+      boxShadow: 'var(--shadow-sm)',
       padding: '20px',
-      marginTop: '16px',
-      border: '1px solid #e5e7eb'
+      marginTop: '16px'
     }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
-        <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '600', color: '#374151' }}>
+      <div className="notes-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+        <h3 className="notes-title" style={{ margin: 0, fontSize: '16px' }}>
           📝 Notes
         </h3>
         {!isEditing && (
@@ -63,9 +61,9 @@ export default function NotesSection({ inspectionId, initialNotes, onNotesUpdate
             style={{
               padding: '6px 12px',
               borderRadius: '6px',
-              border: '1px solid #d1d5db',
-              background: 'white',
-              color: '#374151',
+              border: '1px solid var(--border-light)',
+              background: 'var(--bg-tertiary)',
+              color: 'var(--text-primary)',
               fontSize: '13px',
               fontWeight: '500',
               cursor: 'pointer',
@@ -86,11 +84,11 @@ export default function NotesSection({ inspectionId, initialNotes, onNotesUpdate
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
             placeholder="Add inspection notes..."
+            className="comment-input"
             style={{
               width: '100%',
               minHeight: '100px',
               padding: '12px',
-              border: '1px solid #d1d5db',
               borderRadius: '6px',
               fontSize: '14px',
               lineHeight: '1.5',
@@ -102,7 +100,7 @@ export default function NotesSection({ inspectionId, initialNotes, onNotesUpdate
           {saveError && (
             <div style={{ 
               marginTop: '8px', 
-              color: '#dc2626', 
+              color: '#ef4444', 
               fontSize: '13px',
               display: 'flex',
               alignItems: 'center',
@@ -124,9 +122,9 @@ export default function NotesSection({ inspectionId, initialNotes, onNotesUpdate
               style={{
                 padding: '8px 16px',
                 borderRadius: '6px',
-                border: '1px solid #d1d5db',
-                background: 'white',
-                color: '#374151',
+                border: '1px solid var(--border-light)',
+                background: 'var(--bg-tertiary)',
+                color: 'var(--text-primary)',
                 fontSize: '14px',
                 fontWeight: '500',
                 cursor: isSaving ? 'not-allowed' : 'pointer'
@@ -160,7 +158,7 @@ export default function NotesSection({ inspectionId, initialNotes, onNotesUpdate
           {saveSuccess && (
             <div style={{ 
               marginBottom: '12px', 
-              color: '#059669', 
+              color: '#10b981', 
               fontSize: '13px',
               display: 'flex',
               alignItems: 'center',
@@ -170,15 +168,14 @@ export default function NotesSection({ inspectionId, initialNotes, onNotesUpdate
             </div>
           )}
           
-          <div style={{ 
+          <div className="notes-content" style={{ 
             fontSize: '14px', 
-            color: notes ? '#374151' : '#9ca3af', 
             lineHeight: '1.6',
             whiteSpace: 'pre-wrap',
             minHeight: '40px',
             padding: '8px 0'
           }}>
-            {notes || 'No notes added yet. Click "Edit" to add inspection notes.'}
+            {notes || <span className="notes-empty">No notes added yet. Click "Edit" to add inspection notes.</span>}
           </div>
         </div>
       )}

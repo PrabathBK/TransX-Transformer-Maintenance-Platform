@@ -8,6 +8,7 @@ import NotesSection from '../components/NotesSection';
 import CommentsSection from '../components/CommentsSection';
 import FileDrop from '../components/FileDrop';
 import InspectionHistoryList from '../components/InspectionHistoryList';
+import { useToast } from '../components/Toast';
 import {
   getInspection,
   detectAnomalies,
@@ -25,6 +26,7 @@ import type { Annotation } from '../api/annotations';
 export default function InspectionDetailNew() {
   const { id } = useParams();
   const nav = useNavigate();
+  const toast = useToast();
 
   const [inspection, setInspection] = useState<Inspection | null>(null);
   const [annotations, setAnnotations] = useState<Annotation[]>([]);
@@ -166,9 +168,9 @@ export default function InspectionDetailNew() {
         await loadBaselineImage(updatedInspection.transformerId, updatedInspection.weatherCondition);
       }
       
-      alert(`✅ Detection complete! Found ${result.detections?.length || 0} anomalies with threshold ${threshold}%.`);
+      toast.success('Detection Complete!', `Found ${result.detections?.length || 0} anomalies with threshold ${threshold}%`);
     } catch (e: any) {
-      alert('❌ Detection failed: ' + (e?.message || 'Unknown error'));
+      toast.error('Detection Failed', e?.message || 'Unknown error');
     } finally {
       setIsDetecting(false);
     }
@@ -209,9 +211,10 @@ export default function InspectionDetailNew() {
       await saveAnnotation(annotationRequest);
       
       await loadData();
+      toast.success('Annotation Created', `Added ${selectedClass} annotation`);
     } catch (e: any) {
       console.error('Annotation creation error:', e);
-      alert('Failed to create annotation: ' + (e?.message || 'Unknown error'));
+      toast.error('Failed to Create Annotation', e?.message || 'Unknown error');
     }
   }
 
@@ -242,8 +245,9 @@ export default function InspectionDetailNew() {
       });
       
       await loadData();
+      toast.success('Annotation Updated', 'Changes saved successfully');
     } catch (e: any) {
-      alert('Failed to update annotation: ' + (e?.message || 'Unknown error'));
+      toast.error('Failed to Update Annotation', e?.message || 'Unknown error');
     }
   }
 
@@ -253,8 +257,9 @@ export default function InspectionDetailNew() {
     try {
       await deleteAnnotation(annotationId, 'current-user@example.com');
       await loadData();
+      toast.success('Annotation Deleted', 'The annotation has been removed');
     } catch (e: any) {
-      alert('Failed to delete annotation: ' + (e?.message || 'Unknown error'));
+      toast.error('Failed to Delete Annotation', e?.message || 'Unknown error');
     }
   }
 
@@ -291,8 +296,9 @@ export default function InspectionDetailNew() {
       });
 
       await loadData();
+      toast.success('Comment Updated', 'Your comment has been saved');
     } catch (e: any) {
-      alert('Failed to update comment: ' + (e?.message || 'Unknown error'));
+      toast.error('Failed to Update Comment', e?.message || 'Unknown error');
       throw e;
     }
   }
@@ -301,8 +307,9 @@ export default function InspectionDetailNew() {
     try {
       await approveAnnotation(annotationId, 'current-user@example.com');
       await loadData();
+      toast.success('Annotation Approved', 'The detection has been verified');
     } catch (e: any) {
-      alert('Failed to approve: ' + (e?.message || 'Unknown error'));
+      toast.error('Failed to Approve', e?.message || 'Unknown error');
     }
   }
 
@@ -310,8 +317,9 @@ export default function InspectionDetailNew() {
     try {
       await rejectAnnotation(annotationId, 'current-user@example.com', 'User rejected this annotation');
       await loadData();
+      toast.warning('Annotation Rejected', 'The detection has been marked as incorrect');
     } catch (e: any) {
-      alert('Failed to reject: ' + (e?.message || 'Unknown error'));
+      toast.error('Failed to Reject', e?.message || 'Unknown error');
     }
   }
 
@@ -361,9 +369,10 @@ export default function InspectionDetailNew() {
       await loadData();
       
       setSelectedFile(null);
-      alert('Image uploaded successfully! You can now trigger detection.');
+      toast.success('Image Uploaded', 'You can now trigger anomaly detection');
     } catch (e: any) {
       setUploadError(e?.message || 'Upload failed');
+      toast.error('Upload Failed', e?.message || 'Failed to upload image');
     } finally {
       setUploading(false);
     }
@@ -390,14 +399,10 @@ export default function InspectionDetailNew() {
       // Reload inspection data to reflect changes
       await loadData();
       
-      const successMessage = hasAnnotations
-        ? '✅ Image and all annotations removed successfully. You can now upload a new image.'
-        : '✅ Image removed successfully. You can now upload a new image.';
-      
-      alert(successMessage);
+      toast.success('Image Removed', 'You can now upload a new image');
     } catch (e: any) {
       console.error('Error removing image:', e);
-      alert(`❌ Failed to remove image: ${e?.message || 'Unknown error'}`);
+      toast.error('Failed to Remove Image', e?.message || 'Unknown error');
     } finally {
       setRemovingImage(false);
     }
@@ -416,17 +421,17 @@ export default function InspectionDetailNew() {
     console.log('captureCanvas type:', typeof captureCanvasRef.current);
     
     if (!inspection) {
-      alert('No inspection available');
+      toast.error('No Inspection', 'No inspection available');
       return;
     }
     
     if (!captureCanvasRef.current) {
-      alert('Canvas capture function not ready. Please wait for the image to load completely.');
+      toast.warning('Not Ready', 'Canvas capture function not ready. Please wait for the image to load completely.');
       return;
     }
     
     if (typeof captureCanvasRef.current !== 'function') {
-      alert('Canvas capture is not a function. Please refresh the page and try again.');
+      toast.error('Error', 'Canvas capture is not a function. Please refresh the page and try again.');
       return;
     }
     
@@ -439,7 +444,7 @@ export default function InspectionDetailNew() {
       console.log('Capture result:', dataUrl ? 'Success' : 'Failed');
       
       if (!dataUrl) {
-        alert('Failed to capture annotated image. Please ensure the image is fully loaded.');
+        toast.error('Capture Failed', 'Failed to capture annotated image. Please ensure the image is fully loaded.');
         return;
       }
       
@@ -465,9 +470,9 @@ export default function InspectionDetailNew() {
       // Reload data to show updated image
       await loadData();
       
-      alert('✅ Annotated image saved! This image will now appear on the transformer page.');
+      toast.success('Image Saved!', 'This annotated image will now appear on the transformer page');
     } catch (e: any) {
-      alert('Failed to save annotated image: ' + (e?.message || 'Unknown error'));
+      toast.error('Save Failed', e?.message || 'Unknown error');
     } finally {
       setIsSavingImage(false);
     }
@@ -482,13 +487,15 @@ export default function InspectionDetailNew() {
       // Update inspection status to COMPLETED
       await updateInspectionStatus(inspection.id, 'COMPLETED');
       
-      // Show success message
-      alert('Inspection completed successfully! Redirecting to transformer page...');
+      // Show success toast
+      toast.success('Inspection Completed!', 'Redirecting to transformer page...');
       
       // Navigate to transformer detail page with reliable navigation
-      window.location.href = `/transformers/${inspection.transformerId}`;
+      setTimeout(() => {
+        window.location.href = `/transformers/${inspection.transformerId}`;
+      }, 1000);
     } catch (e: any) {
-      alert('Failed to complete inspection: ' + (e?.message || 'Unknown error'));
+      toast.error('Completion Failed', e?.message || 'Unknown error');
     } finally {
       setIsCompleting(false);
     }
@@ -536,22 +543,13 @@ export default function InspectionDetailNew() {
 
       const result = await response.json();
       
-      alert(`✅ Feedback exported successfully!\n\n` +
-            `📊 Summary:\n` +
-            `- AI Detections: ${result.summary?.totalAiDetections || 0}\n` +
-            `- Human Annotations: ${result.summary?.totalHumanAnnotations || 0}\n` +
-            `- Approved: ${result.summary?.approved || 0}\n` +
-            `- Rejected: ${result.summary?.rejected || 0}\n\n` +
-            `📁 Files downloaded to your Downloads folder\n` +
-            `🤖 Data sent to ML service for fine-tuning\n\n` +
-            `Note: The ML model can now be fine-tuned using this feedback data.`);
+      toast.success('Feedback Exported!', 
+        `AI: ${result.summary?.totalAiDetections || 0}, Human: ${result.summary?.totalHumanAnnotations || 0}, ` +
+        `Approved: ${result.summary?.approved || 0}, Rejected: ${result.summary?.rejected || 0}`);
       
     } catch (e: any) {
       console.error('Feedback export error:', e);
-      alert(`⚠️ Feedback export partially completed.\n\n` +
-            `Files may have been downloaded, but failed to send to ML service:\n` +
-            `${e?.message || 'Unknown error'}\n\n` +
-            `Check console for details.`);
+      toast.warning('Partial Export', 'Files downloaded, but ML service connection failed. Check console for details.');
     } finally {
       setIsExportingFeedback(false);
     }
@@ -588,7 +586,9 @@ export default function InspectionDetailNew() {
   }
 
   // Use original image URL for editing annotations, fall back to current inspection image
-  const imageUrl = inspection.originalInspectionImageUrl || inspection.inspectionImageUrl || 'https://via.placeholder.com/800x600?text=No+Image';
+  // Use data URI for placeholder to avoid external service dependency
+  const PLACEHOLDER_IMAGE = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAwIiBoZWlnaHQ9IjYwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjBmMGYwIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIyNCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPk5vIEltYWdlPC90ZXh0Pjwvc3ZnPg==';
+  const imageUrl = inspection.originalInspectionImageUrl || inspection.inspectionImageUrl || PLACEHOLDER_IMAGE;
 
   return (
     <div className="page-container">

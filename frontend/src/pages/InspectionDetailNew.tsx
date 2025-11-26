@@ -592,7 +592,9 @@ export default function InspectionDetailNew() {
   }
 
   // Use original image URL for editing annotations, fall back to current inspection image
-  const imageUrl = inspection.originalInspectionImageUrl || inspection.inspectionImageUrl || 'https://via.placeholder.com/800x600?text=No+Image';
+  // Use data URI for placeholder to avoid external service dependency
+  const PLACEHOLDER_IMAGE = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAwIiBoZWlnaHQ9IjYwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjBmMGYwIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIyNCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPk5vIEltYWdlPC90ZXh0Pjwvc3ZnPg==';
+  const imageUrl = inspection.originalInspectionImageUrl || inspection.inspectionImageUrl || PLACEHOLDER_IMAGE;
 
   return (
     <div className="inspection-detail">
@@ -708,24 +710,23 @@ export default function InspectionDetailNew() {
 
           {/* Image Upload Section */}
           {!inspection.inspectionImageId && (
-            <div style={{
+            <div className="upload-section" style={{
               marginBottom: '16px',
               padding: '20px',
-              background: 'white',
-              border: '2px dashed #d1d5db',
+              border: '2px dashed var(--border-light)',
               borderRadius: '12px',
               textAlign: 'center',
             }}>
-              <div style={{ marginBottom: '16px', color: '#374151', fontWeight: '600', fontSize: '16px' }}>
+              <div style={{ marginBottom: '16px', color: 'var(--text-primary)', fontWeight: '600', fontSize: '16px' }}>
                 📸 Upload Thermal Image
               </div>
-              <div style={{ marginBottom: '16px', color: '#6b7280', fontSize: '14px' }}>
+              <div style={{ marginBottom: '16px', color: 'var(--text-secondary)', fontSize: '14px' }}>
                 Upload an inspection image to start annotation and detection
               </div>
               <FileDrop onFile={setSelectedFile} />
               {selectedFile && (
                 <div style={{ marginTop: '16px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
-                  <span style={{ fontSize: '14px', color: '#374151', fontWeight: '500' }}>
+                  <span style={{ fontSize: '14px', color: 'var(--text-primary)', fontWeight: '500' }}>
                     📎 {selectedFile.name}
                   </span>
                   <button
@@ -831,14 +832,11 @@ export default function InspectionDetailNew() {
           />
 
           {/* Quick Help */}
-          <div style={{
+          <div className="help-bar" style={{
             marginTop: '16px',
             padding: '10px 16px',
-            background: '#f8fafc',
-            border: '1px solid #e2e8f0',
             borderRadius: '8px',
-            fontSize: '13px',
-            color: '#64748b'
+            fontSize: '13px'
           }}>
             <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
               <span><strong>View:</strong> Drag to pan, scroll to zoom</span>
@@ -848,16 +846,14 @@ export default function InspectionDetailNew() {
           </div>
 
           {/* Action Buttons Bar */}
-          <div style={{
+          <div className="action-bar" style={{
             marginTop: '16px',
-            border: '2px solid #e5e7eb',
             borderRadius: '12px',
             padding: '12px',
             display: 'flex',
             gap: '10px',
             alignItems: 'center',
-            flexWrap: 'wrap',
-            background: 'white'
+            flexWrap: 'wrap'
           }}>
             {inspection.status !== 'COMPLETED' ? (
               <>
@@ -1001,25 +997,28 @@ export default function InspectionDetailNew() {
           </div>
 
           {/* Inspection History - MOVED HERE */}
-          <div style={{
-            background: 'white',
+          <div className="history-section" style={{
             borderRadius: '12px',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+            boxShadow: 'var(--shadow-sm)',
             padding: '16px',
             marginTop: '16px'
           }}>
             <div
+              className="history-header"
               style={{
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center',
                 cursor: 'pointer',
                 userSelect: 'none',
-                marginBottom: '12px'
+                marginBottom: '12px',
+                background: 'transparent',
+                padding: 0,
+                border: 'none'
               }}
               onClick={() => setHistoryExpanded(!historyExpanded)}
             >
-              <h2 style={{ margin: '0', fontSize: '16px', fontWeight: '600' }}>
+              <h2 className="history-title" style={{ margin: '0', fontSize: '16px' }}>
                 📋 Inspection History
               </h2>
               <span style={{
@@ -1051,15 +1050,14 @@ export default function InspectionDetailNew() {
         {/* Right Column */}
         <div>
           {/* Annotations List */}
-          <div style={{
-            background: 'white',
+          <div className="annotations-panel" style={{
             borderRadius: '12px',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+            boxShadow: 'var(--shadow-sm)',
             padding: '16px',
             display: 'flex',
             flexDirection: 'column',
           }}>
-            <h2 style={{ margin: '0 0 12px 0', fontSize: '16px', fontWeight: '600' }}>
+            <h2 className="annotations-title" style={{ margin: '0 0 12px 0', fontSize: '16px' }}>
               Annotations ({annotations.length})
             </h2>
 
@@ -1075,10 +1073,9 @@ export default function InspectionDetailNew() {
               gap: '10px',
             }}>
               {annotations.length === 0 ? (
-                <div style={{
+                <div className="no-comments" style={{
                   textAlign: 'center',
                   padding: '40px 20px',
-                  color: '#6b7280',
                   fontSize: '14px'
                 }}>
                   No annotations yet. Click "Detect Anomalies" or draw manually.
@@ -1109,25 +1106,28 @@ export default function InspectionDetailNew() {
           />
 
           {/* Comments Section with fixed height and scroll */}
-          <div style={{
-            background: 'white',
+          <div className="comments-section" style={{
             borderRadius: '12px',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+            boxShadow: 'var(--shadow-sm)',
             padding: '16px',
             marginTop: '16px'
           }}>
             <div
+              className="history-header"
               style={{
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center',
                 cursor: 'pointer',
                 userSelect: 'none',
-                marginBottom: '12px'
+                marginBottom: '12px',
+                background: 'transparent',
+                padding: 0,
+                border: 'none'
               }}
               onClick={() => setCommentsExpanded(!commentsExpanded)}
             >
-              <h2 style={{ margin: '0', fontSize: '16px', fontWeight: '600' }}>
+              <h2 className="comments-header" style={{ margin: '0', fontSize: '16px' }}>
                 💬 Comments
               </h2>
               <span style={{
@@ -1170,17 +1170,18 @@ export default function InspectionDetailNew() {
           zIndex: 1000,
         }}>
           <div style={{
-            backgroundColor: 'white',
+            backgroundColor: 'var(--bg-secondary)',
             borderRadius: '16px',
             padding: '24px',
             minWidth: '400px',
-            boxShadow: '0 10px 25px rgba(0, 0, 0, 0.2)',
+            boxShadow: '0 10px 25px rgba(0, 0, 0, 0.3)',
+            border: '1px solid var(--border-light)'
           }}>
             <h3 style={{
               margin: '0 0 16px 0',
               fontSize: '20px',
               fontWeight: '600',
-              color: '#1f2937'
+              color: 'var(--text-heading)'
             }}>
               Configure Anomaly Detection
             </h3>
@@ -1188,7 +1189,7 @@ export default function InspectionDetailNew() {
             <div style={{ marginBottom: '20px' }}>
               <p style={{
                 fontSize: '14px',
-                color: '#6b7280',
+                color: 'var(--text-secondary)',
                 marginBottom: '16px'
               }}>
                 Set the detection threshold.
@@ -1199,7 +1200,7 @@ export default function InspectionDetailNew() {
                 display: 'block',
                 fontSize: '14px',
                 fontWeight: '600',
-                color: '#374151',
+                color: 'var(--text-primary)',
                 marginBottom: '8px'
               }}>
                 Threshold Value (0-100)
@@ -1225,14 +1226,14 @@ export default function InspectionDetailNew() {
                 display: 'flex',
                 justifyContent: 'space-between',
                 fontSize: '12px',
-                color: '#6b7280',
+                color: 'var(--text-secondary)',
                 marginBottom: '8px'
               }}>
                 <span>More Sensitive</span>
                 <span style={{
                   fontSize: '16px',
                   fontWeight: '700',
-                  color: '#1f2937'
+                  color: 'var(--text-primary)'
                 }}>
                   {threshold}%
                 </span>
@@ -1241,10 +1242,11 @@ export default function InspectionDetailNew() {
 
               <div style={{
                 fontSize: '13px',
-                color: '#374151',
+                color: 'var(--text-primary)',
                 padding: '8px 12px',
-                backgroundColor: '#f3f4f6',
-                borderRadius: '6px'
+                backgroundColor: 'var(--bg-tertiary)',
+                borderRadius: '6px',
+                border: '1px solid var(--border-light)'
               }}>
                 💡 <strong>Recommended:</strong> Start with 50% for balanced detection,
                 adjust based on results.
@@ -1261,10 +1263,10 @@ export default function InspectionDetailNew() {
                 disabled={isDetecting}
                 style={{
                   padding: '10px 20px',
-                  border: '1px solid #d1d5db',
+                  border: '1px solid var(--border-light)',
                   borderRadius: '8px',
-                  background: 'white',
-                  color: '#374151',
+                  background: 'var(--bg-tertiary)',
+                  color: 'var(--text-primary)',
                   fontSize: '14px',
                   fontWeight: '600',
                   cursor: isDetecting ? 'not-allowed' : 'pointer',
@@ -1559,18 +1561,18 @@ function AnnotationCard({ annotation, onApprove, onReject, onDelete, onUpdateCom
       )}
 
       {/* Comments Section */}
-      <div style={{ marginTop: '12px', paddingTop: '12px', borderTop: '1px solid #e5e7eb' }}>
+      <div style={{ marginTop: '12px', paddingTop: '12px', borderTop: '1px solid var(--border-light)' }}>
         {annotation.comments && !showCommentInput && (
           <div style={{
-            background: '#f9fafb',
+            background: 'var(--bg-tertiary)',
             padding: '8px',
             borderRadius: '4px',
             marginBottom: '8px'
           }}>
-            <div style={{ fontSize: '11px', color: '#6b7280', marginBottom: '4px', fontWeight: '600' }}>
+            <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginBottom: '4px', fontWeight: '600' }}>
               📝 Note:
             </div>
-            <div style={{ fontSize: '12px', color: '#374151', lineHeight: '1.5' }}>
+            <div style={{ fontSize: '12px', color: 'var(--text-primary)', lineHeight: '1.5' }}>
               {annotation.comments}
             </div>
           </div>
@@ -1582,11 +1584,11 @@ function AnnotationCard({ annotation, onApprove, onReject, onDelete, onUpdateCom
               value={commentText}
               onChange={(e) => setCommentText(e.target.value)}
               placeholder="Add a note about this annotation..."
+              className="comment-input"
               style={{
                 width: '100%',
                 minHeight: '60px',
                 padding: '8px',
-                border: '1px solid #d1d5db',
                 borderRadius: '4px',
                 fontSize: '12px',
                 fontFamily: 'inherit',
@@ -1621,10 +1623,10 @@ function AnnotationCard({ annotation, onApprove, onReject, onDelete, onUpdateCom
                 style={{
                   flex: 1,
                   padding: '6px',
-                  border: '1px solid #d1d5db',
+                  border: '1px solid var(--border-light)',
                   borderRadius: '4px',
-                  background: 'white',
-                  color: '#6b7280',
+                  background: 'var(--bg-tertiary)',
+                  color: 'var(--text-secondary)',
                   fontSize: '11px',
                   fontWeight: '600',
                   cursor: isSavingComment ? 'not-allowed' : 'pointer'
@@ -1640,10 +1642,10 @@ function AnnotationCard({ annotation, onApprove, onReject, onDelete, onUpdateCom
             style={{
               width: '100%',
               padding: '6px',
-              border: '1px solid #d1d5db',
+              border: '1px solid var(--border-light)',
               borderRadius: '4px',
-              background: 'white',
-              color: '#6b7280',
+              background: 'var(--bg-tertiary)',
+              color: 'var(--text-secondary)',
               fontSize: '11px',
               fontWeight: '600',
               cursor: 'pointer',
@@ -1664,31 +1666,25 @@ function AnnotationCard({ annotation, onApprove, onReject, onDelete, onUpdateCom
 // ImageBox component for side-by-side comparison
 function ImageBox({ title, imageUrl, timestamp }: { title: string; imageUrl: string | null | undefined; timestamp: string | null | undefined }) {
   return (
-    <div style={{
-      background: '#fff',
-      border: '1px solid #e5e7eb',
+    <div className="image-box" style={{
       borderRadius: 10,
       padding: 12,
-      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)'
+      boxShadow: 'var(--shadow-sm)'
     }}>
-      <div style={{
+      <div className="image-box-header" style={{
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
         marginBottom: 10
       }}>
-        <div style={{
-          fontWeight: 600,
-          fontSize: '14px',
-          color: '#1f2937'
+        <div className="image-box-title" style={{
+          fontSize: '14px'
         }}>
           {title}
         </div>
         {timestamp && (
-          <div style={{
+          <div className="image-box-timestamp" style={{
             fontSize: 11,
-            color: '#6b7280',
-            background: '#f3f4f6',
             padding: '3px 6px',
             borderRadius: '4px'
           }}>
@@ -1696,12 +1692,11 @@ function ImageBox({ title, imageUrl, timestamp }: { title: string; imageUrl: str
           </div>
         )}
       </div>
-      <div style={{
+      <div className="image-box-content" style={{
         height: 400,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)',
         borderRadius: 8,
         border: '2px solid #334155'
       }}>
@@ -1717,8 +1712,7 @@ function ImageBox({ title, imageUrl, timestamp }: { title: string; imageUrl: str
             }}
           />
         ) : (
-          <div style={{
-            color: '#94a3b8',
+          <div className="image-box-placeholder" style={{
             textAlign: 'center',
             fontSize: '13px',
             fontWeight: '500'

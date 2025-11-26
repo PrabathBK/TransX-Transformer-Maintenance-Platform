@@ -64,11 +64,11 @@ const InspectionHistoryList: React.FC<InspectionHistoryListProps> = ({ inspectio
       <div style={{ 
         padding: '20px', 
         textAlign: 'center',
-        background: '#f9fafb',
+        background: 'var(--bg-tertiary)',
         borderRadius: '12px',
-        border: '1px solid #e5e7eb'
+        border: '1px solid var(--border-light)'
       }}>
-        <div style={{ fontSize: '16px', color: '#6b7280' }}>Loading history...</div>
+        <div style={{ fontSize: '16px', color: 'var(--text-secondary)' }}>Loading history...</div>
       </div>
     );
   }
@@ -78,9 +78,9 @@ const InspectionHistoryList: React.FC<InspectionHistoryListProps> = ({ inspectio
       <div style={{ 
         padding: '20px', 
         textAlign: 'center',
-        background: '#fef2f2',
+        background: 'rgba(239, 68, 68, 0.1)',
         borderRadius: '12px',
-        border: '1px solid #fecaca'
+        border: '1px solid rgba(239, 68, 68, 0.3)'
       }}>
         <div style={{ fontSize: '16px', color: '#ef4444' }}>Error: {error}</div>
         <button
@@ -103,40 +103,34 @@ const InspectionHistoryList: React.FC<InspectionHistoryListProps> = ({ inspectio
   }
 
   return (
-    <div style={{
+    <div className="history-section" style={{
       marginTop: '24px',
-      background: '#fff',
       borderRadius: '12px',
-      border: '1px solid #e5e7eb',
-      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)'
+      boxShadow: 'var(--shadow-sm)'
     }}>
       {/* Header */}
       <div 
         onClick={() => setCollapsed(!collapsed)}
+        className="history-header"
         style={{
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
           padding: '16px 20px',
-          borderBottom: collapsed ? 'none' : '1px solid #e5e7eb',
+          borderBottom: collapsed ? 'none' : '1px solid var(--border-light)',
           cursor: 'pointer',
-          background: collapsed ? '#f9fafb' : '#fff',
           borderRadius: collapsed ? '12px' : '12px 12px 0 0'
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <span style={{ fontSize: '20px' }}>📋</span>
-          <h3 style={{ 
+          <h3 className="history-title" style={{ 
             margin: 0, 
-            fontSize: '18px', 
-            fontWeight: '600', 
-            color: '#1f2937' 
+            fontSize: '18px'
           }}>
             Inspection History
           </h3>
-          <span style={{
-            background: '#e5e7eb',
-            color: '#374151',
+          <span className="history-count" style={{
             fontSize: '12px',
             fontWeight: '600',
             padding: '2px 8px',
@@ -148,7 +142,8 @@ const InspectionHistoryList: React.FC<InspectionHistoryListProps> = ({ inspectio
         <div style={{ 
           fontSize: '18px', 
           transform: collapsed ? 'rotate(-90deg)' : 'rotate(0deg)',
-          transition: 'transform 0.2s'
+          transition: 'transform 0.2s',
+          color: 'var(--text-secondary)'
         }}>
           ▼
         </div>
@@ -156,12 +151,11 @@ const InspectionHistoryList: React.FC<InspectionHistoryListProps> = ({ inspectio
 
       {/* History List */}
       {!collapsed && (
-        <div style={{ padding: '0' }}>
+        <div className="history-content" style={{ padding: '0' }}>
           {history.length === 0 ? (
-            <div style={{ 
+            <div className="no-comments" style={{ 
               padding: '40px 20px', 
-              textAlign: 'center',
-              color: '#6b7280'
+              textAlign: 'center'
             }}>
               <div style={{ fontSize: '48px', marginBottom: '12px' }}>📝</div>
               <div>No history entries yet</div>
@@ -174,9 +168,10 @@ const InspectionHistoryList: React.FC<InspectionHistoryListProps> = ({ inspectio
               {history.map((entry, index) => (
                 <div 
                   key={index}
+                  className="history-item"
                   style={{
                     padding: '16px 20px',
-                    borderBottom: index < history.length - 1 ? '1px solid #f3f4f6' : 'none',
+                    borderBottom: index < history.length - 1 ? '1px solid var(--border-light)' : 'none',
                     display: 'flex',
                     alignItems: 'flex-start',
                     gap: '12px'
@@ -199,13 +194,13 @@ const InspectionHistoryList: React.FC<InspectionHistoryListProps> = ({ inspectio
 
                   {/* Content */}
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ 
+                    <div className="history-item-header" style={{ 
                       display: 'flex', 
                       alignItems: 'center', 
                       gap: '8px',
                       marginBottom: '4px'
                     }}>
-                      <span style={{
+                      <span className="history-item-action" style={{
                         fontWeight: '600',
                         fontSize: '14px',
                         color: getActionColor(entry.actionType)
@@ -213,9 +208,7 @@ const InspectionHistoryList: React.FC<InspectionHistoryListProps> = ({ inspectio
                         {entry.actionType.replace('_', ' ')}
                       </span>
                       {entry.boxNumber && (
-                        <span style={{
-                          background: '#f3f4f6',
-                          color: '#374151',
+                        <span className="history-item-box" style={{
                           fontSize: '11px',
                           fontWeight: '600',
                           padding: '2px 6px',
@@ -226,21 +219,19 @@ const InspectionHistoryList: React.FC<InspectionHistoryListProps> = ({ inspectio
                       )}
                     </div>
 
-                    <div style={{ 
-                      fontSize: '14px', 
-                      color: '#374151',
+                    <div className="history-item-description" style={{ 
+                      fontSize: '14px',
                       marginBottom: '6px',
                       lineHeight: 1.4
                     }}>
                       {entry.actionDescription}
                     </div>
 
-                    <div style={{ 
+                    <div className="history-item-meta" style={{ 
                       display: 'flex',
                       alignItems: 'center',
                       gap: '12px',
-                      fontSize: '12px',
-                      color: '#6b7280'
+                      fontSize: '12px'
                     }}>
                       <span>👤 {entry.userName || 'System'}</span>
                       <span>🕒 {formatDateTime(entry.createdAt)}</span>
@@ -250,10 +241,10 @@ const InspectionHistoryList: React.FC<InspectionHistoryListProps> = ({ inspectio
                       <div style={{
                         marginTop: '8px',
                         padding: '8px 12px',
-                        background: '#f9fafb',
+                        background: 'var(--bg-tertiary)',
                         borderRadius: '6px',
                         fontSize: '12px',
-                        color: '#6b7280'
+                        color: 'var(--text-secondary)'
                       }}>
                         {entry.previousData && <div><strong>Before:</strong> {entry.previousData}</div>}
                         {entry.newData && <div><strong>After:</strong> {entry.newData}</div>}

@@ -2,12 +2,14 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../components/Toast';
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
 
 export default function Signup() {
   const navigate = useNavigate();
   const { signup, loginWithGoogle } = useAuth();
+  const toast = useToast();
   const googleButtonRef = useRef<HTMLDivElement>(null);
   
   const [name, setName] = useState('');
@@ -65,9 +67,12 @@ export default function Signup() {
     setError(null);
     try {
       await loginWithGoogle(response.credential);
+      toast.success('Welcome to TransX!', 'Your account has been created successfully');
       navigate('/');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Google signup failed');
+      const msg = err instanceof Error ? err.message : 'Google signup failed';
+      setError(msg);
+      toast.error('Signup Failed', msg);
     } finally {
       setIsLoading(false);
     }
@@ -109,6 +114,7 @@ export default function Signup() {
     const validationError = validateForm();
     if (validationError) {
       setError(validationError);
+      toast.warning('Validation Error', validationError);
       return;
     }
 
@@ -116,9 +122,12 @@ export default function Signup() {
 
     try {
       await signup(name.trim(), email.trim(), password);
+      toast.success('Welcome to TransX!', 'Your account has been created successfully');
       navigate('/');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Signup failed. Please try again.');
+      const errorMessage = err instanceof Error ? err.message : 'Signup failed. Please try again.';
+      setError(errorMessage);
+      toast.error('Signup Failed', errorMessage);
     } finally {
       setIsLoading(false);
     }

@@ -92,150 +92,46 @@ export default function Dashboard() {
         alignItems: 'center', 
         height: '400px',
         fontSize: '18px',
-        color: '#1e40af'
+        color: 'var(--primary)'
       }}>
         Loading dashboard...
       </div>
     );
   }
 
+  const statCards = [
+    { label: 'TOTAL TRANSFORMERS', value: stats.totalTransformers, color: 'var(--primary)', bgColor: 'rgba(30, 64, 175, 0.1)' },
+    { label: 'HEALTHY STATUS', value: stats.healthyTransformers, color: 'var(--success)', bgColor: 'var(--success-bg)' },
+    { label: 'WARNING STATUS', value: stats.warningTransformers, color: 'var(--warning)', bgColor: 'var(--warning-bg)' },
+    { label: 'CRITICAL STATUS', value: stats.criticalTransformers, color: 'var(--danger)', bgColor: 'var(--danger-bg)' },
+    { label: 'TOTAL CAPACITY', value: `${stats.totalCapacity} kVA`, color: 'var(--primary)', bgColor: 'rgba(30, 64, 175, 0.1)' },
+    { label: 'AVG CAPACITY', value: `${stats.averageCapacity} kVA`, color: 'var(--info)', bgColor: 'var(--info-bg)' }
+  ];
+
   return (
-    <div style={{ 
-      width: '100%', 
-      display: 'flex', 
-      flexDirection: 'column', 
-      gap: '2.5rem',
-      padding: '2rem',
-      maxWidth: '1400px',
-      margin: '0 auto'
-    }}>
+    <div className="dashboard-container">
       
       {/* Welcome Header */}
-      <div style={{ marginBottom: '1rem' }}>
-        <h1 className="fancy-heading" style={{
-          fontSize: '2.5rem',
-          marginBottom: '0.5rem',
-          color: '#2d1e6b',
-          letterSpacing: '-1.5px',
-          animation: 'fadeIn 1.2s cubic-bezier(.4,0,.2,1)'
-        }}>
+      <div className="dashboard-header">
+        <h1 className="fancy-heading dashboard-title">
           Transformer Maintenance Dashboard
         </h1>
-        <p style={{ 
-          fontSize: '1.1rem', 
-          color: '#64748b', 
-          margin: 0,
-          fontFamily: 'Inter'
-        }}>
+        <p className="dashboard-subtitle">
           Real-time monitoring and maintenance insights
         </p>
       </div>
 
       {/* Transformer Statistics */}
       <div>
-        <h2 style={{ 
-          fontSize: '1.5rem', 
-          color: '#374151', 
-          marginBottom: '1rem',
-          fontFamily: 'Montserrat',
-          fontWeight: '600'
-        }}>
-          Transformer Statistics
-        </h2>
-        <div style={{ display: 'flex', gap: '1.5rem', flexWrap: 'wrap' }}>
-          {[
-            { 
-              label: 'TOTAL TRANSFORMERS', 
-              value: stats.totalTransformers, 
-              color: '#1e40af',
-              bgColor: 'rgba(30, 64, 175, 0.1)'
-            },
-            { 
-              label: 'HEALTHY STATUS', 
-              value: stats.healthyTransformers, 
-              color: '#059669',
-              bgColor: 'rgba(5, 150, 105, 0.1)'
-            },
-            { 
-              label: 'WARNING STATUS', 
-              value: stats.warningTransformers, 
-              color: '#d97706',
-              bgColor: 'rgba(217, 119, 6, 0.1)'
-            },
-            { 
-              label: 'CRITICAL STATUS', 
-              value: stats.criticalTransformers, 
-              color: '#dc2626',
-              bgColor: 'rgba(220, 38, 38, 0.1)'
-            },
-            { 
-              label: 'TOTAL CAPACITY', 
-              value: `${stats.totalCapacity} kVA`, 
-              color: '#1e40af',
-              bgColor: 'rgba(30, 64, 175, 0.1)'
-            },
-            { 
-              label: 'AVG CAPACITY', 
-              value: `${stats.averageCapacity} kVA`, 
-              color: '#0ea5e9',
-              bgColor: 'rgba(14, 165, 233, 0.1)'
-            }
-          ].map((card) => (
-            <div key={card.label} style={{
-              background: 'linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)',
-              borderRadius: 16,
-              boxShadow: '0 4px 20px rgba(124, 58, 237, 0.08)',
-              border: '1px solid rgba(124, 58, 237, 0.1)',
-              padding: '1.5rem 2rem',
-              minWidth: 200,
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontFamily: 'Montserrat',
-              transition: 'all 0.3s ease',
-              cursor: 'pointer',
-              position: 'relative',
-              overflow: 'hidden'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.transform = 'translateY(-4px)';
-              e.currentTarget.style.boxShadow = '0 8px 30px rgba(124, 58, 237, 0.15)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.transform = 'translateY(0)';
-              e.currentTarget.style.boxShadow = '0 4px 20px rgba(124, 58, 237, 0.08)';
-            }}>
-              {/* Background decoration */}
-              <div style={{
-                position: 'absolute',
-                top: 0,
-                right: 0,
-                width: '60px',
-                height: '60px',
-                background: card.bgColor,
-                borderRadius: '50%',
-                transform: 'translate(20px, -20px)',
-                opacity: 0.6
-              }} />
-              
-              <div style={{ 
-                fontSize: '2rem', 
-                fontWeight: '900', 
-                color: card.color, 
-                marginBottom: '0.5rem',
-                zIndex: 1
-              }}>
+        <h2 className="dashboard-section-title">Transformer Statistics</h2>
+        <div className="stats-grid">
+          {statCards.map((card) => (
+            <div key={card.label} className="stat-card">
+              <div className="stat-card-decoration" style={{ background: card.bgColor }} />
+              <div className="stat-value" style={{ color: card.color }}>
                 {card.value}
               </div>
-              <div style={{ 
-                fontSize: '0.75rem', 
-                color: '#64748b', 
-                fontWeight: '600', 
-                letterSpacing: '0.5px',
-                textAlign: 'center',
-                zIndex: 1
-              }}>
+              <div className="stat-label">
                 {card.label}
               </div>
             </div>
@@ -244,158 +140,87 @@ export default function Dashboard() {
       </div>
 
       {/* Recent Activity & Alerts */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
+      <div className="dashboard-grid">
         
         {/* Recent Activity */}
-        <div style={{
-          background: 'linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)',
-          borderRadius: 16,
-          boxShadow: '0 4px 20px rgba(124, 58, 237, 0.08)',
-          border: '1px solid rgba(124, 58, 237, 0.1)',
-          padding: '2rem',
-          minHeight: '300px'
-        }}>
-          <h3 style={{ 
-            fontSize: '1.3rem', 
-            color: '#374151', 
-            marginBottom: '1.5rem',
-            fontFamily: 'Montserrat',
-            fontWeight: '600',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.5rem'
-          }}>
-            Recent Activity
-          </h3>
+        <div className="dashboard-card">
+          <h3 className="dashboard-card-title">Recent Activity</h3>
           
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            <div style={{
-              padding: '1rem',
-              background: 'rgba(34, 197, 94, 0.1)',
-              borderRadius: '8px',
-              border: '1px solid rgba(34, 197, 94, 0.2)'
-            }}>
-              <div style={{ fontWeight: '600', color: '#059669', fontSize: '0.9rem' }}>
+          <div className="activity-list">
+            <div className="activity-item" style={{ background: 'var(--success-bg)', borderColor: 'var(--success)' }}>
+              <div className="activity-item-title" style={{ color: 'var(--success)' }}>
                 Recent Uploads
               </div>
-              <div style={{ color: '#374151', marginTop: '0.25rem' }}>
+              <p className="activity-item-description">
                 {stats.recentUploads} thermal images uploaded this week
-              </div>
+              </p>
             </div>
             
-            <div style={{
-              padding: '1rem',
-              background: 'rgba(124, 58, 237, 0.1)',
-              borderRadius: '8px',
-              border: '1px solid rgba(30, 64, 175, 0.2)'
-            }}>
-              <div style={{ fontWeight: '600', color: '#1e40af', fontSize: '0.9rem' }}>
+            <div className="activity-item" style={{ background: 'rgba(30, 64, 175, 0.1)', borderColor: 'var(--primary)' }}>
+              <div className="activity-item-title" style={{ color: 'var(--primary)' }}>
                 System Status
               </div>
-              <div style={{ color: '#374151', marginTop: '0.25rem' }}>
+              <p className="activity-item-description">
                 All monitoring systems operational
-              </div>
+              </p>
             </div>
             
             {recentActivity.recentTransformers.length > 0 && (
-              <div style={{
-                padding: '1rem',
-                background: 'rgba(14, 165, 233, 0.1)',
-                borderRadius: '8px',
-                border: '1px solid rgba(14, 165, 233, 0.2)'
-              }}>
-                <div style={{ fontWeight: '600', color: '#0ea5e9', fontSize: '0.9rem' }}>
+              <div className="activity-item" style={{ background: 'var(--info-bg)', borderColor: 'var(--info)' }}>
+                <div className="activity-item-title" style={{ color: 'var(--info)' }}>
                   Recent Additions
                 </div>
-                <div style={{ color: '#374151', marginTop: '0.25rem' }}>
+                <p className="activity-item-description">
                   Latest: {recentActivity.recentTransformers[0]?.code} in {recentActivity.recentTransformers[0]?.location}
-                </div>
+                </p>
               </div>
             )}
           </div>
         </div>
 
         {/* Alert Summary */}
-        <div style={{
-          background: 'linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)',
-          borderRadius: 16,
-          boxShadow: '0 4px 20px rgba(124, 58, 237, 0.08)',
-          border: '1px solid rgba(124, 58, 237, 0.1)',
-          padding: '2rem',
-          minHeight: '300px'
-        }}>
-          <h3 style={{ 
-            fontSize: '1.3rem', 
-            color: '#374151', 
-            marginBottom: '1.5rem',
-            fontFamily: 'Montserrat',
-            fontWeight: '600',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.5rem'
-          }}>
-            Alert Summary
-          </h3>
+        <div className="dashboard-card">
+          <h3 className="dashboard-card-title">Alert Summary</h3>
           
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          <div className="activity-list">
             {stats.criticalTransformers > 0 ? (
-              <div style={{
-                padding: '1rem',
-                background: 'rgba(220, 38, 38, 0.1)',
-                borderRadius: '8px',
-                border: '1px solid rgba(220, 38, 38, 0.2)'
-              }}>
-                <div style={{ fontWeight: '600', color: '#dc2626', fontSize: '0.9rem' }}>
+              <div className="activity-item" style={{ background: 'var(--danger-bg)', borderColor: 'var(--danger)' }}>
+                <div className="activity-item-title" style={{ color: 'var(--danger)' }}>
                   Critical Issues
                 </div>
-                <div style={{ color: '#374151', marginTop: '0.25rem' }}>
+                <p className="activity-item-description">
                   {stats.criticalTransformers} transformers require immediate attention
-                </div>
+                </p>
               </div>
             ) : (
-              <div style={{
-                padding: '1rem',
-                background: 'rgba(34, 197, 94, 0.1)',
-                borderRadius: '8px',
-                border: '1px solid rgba(34, 197, 94, 0.2)'
-              }}>
-                <div style={{ fontWeight: '600', color: '#059669', fontSize: '0.9rem' }}>
+              <div className="activity-item" style={{ background: 'var(--success-bg)', borderColor: 'var(--success)' }}>
+                <div className="activity-item-title" style={{ color: 'var(--success)' }}>
                   All Clear
                 </div>
-                <div style={{ color: '#374151', marginTop: '0.25rem' }}>
+                <p className="activity-item-description">
                   No critical issues detected
-                </div>
+                </p>
               </div>
             )}
             
             {stats.warningTransformers > 0 && (
-              <div style={{
-                padding: '1rem',
-                background: 'rgba(217, 119, 6, 0.1)',
-                borderRadius: '8px',
-                border: '1px solid rgba(217, 119, 6, 0.2)'
-              }}>
-                <div style={{ fontWeight: '600', color: '#d97706', fontSize: '0.9rem' }}>
+              <div className="activity-item" style={{ background: 'var(--warning-bg)', borderColor: 'var(--warning)' }}>
+                <div className="activity-item-title" style={{ color: 'var(--warning)' }}>
                   Monitor Required
                 </div>
-                <div style={{ color: '#374151', marginTop: '0.25rem' }}>
+                <p className="activity-item-description">
                   {stats.warningTransformers} transformers showing warning signs
-                </div>
+                </p>
               </div>
             )}
             
-            <div style={{
-              padding: '1rem',
-              background: 'rgba(124, 58, 237, 0.1)',
-              borderRadius: '8px',
-              border: '1px solid rgba(30, 64, 175, 0.2)'
-            }}>
-              <div style={{ fontWeight: '600', color: '#1e40af', fontSize: '0.9rem' }}>
+            <div className="activity-item" style={{ background: 'rgba(30, 64, 175, 0.1)', borderColor: 'var(--primary)' }}>
+              <div className="activity-item-title" style={{ color: 'var(--primary)' }}>
                 Maintenance Schedule
               </div>
-              <div style={{ color: '#374151', marginTop: '0.25rem' }}>
+              <p className="activity-item-description">
                 Next scheduled maintenance in 3 days
-              </div>
+              </p>
             </div>
           </div>
         </div>

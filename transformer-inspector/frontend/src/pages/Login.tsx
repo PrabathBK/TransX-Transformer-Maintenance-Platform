@@ -30,27 +30,34 @@ export default function Login() {
 
   // Load Google Sign-In script and render button
   useEffect(() => {
-    if (!GOOGLE_CLIENT_ID) return;
+    if (!GOOGLE_CLIENT_ID) {
+      console.log('Google OAuth not configured - skipping Google Sign-In');
+      return;
+    }
 
     const initializeGoogle = () => {
-      const google = (window as any).google;
-      if (google && googleButtonRef.current) {
-        google.accounts.id.initialize({
-          client_id: GOOGLE_CLIENT_ID,
-          callback: handleGoogleCallback,
-          auto_select: false,
-          cancel_on_tap_outside: true,
-        });
-        
-        // Render the Google button
-        google.accounts.id.renderButton(googleButtonRef.current, {
-          type: 'standard',
-          theme: 'outline',
-          size: 'large',
-          text: 'continue_with',
-          shape: 'rectangular',
-          width: 300, // Fixed width in pixels to avoid GSI warning
-        });
+      try {
+        const google = (window as any).google;
+        if (google && googleButtonRef.current) {
+          google.accounts.id.initialize({
+            client_id: GOOGLE_CLIENT_ID,
+            callback: handleGoogleCallback,
+            auto_select: false,
+            cancel_on_tap_outside: true,
+          });
+          
+          // Render the Google button
+          google.accounts.id.renderButton(googleButtonRef.current, {
+            type: 'standard',
+            theme: 'outline',
+            size: 'large',
+            text: 'continue_with',
+            shape: 'rectangular',
+            width: 300, // Fixed width in pixels to avoid GSI warning
+          });
+        }
+      } catch (err) {
+        console.warn('Google Sign-In initialization failed:', err);
       }
     };
 

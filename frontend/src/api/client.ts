@@ -17,14 +17,35 @@
 //   return isJson ? JSON.parse(text) as T : (text as unknown as T);
 // }
 // src/api/client.ts
+import { getCookie, COOKIE_NAMES } from '../utils/cookies';
+
 export const API_BASE =
   (import.meta.env.VITE_API_BASE as string) || 'http://localhost:8080';
 
 console.log('API_BASE =', API_BASE);
 
+// Get auth token from cookies
+function getAuthToken(): string | null {
+  return getCookie(COOKIE_NAMES.AUTH_TOKEN);
+}
+
 export async function api<T>(path: string, init?: RequestInit): Promise<T> {
   const url = `${API_BASE}${path}`;
-  const res = await fetch(url, init).catch(err => {
+  
+  // Add authorization header if token exists
+  const token = getAuthToken();
+  const headers: HeadersInit = {
+    ...(init?.headers || {}),
+  };
+  
+  if (token) {
+    (headers as Record<string, string>)['Authorization'] = `Bearer ${token}`;
+  }
+  
+  const res = await fetch(url, {
+    ...init,
+    headers,
+  }).catch(err => {
     throw new Error(`Network error calling ${url}: ${err?.message || err}`);
   });
   const text = await res.text();

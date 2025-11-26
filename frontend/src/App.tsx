@@ -10,6 +10,9 @@ import InspectionDetailNew from './pages/InspectionDetailNew';
 import MaintenanceRecordPage from './pages/MaintenanceRecordPage';
 import Settings from './pages/Settings';
 import Login from './pages/Login';
+import Signup from './pages/Signup';
+import { AuthProvider, useAuth } from './context/AuthContext';
+import { ToastProvider } from './components/Toast';
 
 // Replace with your actual Google Client ID
 // Ideally this should come from an environment variable
@@ -17,10 +20,19 @@ const GOOGLE_CLIENT_ID = "656702563579-jn27q8n9hja9e0d2ttn5to9tb9r9bi32.apps.goo
 
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
-  const token = localStorage.getItem('transx_token');
+  const { isAuthenticated, isLoading } = useAuth();
   const location = useLocation();
 
-  if (!token) {
+  // Show nothing while checking auth status
+  if (isLoading) {
+    return (
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+        <div>Loading...</div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
@@ -30,9 +42,12 @@ function PrivateRoute({ children }: { children: React.ReactNode }) {
 export default function App() {
   return (
     <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
-      <BrowserRouter>
-        <Routes>
-          <Route path="/login" element={<Login />} />
+      <AuthProvider>
+        <ToastProvider>
+          <BrowserRouter>
+            <Routes>
+              <Route path="/login" element={<Login />} />
+              <Route path="/signup" element={<Signup />} />
 
           {/* Protected Routes */}
           <Route element={
@@ -51,8 +66,10 @@ export default function App() {
           </Route>
 
           <Route path="*" element={<div style={{ padding: 24 }}>Not found</div>} />
-        </Routes>
-      </BrowserRouter>
+            </Routes>
+          </BrowserRouter>
+        </ToastProvider>
+      </AuthProvider>
     </GoogleOAuthProvider>
   );
 }

@@ -487,18 +487,25 @@ export default function InspectionDetailNew() {
       // Update inspection status to COMPLETED
       await updateInspectionStatus(inspection.id, 'COMPLETED');
       
-      // Show success toast
-      toast.success('Inspection Completed!', 'Redirecting to transformer page...');
+      // Reload the inspection to get updated status
+      const updatedInspection = await getInspection(inspection.id);
+      setInspection(updatedInspection);
       
-      // Navigate to transformer detail page with reliable navigation
-      setTimeout(() => {
-        window.location.href = `/transformers/${inspection.transformerId}`;
-      }, 1000);
+      // Show success toast
+      toast.success('Inspection Completed!', 'You can now create a maintenance report.');
+      
     } catch (e: any) {
+      console.error('Completion error:', e);
       toast.error('Completion Failed', e?.message || 'Unknown error');
     } finally {
       setIsCompleting(false);
     }
+  }
+  
+  // Navigate to maintenance record page
+  function handleViewMaintenanceReport() {
+    if (!inspection) return;
+    nav(`/maintenance-records/inspection/${inspection.id}`);
   }
 
   /**
@@ -923,6 +930,39 @@ export default function InspectionDetailNew() {
               )}
             </div>
           )}
+          
+          {/* Maintenance Report Button - Always visible */}
+          <div style={{
+            marginTop: '16px',
+            display: 'flex',
+            gap: '12px',
+            flexWrap: 'wrap'
+          }}>
+            <button
+              onClick={handleViewMaintenanceReport}
+              title="View or create maintenance report for this inspection"
+              style={{
+                flex: '1 1 auto',
+                minWidth: '200px',
+                background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+                color: 'white',
+                border: 'none',
+                borderRadius: '10px',
+                padding: '14px 24px',
+                fontSize: '16px',
+                fontWeight: '600',
+                cursor: 'pointer',
+                boxShadow: '0 4px 12px rgba(245, 158, 11, 0.3)',
+                transition: 'all 0.2s',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px'
+              }}
+            >
+              📋 Maintenance Report
+            </button>
+          </div>
 
           {/* Comments Section */}
           <CommentsSection inspectionId={inspection.id} />

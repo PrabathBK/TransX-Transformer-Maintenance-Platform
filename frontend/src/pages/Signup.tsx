@@ -1,32 +1,25 @@
-// src/pages/Login.tsx
+// src/pages/Signup.tsx
 import { useState, useEffect, useRef } from 'react';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../components/Toast';
 
-// Google OAuth Client ID
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || '656702563579-jn27q8n9hja9e0d2ttn5to9tb9r9bi32.apps.googleusercontent.com';
 
-export default function Login() {
+export default function Signup() {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const { login, loginWithGoogle } = useAuth();
+  const { signup, loginWithGoogle } = useAuth();
   const toast = useToast();
   const googleButtonRef = useRef<HTMLDivElement>(null);
   
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [rememberMe, setRememberMe] = useState(false);
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-
-  // Check for session expiration
-  useEffect(() => {
-    if (searchParams.get('expired') === 'true') {
-      toast.warning('Session Expired', 'Your session has expired due to inactivity. Please sign in again.');
-    }
-  }, [searchParams, toast]);
+  const [agreeTerms, setAgreeTerms] = useState(false);
 
   // Load Google Sign-In script and render button
   useEffect(() => {
@@ -47,9 +40,9 @@ export default function Login() {
           type: 'standard',
           theme: 'outline',
           size: 'large',
-          text: 'continue_with',
+          text: 'signup_with',
           shape: 'rectangular',
-          width: 300, // Fixed width in pixels to avoid GSI warning
+          width: 300,
         });
       }
     };
@@ -67,10 +60,6 @@ export default function Login() {
     script.defer = true;
     script.onload = () => setTimeout(initializeGoogle, 100);
     document.body.appendChild(script);
-
-    return () => {
-      // Cleanup if needed
-    };
   }, []);
 
   const handleGoogleCallback = async (response: { credential: string }) => {
@@ -78,30 +67,67 @@ export default function Login() {
     setError(null);
     try {
       await loginWithGoogle(response.credential);
-      toast.success('Welcome!', 'Successfully signed in with Google');
+      toast.success('Welcome to TransX!', 'Your account has been created successfully');
       navigate('/');
     } catch (err) {
-      const msg = err instanceof Error ? err.message : 'Google login failed';
+      const msg = err instanceof Error ? err.message : 'Google signup failed';
       setError(msg);
-      toast.error('Login Failed', msg);
+      toast.error('Signup Failed', msg);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleEmailLogin = async (e: React.FormEvent) => {
+  // Password strength calculation
+  const getPasswordStrength = (pwd: string): { score: number; label: string; color: string } => {
+    let score = 0;
+    if (pwd.length >= 8) score++;
+    if (pwd.length >= 12) score++;
+    if (/[a-z]/.test(pwd) && /[A-Z]/.test(pwd)) score++;
+    if (/\d/.test(pwd)) score++;
+    if (/[^a-zA-Z0-9]/.test(pwd)) score++;
+
+    if (score <= 1) return { score, label: 'Weak', color: '#ef4444' };
+    if (score <= 2) return { score, label: 'Fair', color: '#f59e0b' };
+    if (score <= 3) return { score, label: 'Good', color: '#3b82f6' };
+    return { score, label: 'Strong', color: '#22c55e' };
+  };
+
+  const passwordStrength = getPasswordStrength(password);
+
+  const validateForm = (): string | null => {
+    if (!name.trim()) return 'Name is required';
+    if (name.trim().length < 2) return 'Name must be at least 2 characters';
+    if (!email.trim()) return 'Email is required';
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return 'Invalid email format';
+    if (!password) return 'Password is required';
+    if (password.length < 8) return 'Password must be at least 8 characters';
+    if (password !== confirmPassword) return 'Passwords do not match';
+    if (!agreeTerms) return 'You must agree to the terms and conditions';
+    return null;
+  };
+
+  const handleEmailSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+
+    const validationError = validateForm();
+    if (validationError) {
+      setError(validationError);
+      toast.warning('Validation Error', validationError);
+      return;
+    }
+
     setIsLoading(true);
 
     try {
-      await login(email, password, rememberMe);
-      toast.success('Welcome back!', rememberMe ? 'You will stay signed in for 30 days' : 'Successfully signed in');
+      await signup(name.trim(), email.trim(), password);
+      toast.success('Welcome to TransX!', 'Your account has been created successfully');
       navigate('/');
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Login failed. Please try again.';
+      const errorMessage = err instanceof Error ? err.message : 'Signup failed. Please try again.';
       setError(errorMessage);
-      toast.error('Login Failed', errorMessage);
+      toast.error('Signup Failed', errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -109,15 +135,15 @@ export default function Login() {
 
   return (
     <div className="auth-container">
-      <div className="auth-card">
+      <div className="auth-card signup-card">
         {/* Logo and Header */}
         <div className="auth-header">
           <div className="auth-logo">
             <span className="logo-icon">⚡</span>
             <span className="logo-text">TransX</span>
           </div>
-          <h1 className="auth-title">Welcome Back</h1>
-          <p className="auth-subtitle">Sign in to continue to TransX Platform</p>
+          <h1 className="auth-title">Create Account</h1>
+          <p className="auth-subtitle">Join TransX Platform for transformer management</p>
         </div>
 
         {/* Error Message */}
@@ -128,8 +154,25 @@ export default function Login() {
           </div>
         )}
 
-        {/* Login Form */}
-        <form onSubmit={handleEmailLogin} className="auth-form">
+        {/* Signup Form */}
+        <form onSubmit={handleEmailSignup} className="auth-form">
+          <div className="form-group">
+            <label htmlFor="name" className="form-label">Full Name</label>
+            <div className="input-wrapper">
+              <span className="input-icon">👤</span>
+              <input
+                id="name"
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Enter your full name"
+                className="form-input"
+                required
+                disabled={isLoading}
+              />
+            </div>
+          </div>
+
           <div className="form-group">
             <label htmlFor="email" className="form-label">Email Address</label>
             <div className="input-wrapper">
@@ -156,7 +199,7 @@ export default function Login() {
                 type={showPassword ? 'text' : 'password'}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="Enter your password"
+                placeholder="Create a password"
                 className="form-input"
                 required
                 disabled={isLoading}
@@ -170,21 +213,59 @@ export default function Login() {
                 {showPassword ? '👁️' : '👁️‍🗨️'}
               </button>
             </div>
+            {password && (
+              <div className="password-strength">
+                <div className="strength-bar">
+                  <div
+                    className="strength-fill"
+                    style={{
+                      width: `${(passwordStrength.score / 5) * 100}%`,
+                      backgroundColor: passwordStrength.color,
+                    }}
+                  />
+                </div>
+                <span className="strength-label" style={{ color: passwordStrength.color }}>
+                  {passwordStrength.label}
+                </span>
+              </div>
+            )}
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="confirmPassword" className="form-label">Confirm Password</label>
+            <div className="input-wrapper">
+              <span className="input-icon">🔒</span>
+              <input
+                id="confirmPassword"
+                type={showPassword ? 'text' : 'password'}
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="Confirm your password"
+                className="form-input"
+                required
+                disabled={isLoading}
+              />
+              {confirmPassword && password === confirmPassword && (
+                <span className="input-valid">✓</span>
+              )}
+            </div>
           </div>
 
           <div className="form-options">
             <label className="checkbox-label">
-              <input 
-                type="checkbox" 
-                className="checkbox-input" 
-                checked={rememberMe}
-                onChange={(e) => setRememberMe(e.target.checked)}
+              <input
+                type="checkbox"
+                className="checkbox-input"
+                checked={agreeTerms}
+                onChange={(e) => setAgreeTerms(e.target.checked)}
               />
-              <span>Remember me for 30 days</span>
+              <span>
+                I agree to the{' '}
+                <Link to="/terms" className="terms-link">Terms of Service</Link>
+                {' '}and{' '}
+                <Link to="/privacy" className="terms-link">Privacy Policy</Link>
+              </span>
             </label>
-            <Link to="/forgot-password" className="forgot-link">
-              Forgot password?
-            </Link>
           </div>
 
           <button
@@ -195,10 +276,10 @@ export default function Login() {
             {isLoading ? (
               <>
                 <span className="spinner"></span>
-                Signing in...
+                Creating account...
               </>
             ) : (
-              'Sign In'
+              'Create Account'
             )}
           </button>
         </form>
@@ -226,11 +307,11 @@ export default function Login() {
           )}
         </div>
 
-        {/* Sign Up Link */}
+        {/* Sign In Link */}
         <p className="auth-footer">
-          Don't have an account?{' '}
-          <Link to="/signup" className="auth-link">
-            Create account
+          Already have an account?{' '}
+          <Link to="/login" className="auth-link">
+            Sign in
           </Link>
         </p>
       </div>

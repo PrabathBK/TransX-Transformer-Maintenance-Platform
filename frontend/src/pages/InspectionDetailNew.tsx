@@ -1,6 +1,6 @@
 // src/pages/InspectionDetailNew.tsx
 import { useState, useEffect, useRef } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import AnnotationCanvas from '../components/AnnotationCanvas';
 import AnnotationToolbar from '../components/AnnotationToolbar';
 import AnnotationLegend from '../components/AnnotationLegend';
@@ -24,7 +24,7 @@ import type { Annotation } from '../api/annotations';
 
 export default function InspectionDetailNew() {
   const { id } = useParams();
-  // const nav = useNavigate();
+  const nav = useNavigate();
 
   const [inspection, setInspection] = useState<Inspection | null>(null);
   const [annotations, setAnnotations] = useState<Annotation[]>([]);
@@ -489,8 +489,8 @@ export default function InspectionDetailNew() {
       // Show success message
       alert('Inspection completed successfully! Redirecting to transformer page...');
 
-      // Navigate to transformer detail page with reliable navigation
-      window.location.href = `/transformers/${inspection.transformerId}`;
+      // Navigate to transformer detail page using React Router
+      nav(`/transformers/${inspection.transformerId}`);
     } catch (e: any) {
       alert('Failed to complete inspection: ' + (e?.message || 'Unknown error'));
     } finally {
@@ -573,7 +573,7 @@ export default function InspectionDetailNew() {
     return (
       <div className="page-container">
         <div className="error-message">{error}</div>
-        <button onClick={() => window.location.href = '/inspections'} className="primary-button">
+        <button onClick={() => nav('/inspections')} className="primary-button">
           Back to Inspections
         </button>
       </div>
@@ -584,7 +584,7 @@ export default function InspectionDetailNew() {
     return (
       <div className="page-container">
         <div className="error-message">Inspection not found</div>
-        <button onClick={() => window.location.href = '/inspections'} className="primary-button">
+        <button onClick={() => nav('/inspections')} className="primary-button">
           Back to Inspections
         </button>
       </div>
@@ -613,8 +613,8 @@ export default function InspectionDetailNew() {
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
           <button
             onClick={() => {
-              // Force navigation with page refresh for reliability
-              window.location.href = '/inspections';
+              // Navigate using React Router to preserve auth context
+              nav('/inspections');
             }}
             style={{
               background: 'rgba(255, 255, 255, 0.2)',
@@ -954,8 +954,8 @@ export default function InspectionDetailNew() {
             {/* Maintenance Record Button - Always visible for both statuses */}
             <button
               onClick={() => {
-                // Navigate and force page reload to ensure fresh data
-                window.location.href = `/inspections/${id}/maintenance-record`;
+                // Navigate using React Router to preserve auth context
+                nav(`/inspections/${id}/maintenance-record`);
               }}
               disabled={!inspection.inspectionImageId}
               style={{
@@ -977,7 +977,7 @@ export default function InspectionDetailNew() {
 
             {/* View Transformer Button - Always visible */}
             <button
-              onClick={() => window.location.href = `/transformers/${inspection.transformerId}`}
+              onClick={() => nav(`/transformers/${inspection.transformerId}`)}
               style={{
                 flex: '1',
                 minWidth: '180px',

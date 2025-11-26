@@ -9,6 +9,7 @@ import TransformersList from './pages/TransformersList';
 import TransformerDetail from './pages/TransformerDetail';
 import InspectionsList from './pages/InspectionsList';
 import InspectionDetailNew from './pages/InspectionDetailNew';
+import MaintenanceRecordPage from './pages/MaintenanceRecordPage';
 import Settings from './pages/Settings';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
@@ -85,6 +86,8 @@ function AppRoutes() {
         <Route path="/transformers/:id" element={<TransformerDetail />} />
         <Route path="/inspections" element={<InspectionsList />} />
         <Route path="/inspections/:id" element={<InspectionDetailNew />} />
+        <Route path="/maintenance-records/:recordId" element={<MaintenanceRecordPage />} />
+        <Route path="/maintenance-records/inspection/:inspectionId" element={<MaintenanceRecordPage />} />
         <Route path="/settings" element={<Settings />} />
         <Route path="*" element={<div style={{ padding: 24 }}>Not found</div>} />
       </Route>

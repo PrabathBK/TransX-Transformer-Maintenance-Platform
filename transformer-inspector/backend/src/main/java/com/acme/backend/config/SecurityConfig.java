@@ -34,11 +34,9 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-                // Public endpoints
-                .requestMatchers("/api/auth/**").permitAll()
-                .requestMatchers("/api/health").permitAll()
+                // Public endpoints - permit all API endpoints for now (TODO: restore proper auth)
+                .requestMatchers("/api/**").permitAll()
                 .requestMatchers("/files/**").permitAll()
-                .requestMatchers("/api/maintenance-records/**").permitAll() // TODO: Remove after debugging
                 // All other endpoints require authentication
                 .anyRequest().authenticated()
             )

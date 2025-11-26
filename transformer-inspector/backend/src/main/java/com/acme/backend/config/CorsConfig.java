@@ -48,7 +48,7 @@ public class CorsConfig {
 
                 // If you plan to use cookies/auth headers, set allowCredentials(true)
                 // and DO NOT use "*" or patterns — list exact origins instead.
-                mapping.allowCredentials(false);
+                mapping.allowCredentials(true);
             }
         };
     }

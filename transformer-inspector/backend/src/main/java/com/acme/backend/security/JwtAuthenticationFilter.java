@@ -45,7 +45,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 userId = jwtUtil.extractUserId(jwt);
             } catch (Exception e) {
                 // Invalid token, continue without authentication
+                System.out.println("JWT Extraction failed: " + e.getMessage());
             }
+        } else {
+            System.out.println("No Bearer token found in Authorization header");
         }
 
         // Validate token and set authentication
@@ -65,7 +68,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 }
             } catch (Exception e) {
                 // Invalid user ID or token
+                System.out.println("Token validation failed or user not found: " + e.getMessage());
             }
+        } else {
+             if (userId != null) {
+                 System.out.println("SecurityContext already has authentication: " + SecurityContextHolder.getContext().getAuthentication());
+             }
         }
 
         filterChain.doFilter(request, response);

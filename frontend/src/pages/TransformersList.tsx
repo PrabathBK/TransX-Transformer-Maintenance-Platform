@@ -120,7 +120,7 @@ export default function TransformersList() {
   }
 
   return (
-    <div className="page-container">
+    <div className="list-page-wrapper">
       <div className="page-header">
         <h1 className="page-title">Transformers</h1>
         <div style={{ display: 'flex', gap: 12 }}>

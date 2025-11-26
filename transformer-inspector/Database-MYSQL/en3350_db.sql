@@ -634,6 +634,83 @@ INSERT INTO `transformers` VALUES (_binary 'F\ëÿ´ôC’´dr\ÐX/\Ü8',300,'TX-002','2
 UNLOCK TABLES;
 
 --
+-- Table structure for table `transx_user_activity_log`
+--
+
+DROP TABLE IF EXISTS `transx_user_activity_log`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `transx_user_activity_log` (
+  `id` binary(16) NOT NULL,
+  `user_id` binary(16) NOT NULL,
+  `action` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `entity_type` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `entity_id` binary(16) DEFAULT NULL,
+  `details` json DEFAULT NULL,
+  `ip_address` varchar(45) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `user_agent` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_activity_user` (`user_id`),
+  KEY `idx_activity_action` (`action`),
+  KEY `idx_activity_created` (`created_at`),
+  CONSTRAINT `fk_transx_activity_user` FOREIGN KEY (`user_id`) REFERENCES `transx_users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `transx_user_activity_log`
+--
+
+LOCK TABLES `transx_user_activity_log` WRITE;
+/*!40000 ALTER TABLE `transx_user_activity_log` DISABLE KEYS */;
+/*!40000 ALTER TABLE `transx_user_activity_log` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `transx_users`
+--
+
+DROP TABLE IF EXISTS `transx_users`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `transx_users` (
+  `id` binary(16) NOT NULL,
+  `name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `email` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `password` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `avatar` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `role` enum('ADMIN','INSPECTOR','VIEWER') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'INSPECTOR',
+  `provider` enum('EMAIL','GOOGLE') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'EMAIL',
+  `google_id` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `theme_preference` enum('LIGHT','DARK','SYSTEM') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'SYSTEM',
+  `notifications_enabled` tinyint(1) NOT NULL DEFAULT '1',
+  `email_notifications_enabled` tinyint(1) NOT NULL DEFAULT '1',
+  `language_preference` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `timezone_preference` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `last_login` timestamp NULL DEFAULT NULL,
+  `is_active` tinyint(1) NOT NULL DEFAULT '1',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `email` (`email`),
+  UNIQUE KEY `google_id` (`google_id`),
+  KEY `idx_transx_users_email` (`email`),
+  KEY `idx_transx_users_google_id` (`google_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `transx_users`
+--
+
+LOCK TABLES `transx_users` WRITE;
+/*!40000 ALTER TABLE `transx_users` DISABLE KEYS */;
+INSERT INTO `transx_users` VALUES (_binary 'V¨–\n\ÐA\ï²©\æÁ…@-','Prabath Wijethilaka','rajans50prabath@gmail.com',NULL,'https://lh3.googleusercontent.com/a/ACg8ocIX6KfzPL3vvkDWkJmxuIwEk86rsCCXEdmPcpSJ9ufiWLwERpxS=s96-c','INSPECTOR','GOOGLE','108455024764383207884','SYSTEM',1,1,'en','UTC','2025-11-26 04:04:13','2025-11-26 06:16:29','2025-11-26 06:16:28',1),(_binary 'UFª\â\0”Aº™õ÷w)‘','Bk Cloud5','bkcloudspace5@gmail.com',NULL,'https://lh3.googleusercontent.com/a/ACg8ocLJKKvDxrV5bAw83fbchIGXfPwLM8GRhECBIcaEIdxXZ_0dJw=s96-c','INSPECTOR','GOOGLE','106316183403819249754','SYSTEM',1,1,'en','UTC','2025-11-26 03:10:59','2025-11-26 06:05:54','2025-11-26 06:05:54',1),(_binary 's2:(\ßûM€¤I¯\à\ëýj','kasun','kasun@gmail.com','$2a$10$YQWJCCS/.IBgxmfsLGFWi.3Rx5xfRhKjJsHPkD/j/n8fIYoOrJzTW',NULL,'INSPECTOR','EMAIL',NULL,'SYSTEM',1,1,'en','UTC','2025-11-26 02:20:32','2025-11-26 06:31:31','2025-11-26 06:31:31',1),(_binary 'ˆ®U Ê›ðƒÔ“ÂƒK\ë','Admin User','admin@transx.com','$2a$10$dXJ3SW6G7P50lGmMkkmwe.20cQQubK3.HZWzG3YB1tlRy.fqvM/BG',NULL,'ADMIN','EMAIL',NULL,'SYSTEM',1,1,'en','UTC','2025-11-26 07:43:01','2025-11-26 07:43:01',NULL,1),(_binary '¾LW\ÒM—´ö½C–c\Û','Prabath Wijethilaka','prabathwijethilaka50@gmail.com',NULL,'https://lh3.googleusercontent.com/a/ACg8ocJEFsDNJD9hjUjyFlOwD278_UDScqpgRfw88xGItx60_-rD7TQf=s96-c','INSPECTOR','GOOGLE','115527804369620187207','SYSTEM',1,1,'en','UTC','2025-11-26 03:10:25','2025-11-26 03:10:25',NULL,1);
+/*!40000 ALTER TABLE `transx_users` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `users`
 --
 
@@ -706,4 +783,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2025-11-10 21:19:49
+-- Dump completed on 2025-11-26 17:34:35

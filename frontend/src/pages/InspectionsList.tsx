@@ -120,7 +120,7 @@ export default function InspectionsList() {
   }
 
   return (
-    <div className="page-container">
+    <div className="list-page-wrapper">
       <div className="page-header">
         <h1 className="page-title">Inspections</h1>
         <button className="primary-button add-button" onClick={() => { resetForm(); setOpen(true); }}>

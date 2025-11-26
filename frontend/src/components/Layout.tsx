@@ -103,33 +103,14 @@ export default function Layout() {
         </button>
       </aside>
       <div className="app-main">
-        <main style={{
-          flex: 1,
-          width: '100%',
-          maxWidth: '100%',
-          margin: '0',
-          padding: '1rem',
-        }}>
+        <main className="app-main-content">
           <Outlet />
         </main>
-        <footer style={{
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          gap: '1rem',
-          color: 'var(--text-secondary)',
-          fontSize: '0.85rem',
-          padding: '1rem 0 0.5rem 0',
-        }}>
-          <span>&copy; {new Date().getFullYear()} TransX Platform</span>
-          <span style={{ 
-            background: 'var(--bg-tertiary)', 
-            padding: '0.25rem 0.5rem', 
-            borderRadius: '6px',
-            fontSize: '0.75rem',
-            fontFamily: 'Source Code Pro, monospace',
-            color: 'var(--text-secondary)'
-          }}>v1.0.0</span>
+        <footer className="app-footer">
+          <span>⚡ TransX Platform</span>
+          <span>&copy; {new Date().getFullYear()} All rights reserved</span>
+          <span className="footer-user">Logged in as <strong>{user?.name || 'User'}</strong></span>
+          <span className="footer-version">v1.0.0</span>
         </footer>
       </div>
     </div>

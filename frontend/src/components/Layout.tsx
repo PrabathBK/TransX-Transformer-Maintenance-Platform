@@ -2,13 +2,11 @@
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { logout } from '../api/auth';
 import { useState, useEffect } from 'react';
-import { useTheme } from '../context/ThemeContext';
 
 export default function Layout() {
   const navigate = useNavigate();
   const location = useLocation();
   const [user, setUser] = useState<any>(null);
-  const { isDark } = useTheme();
 
   useEffect(() => {
     const userStr = localStorage.getItem('transx_user');
@@ -35,12 +33,8 @@ export default function Layout() {
     padding: '14px 20px',
     borderRadius: 12,
     textDecoration: 'none',
-    color: isActive(path) 
-      ? (isDark ? '#ffffff' : '#1e40af')
-      : 'var(--sidebar-text)',
-    background: isActive(path) 
-      ? (isDark ? 'var(--primary)' : '#fff')
-      : 'transparent',
+    color: isActive(path) ? '#1e40af' : 'var(--sidebar-text)',
+    background: isActive(path) ? '#fff' : 'transparent',
     fontWeight: 700,
     fontFamily: 'Montserrat',
     fontSize: 18,
@@ -119,12 +113,23 @@ export default function Layout() {
           <Outlet />
         </main>
         <footer style={{
-          textAlign: 'center',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          gap: '1rem',
           color: 'var(--text-secondary)',
           fontSize: '0.85rem',
           padding: '1rem 0 0.5rem 0',
         }}>
-          &copy; {new Date().getFullYear()} TransX Platform
+          <span>&copy; {new Date().getFullYear()} TransX Platform</span>
+          <span style={{ 
+            background: 'var(--bg-tertiary)', 
+            padding: '0.25rem 0.5rem', 
+            borderRadius: '6px',
+            fontSize: '0.75rem',
+            fontFamily: 'Source Code Pro, monospace',
+            color: 'var(--text-secondary)'
+          }}>v1.0.0</span>
         </footer>
       </div>
     </div>

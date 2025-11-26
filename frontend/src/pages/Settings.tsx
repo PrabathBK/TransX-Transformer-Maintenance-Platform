@@ -1,15 +1,12 @@
 import { useState } from 'react';
-import { useTheme, type Theme } from '../context/ThemeContext';
 
-type TabType = 'account' | 'preferences' | 'security';
+type TabType = 'account' | 'security';
 
 export default function Settings() {
   const [activeTab, setActiveTab] = useState<TabType>('account');
-  const { theme, setTheme } = useTheme();
 
   const tabs: { id: TabType; label: string; icon: string }[] = [
     { id: 'account', label: 'Account', icon: '👤' },
-    { id: 'preferences', label: 'Preferences', icon: '🎨' },
     { id: 'security', label: 'Security', icon: '🔒' },
   ];
 
@@ -17,8 +14,6 @@ export default function Settings() {
     switch (activeTab) {
       case 'account':
         return <AccountSettings />;
-      case 'preferences':
-        return <PreferencesSettings theme={theme} setTheme={setTheme} />;
       case 'security':
         return <SecuritySettings />;
       default:
@@ -30,7 +25,7 @@ export default function Settings() {
     <div className="settings-page">
       <div className="settings-header">
         <h1 className="settings-title">Settings</h1>
-        <p className="settings-subtitle">Manage your account and application preferences</p>
+        <p className="settings-subtitle">Manage your account settings</p>
       </div>
 
       <div className="settings-container">
@@ -102,68 +97,6 @@ function AccountSettings() {
       </div>
 
       <button className="btn-primary">Save Changes</button>
-    </div>
-  );
-}
-
-interface PreferencesSettingsProps {
-  theme: Theme;
-  setTheme: (theme: Theme) => void;
-}
-
-function PreferencesSettings({ theme, setTheme }: PreferencesSettingsProps) {
-  return (
-    <div className="settings-section">
-      <h2 className="section-title">Appearance</h2>
-      <p className="section-description">Customize how TransX looks for you</p>
-
-      <div className="theme-options">
-        <button
-          onClick={() => setTheme('light')}
-          className={`theme-option ${theme === 'light' ? 'selected' : ''}`}
-        >
-          <div className="theme-preview light-preview">
-            <div className="preview-sidebar"></div>
-            <div className="preview-content">
-              <div className="preview-header"></div>
-              <div className="preview-cards">
-                <div className="preview-card"></div>
-                <div className="preview-card"></div>
-              </div>
-            </div>
-          </div>
-          <div className="theme-label">
-            <span className="theme-icon">☀️</span>
-            <span>Light</span>
-          </div>
-        </button>
-
-        <button
-          onClick={() => setTheme('dark')}
-          className={`theme-option ${theme === 'dark' ? 'selected' : ''}`}
-        >
-          <div className="theme-preview dark-preview">
-            <div className="preview-sidebar"></div>
-            <div className="preview-content">
-              <div className="preview-header"></div>
-              <div className="preview-cards">
-                <div className="preview-card"></div>
-                <div className="preview-card"></div>
-              </div>
-            </div>
-          </div>
-          <div className="theme-label">
-            <span className="theme-icon">🌙</span>
-            <span>Dark</span>
-          </div>
-        </button>
-      </div>
-
-      <div className="current-theme-info">
-        <span className="theme-status">
-          Current theme: <strong>{theme === 'light' ? 'Light' : 'Dark'}</strong>
-        </span>
-      </div>
     </div>
   );
 }

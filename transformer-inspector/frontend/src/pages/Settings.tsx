@@ -1,9 +1,7 @@
 // src/pages/Settings.tsx
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { useTheme } from '../context/ThemeContext';
 import type { UserPreferences } from '../context/AuthContext';
-import type { Theme } from '../context/ThemeContext';
 
 interface TabConfig {
   id: string;
@@ -13,7 +11,6 @@ interface TabConfig {
 
 const tabs: TabConfig[] = [
   { id: 'profile', label: 'Profile', icon: '👤' },
-  { id: 'preferences', label: 'Preferences', icon: '⚙️' },
   { id: 'security', label: 'Security', icon: '🔐' },
   { id: 'activity', label: 'Activity Log', icon: '📋' },
 ];

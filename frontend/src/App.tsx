@@ -1,7 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import './App.css';
-import { ThemeProvider } from './context/ThemeContext';
 import Layout from './components/Layout';
 import Dashboard from './pages/Dashboard';
 import TransformersList from './pages/TransformersList';
@@ -31,31 +30,29 @@ function PrivateRoute({ children }: { children: React.ReactNode }) {
 export default function App() {
   return (
     <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
-      <ThemeProvider>
-        <BrowserRouter>
-          <Routes>
-            <Route path="/login" element={<Login />} />
+      <BrowserRouter>
+        <Routes>
+          <Route path="/login" element={<Login />} />
 
-            {/* Protected Routes */}
-            <Route element={
-              <PrivateRoute>
-                <Layout />
-              </PrivateRoute>
-            }>
-              <Route path="/" element={<Dashboard />} />
-              <Route path="/transformers" element={<TransformersList />} />
-              <Route path="/transformers/:id" element={<TransformerDetail />} />
-              <Route path="/inspections" element={<InspectionsList />} />
-              <Route path="/inspections/:id" element={<InspectionDetailNew />} />
-              <Route path="/inspections/:inspectionId/maintenance-record" element={<MaintenanceRecordPage />} />
-              <Route path="/maintenance-records/:recordId" element={<MaintenanceRecordPage />} />
-              <Route path="/settings" element={<Settings />} />
-            </Route>
+          {/* Protected Routes */}
+          <Route element={
+            <PrivateRoute>
+              <Layout />
+            </PrivateRoute>
+          }>
+            <Route path="/" element={<Dashboard />} />
+            <Route path="/transformers" element={<TransformersList />} />
+            <Route path="/transformers/:id" element={<TransformerDetail />} />
+            <Route path="/inspections" element={<InspectionsList />} />
+            <Route path="/inspections/:id" element={<InspectionDetailNew />} />
+            <Route path="/inspections/:inspectionId/maintenance-record" element={<MaintenanceRecordPage />} />
+            <Route path="/maintenance-records/:recordId" element={<MaintenanceRecordPage />} />
+            <Route path="/settings" element={<Settings />} />
+          </Route>
 
-            <Route path="*" element={<div style={{ padding: 24 }}>Not found</div>} />
-          </Routes>
-        </BrowserRouter>
-      </ThemeProvider>
+          <Route path="*" element={<div style={{ padding: 24 }}>Not found</div>} />
+        </Routes>
+      </BrowserRouter>
     </GoogleOAuthProvider>
   );
 }

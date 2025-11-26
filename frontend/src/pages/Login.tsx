@@ -1,101 +1,245 @@
-import { useState } from 'react';
-import { GoogleLogin, type CredentialResponse } from '@react-oauth/google';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { googleAuth } from '../api/auth';
+// src/pages/Login.tsx
+import { useState, useEffect, useRef } from 'react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import { useToast } from '../components/Toast';
+
+// Google OAuth Client ID
+const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
 
 export default function Login() {
   const navigate = useNavigate();
-  const location = useLocation();
+  const [searchParams] = useSearchParams();
+  const { login, loginWithGoogle } = useAuth();
+  const toast = useToast();
+  const googleButtonRef = useRef<HTMLDivElement>(null);
+  
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
-  // Get return URL from location state or default to dashboard
-  const from = location.state?.from?.pathname || '/';
+  // Check for session expiration
+  useEffect(() => {
+    if (searchParams.get('expired') === 'true') {
+      toast.warning('Session Expired', 'Your session has expired due to inactivity. Please sign in again.');
+    }
+  }, [searchParams, toast]);
 
-  const handleSuccess = async (credentialResponse: CredentialResponse) => {
-    if (!credentialResponse.credential) {
-      setError('Google authentication failed: No credential received');
+  // Load Google Sign-In script and render button
+  useEffect(() => {
+    if (!GOOGLE_CLIENT_ID) return;
+
+    const initializeGoogle = () => {
+      const google = (window as any).google;
+      if (google && googleButtonRef.current) {
+        google.accounts.id.initialize({
+          client_id: GOOGLE_CLIENT_ID,
+          callback: handleGoogleCallback,
+          auto_select: false,
+          cancel_on_tap_outside: true,
+        });
+        
+        // Render the Google button
+        google.accounts.id.renderButton(googleButtonRef.current, {
+          type: 'standard',
+          theme: 'outline',
+          size: 'large',
+          text: 'continue_with',
+          shape: 'rectangular',
+          width: 300, // Fixed width in pixels to avoid GSI warning
+        });
+      }
+    };
+
+    // Check if script already loaded
+    if ((window as any).google) {
+      initializeGoogle();
       return;
     }
 
-    setLoading(true);
+    // Load script
+    const script = document.createElement('script');
+    script.src = 'https://accounts.google.com/gsi/client';
+    script.async = true;
+    script.defer = true;
+    script.onload = () => setTimeout(initializeGoogle, 100);
+    document.body.appendChild(script);
+
+    return () => {
+      // Cleanup if needed
+    };
+  }, []);
+
+  const handleGoogleCallback = async (response: { credential: string }) => {
+    setIsLoading(true);
     setError(null);
-
     try {
-      const response = await googleAuth({
-        credential: credentialResponse.credential,
-      });
-
-      // Save token and user info
-      localStorage.setItem('transx_token', response.token);
-      localStorage.setItem('transx_user', JSON.stringify(response.user));
-
-      // Redirect to original destination
-      navigate(from, { replace: true });
-    } catch (err: any) {
-      console.error('Login failed:', err);
-      setError(err.message || 'Authentication failed. Please try again.');
+      await loginWithGoogle(response.credential);
+      toast.success('Welcome!', 'Successfully signed in with Google');
+      navigate('/');
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Google login failed';
+      setError(msg);
+      toast.error('Login Failed', msg);
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
-  const handleError = () => {
-    setError('Google Sign-In failed. Please try again.');
+  const handleEmailLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setIsLoading(true);
+
+    try {
+      await login(email, password, rememberMe);
+      toast.success('Welcome back!', rememberMe ? 'You will stay signed in for 30 days' : 'Successfully signed in');
+      navigate('/');
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Login failed. Please try again.';
+      setError(errorMessage);
+      toast.error('Login Failed', errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8 bg-white p-10 rounded-xl shadow-lg">
-        <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            TransX Platform
-          </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
-            Transformer Maintenance & Inspection
-          </p>
+    <div className="auth-container">
+      <div className="auth-card">
+        {/* Logo and Header */}
+        <div className="auth-header">
+          <div className="auth-logo">
+            <span className="logo-icon">⚡</span>
+            <span className="logo-text">TransX</span>
+          </div>
+          <h1 className="auth-title">Welcome Back</h1>
+          <p className="auth-subtitle">Sign in to continue to TransX Platform</p>
         </div>
 
-        <div className="mt-8 space-y-6">
-          <div className="flex flex-col items-center justify-center">
-            {loading ? (
-              <div className="flex items-center justify-center space-x-2">
-                <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-                <span className="text-gray-600">Signing in...</span>
-              </div>
-            ) : (
-              <div className="w-full flex justify-center">
-                <GoogleLogin
-                  onSuccess={handleSuccess}
-                  onError={handleError}
-                  useOneTap
-                  theme="filled_blue"
-                  shape="pill"
-                  size="large"
-                  width="100%"
-                />
-              </div>
-            )}
+        {/* Error Message */}
+        {error && (
+          <div className="auth-error">
+            <span className="error-icon">⚠️</span>
+            {error}
+          </div>
+        )}
+
+        {/* Login Form */}
+        <form onSubmit={handleEmailLogin} className="auth-form">
+          <div className="form-group">
+            <label htmlFor="email" className="form-label">Email Address</label>
+            <div className="input-wrapper">
+              <span className="input-icon">📧</span>
+              <input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Enter your email"
+                className="form-input"
+                required
+                disabled={isLoading}
+              />
+            </div>
           </div>
 
-          {error && (
-            <div className="rounded-md bg-red-50 p-4">
-              <div className="flex">
-                <div className="flex-shrink-0">
-                  <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                  </svg>
-                </div>
-                <div className="ml-3">
-                  <h3 className="text-sm font-medium text-red-800">Authentication Error</h3>
-                  <div className="mt-2 text-sm text-red-700">
-                    <p>{error}</p>
-                  </div>
-                </div>
-              </div>
+          <div className="form-group">
+            <label htmlFor="password" className="form-label">Password</label>
+            <div className="input-wrapper">
+              <span className="input-icon">🔒</span>
+              <input
+                id="password"
+                type={showPassword ? 'text' : 'password'}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Enter your password"
+                className="form-input"
+                required
+                disabled={isLoading}
+              />
+              <button
+                type="button"
+                className="password-toggle"
+                onClick={() => setShowPassword(!showPassword)}
+                tabIndex={-1}
+              >
+                {showPassword ? '👁️' : '👁️‍🗨️'}
+              </button>
             </div>
+          </div>
+
+          <div className="form-options">
+            <label className="checkbox-label">
+              <input 
+                type="checkbox" 
+                className="checkbox-input" 
+                checked={rememberMe}
+                onChange={(e) => setRememberMe(e.target.checked)}
+              />
+              <span>Remember me for 30 days</span>
+            </label>
+            <Link to="/forgot-password" className="forgot-link">
+              Forgot password?
+            </Link>
+          </div>
+
+          <button
+            type="submit"
+            className="auth-button primary"
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <>
+                <span className="spinner"></span>
+                Signing in...
+              </>
+            ) : (
+              'Sign In'
+            )}
+          </button>
+        </form>
+
+        {/* Divider */}
+        <div className="auth-divider">
+          <span>or continue with</span>
+        </div>
+
+        {/* Google Sign-In Button - Rendered by Google */}
+        <div className="social-buttons">
+          <div 
+            ref={googleButtonRef} 
+            className="google-signin-container"
+            style={{ 
+              display: 'flex', 
+              justifyContent: 'center',
+              minHeight: '44px'
+            }}
+          />
+          {!GOOGLE_CLIENT_ID && (
+            <p style={{ color: '#666', fontSize: '14px', textAlign: 'center' }}>
+              Google Sign-In not configured
+            </p>
           )}
         </div>
+
+        {/* Sign Up Link */}
+        <p className="auth-footer">
+          Don't have an account?{' '}
+          <Link to="/signup" className="auth-link">
+            Create account
+          </Link>
+        </p>
+      </div>
+
+      {/* Background decoration */}
+      <div className="auth-bg-decoration">
+        <div className="decoration-circle circle-1"></div>
+        <div className="decoration-circle circle-2"></div>
+        <div className="decoration-circle circle-3"></div>
       </div>
     </div>
   );

@@ -19,7 +19,7 @@ import java.util.UUID;
  */
 @RestController
 @RequestMapping("/api/inspections/{inspectionId}/history")
-@CrossOrigin(origins = "*")
+@CrossOrigin(origins = {"http://localhost:5173", "http://localhost:5174", "http://localhost:3000"}, allowCredentials = "true")
 public class InspectionHistoryController {
     
     private static final Logger log = LoggerFactory.getLogger(InspectionHistoryController.class);

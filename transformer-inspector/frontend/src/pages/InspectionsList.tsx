@@ -6,6 +6,7 @@ import Select from '../components/Select';
 import Modal from '../components/Modal';
 import { listInspections, createInspection, deleteInspection } from '../api/inspections';
 import { listTransformers } from '../api/transformers';
+import { useAuth } from '../context/AuthContext';
 import type { Inspection } from '../api/inspections';
 import type { Transformer } from '../api/transformers';
 
@@ -18,6 +19,7 @@ type CreateInspectionForm = {
 };
 
 export default function InspectionsList() {
+  const { user } = useAuth();
   const [q, setQ] = useState('');
   const [items, setItems] = useState<Inspection[]>([]);
   const [total, setTotal] = useState(0);
@@ -33,7 +35,7 @@ export default function InspectionsList() {
     inspectionNumber: '',
     transformerId: '',
     weatherCondition: '',
-    inspectedBy: '',
+    inspectedBy: user?.name || '',
     notes: '',
   });
   const [createBusy, setCreateBusy] = useState(false);
@@ -75,7 +77,7 @@ export default function InspectionsList() {
       inspectionNumber: '',
       transformerId: '',
       weatherCondition: '',
-      inspectedBy: '',
+      inspectedBy: user?.name || '',
       notes: '',
     });
     setCreateErr(null);
@@ -290,10 +292,11 @@ export default function InspectionsList() {
             ]}
           />
           <Input 
-            label="Inspected By (Optional)" 
+            label="Inspected By" 
             placeholder="Inspector Name"
             value={form.inspectedBy} 
             onChange={e => setForm(f => ({ ...f, inspectedBy: e.target.value }))} 
+            disabled={!!user?.name}
           />
           <div style={{ gridColumn: '1 / -1' }}>
             <Input 

@@ -1,6 +1,6 @@
 // src/pages/InspectionDetailNew.tsx
 import { useState, useEffect, useRef } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import AnnotationCanvas from '../components/AnnotationCanvas';
 import AnnotationToolbar from '../components/AnnotationToolbar';
 import AnnotationLegend from '../components/AnnotationLegend';
@@ -24,44 +24,44 @@ import type { Annotation } from '../api/annotations';
 
 export default function InspectionDetailNew() {
   const { id } = useParams();
-  const nav = useNavigate();
+  // const nav = useNavigate();
 
   const [inspection, setInspection] = useState<Inspection | null>(null);
   const [annotations, setAnnotations] = useState<Annotation[]>([]);
   const [baselineImage, setBaselineImage] = useState<ThermalImage | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  
+
   // Annotation canvas state
   const [mode, setMode] = useState<'view' | 'edit' | 'draw'>('view');
   const [selectedClass, setSelectedClass] = useState('Faulty');
   const [isDetecting, setIsDetecting] = useState(false);
-  
+
   // Image upload state
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [removingImage, setRemovingImage] = useState(false);
-  
+
   // Inspection completion state
   const [isCompleting, setIsCompleting] = useState(false);
-  
+
   // Canvas capture state
   const captureCanvasRef = useRef<(() => string | null) | null>(null);
   const [isCanvasReady, setIsCanvasReady] = useState(false);
   const [isSavingImage, setIsSavingImage] = useState(false);
-  
+
   // Threshold modal state
   const [showThresholdModal, setShowThresholdModal] = useState(false);
   const [threshold, setThreshold] = useState(50); // Default threshold value (0-100)
-  
+
   // Feedback export state (FR3.3)
   const [isExportingFeedback, setIsExportingFeedback] = useState(false);
 
   // Add this with other state declarations at the top of the component
   const [commentsExpanded, setCommentsExpanded] = useState(true);
   const [historyExpanded, setHistoryExpanded] = useState(true);
-  
+
   // Load inspection and annotations
   useEffect(() => {
     if (!id) return;
@@ -70,19 +70,19 @@ export default function InspectionDetailNew() {
 
   async function loadData() {
     if (!id) return;
-    
+
     try {
       setLoading(true);
       setError(null);
-      
+
       const [inspectionData, annotationsData] = await Promise.all([
         getInspection(id),
         getAnnotationsByInspection(id)
       ]);
-      
+
       setInspection(inspectionData);
       setAnnotations(annotationsData);
-      
+
       // Load baseline image for the transformer
       if (inspectionData.transformerId) {
         await loadBaselineImage(inspectionData.transformerId, inspectionData.weatherCondition);
@@ -97,27 +97,27 @@ export default function InspectionDetailNew() {
 
 
 
-  
+
   async function loadBaselineImage(transformerId: string, weatherCondition?: string | null) {
     try {
       const response = await listImages({ transformerId, type: 'BASELINE', page: 0, size: 10 });
       const baselineImages = response.content || [];
-      
+
       // Try to find a baseline image matching the weather condition first
       let selectedBaseline = null;
       if (weatherCondition) {
-        selectedBaseline = baselineImages.find(img => 
+        selectedBaseline = baselineImages.find(img =>
           img.envCondition === weatherCondition
         );
       }
-      
+
       // If no matching weather condition, use the most recent baseline image
       if (!selectedBaseline && baselineImages.length > 0) {
-        selectedBaseline = baselineImages.sort((a, b) => 
+        selectedBaseline = baselineImages.sort((a, b) =>
           new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime()
         )[0];
       }
-      
+
       setBaselineImage(selectedBaseline || null);
     } catch (e: any) {
       console.error('Failed to load baseline image:', e);
@@ -127,49 +127,49 @@ export default function InspectionDetailNew() {
 
   async function handleDetectAnomalies() {
     if (!id) return;
-    
+
     // Validate that inspection exists and has an image uploaded
     if (!inspection || !inspection.inspectionImageId) {
       alert('⚠️ Please upload an inspection image before detecting anomalies.');
       return;
     }
-    
+
     // Check if baseline image exists
     if (!baselineImage && !inspection.baselineImageUrl) {
       alert('⚠️ No baseline image found for comparison. Please upload a baseline image for this transformer first.');
       return;
     }
-    
+
     // Open threshold modal instead of directly calling detection
     setShowThresholdModal(true);
   }
 
   async function handleDetectWithThreshold() {
     if (!id) return;
-    
+
     try {
       setIsDetecting(true);
       setShowThresholdModal(false);
-      
+
       // Convert threshold from 0-100 to 0.0-1.0 range expected by backend
       const normalizedThreshold = threshold / 100;
-      
+
       const result = await detectAnomalies(id, normalizedThreshold);
-      
+
       // Refresh annotations, inspection data, and baseline image
       const [updatedAnnotations, updatedInspection] = await Promise.all([
         getAnnotationsByInspection(id),
         getInspection(id)
       ]);
-      
+
       setAnnotations(updatedAnnotations);
       setInspection(updatedInspection);
-      
+
       // Refresh baseline image as well
       if (updatedInspection.transformerId) {
         await loadBaselineImage(updatedInspection.transformerId, updatedInspection.weatherCondition);
       }
-      
+
       alert(`✅ Detection complete! Found ${result.detections?.length || 0} anomalies with threshold ${threshold}%.`);
     } catch (e: any) {
       alert('❌ Detection failed: ' + (e?.message || 'Unknown error'));
@@ -180,24 +180,24 @@ export default function InspectionDetailNew() {
 
   async function handleAnnotationCreate(bbox: { x1: number; y1: number; x2: number; y2: number }) {
     if (!id) return;
-    
+
     // Map className to classId (matches backend enum/constants)
     const getClassId = (className: string): number => {
       const classMap: Record<string, number> = {
         'Faulty': 1,
-        'faulty_loose_joint': 2, 
+        'faulty_loose_joint': 2,
         'faulty_point_overload': 3,
         'potential_faulty': 4,
       };
       return classMap[className] || 1;
     };
-    
+
     try {
       const annotationRequest = {
         inspectionId: id,
         bbox: {
           x1: Math.round(bbox.x1),
-          y1: Math.round(bbox.y1), 
+          y1: Math.round(bbox.y1),
           x2: Math.round(bbox.x2),
           y2: Math.round(bbox.y2),
         },
@@ -207,11 +207,11 @@ export default function InspectionDetailNew() {
         source: 'human' as const,
         userId: 'current-user@example.com', // TODO: Get from auth context
       };
-      
+
       console.log('Creating annotation with request:', annotationRequest);
-      
+
       await saveAnnotation(annotationRequest);
-      
+
       await loadData();
     } catch (e: any) {
       console.error('Annotation creation error:', e);
@@ -224,16 +224,16 @@ export default function InspectionDetailNew() {
     const getClassId = (className: string): number => {
       const classMap: Record<string, number> = {
         'Faulty': 1,
-        'faulty_loose_joint': 2, 
+        'faulty_loose_joint': 2,
         'faulty_point_overload': 3,
         'potential_faulty': 4,
       };
       return classMap[className] || 1;
     };
-    
+
     try {
       console.log('Updating annotation with ID:', annotation.id, 'for version creation');
-      
+
       await saveAnnotation({
         id: annotation.id, // Include ID for version creation
         inspectionId: annotation.inspectionId,
@@ -244,7 +244,7 @@ export default function InspectionDetailNew() {
         source: annotation.source,
         userId: 'current-user@example.com',
       });
-      
+
       await loadData();
     } catch (e: any) {
       alert('Failed to update annotation: ' + (e?.message || 'Unknown error'));
@@ -253,7 +253,7 @@ export default function InspectionDetailNew() {
 
   async function handleAnnotationDelete(annotationId: string) {
     if (!confirm('Delete this annotation?')) return;
-    
+
     try {
       await deleteAnnotation(annotationId, 'current-user@example.com');
       await loadData();
@@ -344,11 +344,11 @@ export default function InspectionDetailNew() {
 
   async function handleImageUpload(file: File) {
     if (!inspection) return;
-    
+
     try {
       setUploading(true);
       setUploadError(null);
-      
+
       // Upload image to server
       const uploadedImage = await uploadImage({
         transformerId: inspection.transformerId,
@@ -357,13 +357,13 @@ export default function InspectionDetailNew() {
         file,
         inspectionId: inspection.id,
       });
-      
+
       // Link image to inspection
       await uploadInspectionImage(inspection.id, uploadedImage.id);
-      
+
       // Reload inspection data
       await loadData();
-      
+
       setSelectedFile(null);
       alert('Image uploaded successfully! You can now trigger detection.');
     } catch (e: any) {
@@ -375,29 +375,29 @@ export default function InspectionDetailNew() {
 
   async function handleRemoveImage() {
     if (!inspection) return;
-    
+
     const hasAnnotations = annotations.length > 0;
-    const confirmMessage = hasAnnotations 
+    const confirmMessage = hasAnnotations
       ? `⚠️ Are you sure you want to remove the uploaded image?\n\nThis will permanently delete:\n• The current inspection image\n• All ${annotations.length} annotation${annotations.length > 1 ? 's' : ''}\n\nThis action cannot be undone.`
       : 'Are you sure you want to remove the uploaded image? You can upload a new one afterwards.';
-    
+
     if (!window.confirm(confirmMessage)) {
       return;
     }
-    
+
     try {
       setRemovingImage(true);
-      
+
       // Remove image from inspection
       await removeInspectionImage(inspection.id);
-      
+
       // Reload inspection data to reflect changes
       await loadData();
-      
+
       const successMessage = hasAnnotations
         ? '✅ Image and all annotations removed successfully. You can now upload a new image.'
         : '✅ Image removed successfully. You can now upload a new image.';
-      
+
       alert(successMessage);
     } catch (e: any) {
       console.error('Error removing image:', e);
@@ -418,42 +418,42 @@ export default function InspectionDetailNew() {
     console.log('inspection:', inspection);
     console.log('captureCanvasRef.current:', captureCanvasRef.current);
     console.log('captureCanvas type:', typeof captureCanvasRef.current);
-    
+
     if (!inspection) {
       alert('No inspection available');
       return;
     }
-    
+
     if (!captureCanvasRef.current) {
       alert('Canvas capture function not ready. Please wait for the image to load completely.');
       return;
     }
-    
+
     if (typeof captureCanvasRef.current !== 'function') {
       alert('Canvas capture is not a function. Please refresh the page and try again.');
       return;
     }
-    
+
     try {
       setIsSavingImage(true);
-      
+
       console.log('Calling captureCanvas function...');
       // Capture canvas as base64 data URL
       const dataUrl = captureCanvasRef.current();
       console.log('Capture result:', dataUrl ? 'Success' : 'Failed');
-      
+
       if (!dataUrl) {
         alert('Failed to capture annotated image. Please ensure the image is fully loaded.');
         return;
       }
-      
+
       // Convert base64 to blob
       const response = await fetch(dataUrl);
       const blob = await response.blob();
-      
+
       // Create file from blob
       const file = new File([blob], `annotated_${inspection.inspectionNumber}_${Date.now()}.png`, { type: 'image/png' });
-      
+
       // Upload annotated image
       const uploadedImage = await uploadImage({
         transformerId: inspection.transformerId,
@@ -462,13 +462,13 @@ export default function InspectionDetailNew() {
         file,
         inspectionId: inspection.id,
       });
-      
+
       // Update inspection with annotated image
       await uploadAnnotatedImage(inspection.id, uploadedImage.id);
-      
+
       // Reload data to show updated image
       await loadData();
-      
+
       alert('✅ Annotated image saved! This image will now appear on the transformer page.');
     } catch (e: any) {
       alert('Failed to save annotated image: ' + (e?.message || 'Unknown error'));
@@ -479,16 +479,16 @@ export default function InspectionDetailNew() {
 
   async function handleCompleteInspection() {
     if (!inspection) return;
-    
+
     try {
       setIsCompleting(true);
-      
+
       // Update inspection status to COMPLETED
       await updateInspectionStatus(inspection.id, 'COMPLETED');
-      
+
       // Show success message
       alert('Inspection completed successfully! Redirecting to transformer page...');
-      
+
       // Navigate to transformer detail page with reliable navigation
       window.location.href = `/transformers/${inspection.transformerId}`;
     } catch (e: any) {
@@ -509,7 +509,7 @@ export default function InspectionDetailNew() {
 
       // 1. Export feedback data (JSON format)
       const feedbackData = await exportFeedback(id);
-      
+
       // 2. Download JSON file
       const jsonBlob = new Blob([JSON.stringify(feedbackData, null, 2)], { type: 'application/json' });
       const jsonUrl = URL.createObjectURL(jsonBlob);
@@ -539,23 +539,23 @@ export default function InspectionDetailNew() {
       }
 
       const result = await response.json();
-      
+
       alert(`✅ Feedback exported successfully!\n\n` +
-            `Summary:\n` +
-            `- AI Detections: ${result.summary?.totalAiDetections || 0}\n` +
-            `- Human Annotations: ${result.summary?.totalHumanAnnotations || 0}\n` +
-            `- Approved: ${result.summary?.approved || 0}\n` +
-            `- Rejected: ${result.summary?.rejected || 0}\n\n` +
-            `Files downloaded to your Downloads folder\n` +
-            `Data sent to ML service for fine-tuning\n\n` +
-            `Note: The ML model can now be fine-tuned using this feedback data.`);
-      
+        `Summary:\n` +
+        `- AI Detections: ${result.summary?.totalAiDetections || 0}\n` +
+        `- Human Annotations: ${result.summary?.totalHumanAnnotations || 0}\n` +
+        `- Approved: ${result.summary?.approved || 0}\n` +
+        `- Rejected: ${result.summary?.rejected || 0}\n\n` +
+        `Files downloaded to your Downloads folder\n` +
+        `Data sent to ML service for fine-tuning\n\n` +
+        `Note: The ML model can now be fine-tuned using this feedback data.`);
+
     } catch (e: any) {
       console.error('Feedback export error:', e);
       alert(`⚠️ Feedback export partially completed.\n\n` +
-            `Files may have been downloaded, but failed to send to ML service:\n` +
-            `${e?.message || 'Unknown error'}\n\n` +
-            `Check console for details.`);
+        `Files may have been downloaded, but failed to send to ML service:\n` +
+        `${e?.message || 'Unknown error'}\n\n` +
+        `Check console for details.`);
     } finally {
       setIsExportingFeedback(false);
     }
@@ -609,11 +609,11 @@ export default function InspectionDetailNew() {
         border: 'none'
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-          <button 
+          <button
             onClick={() => {
               // Force navigation with page refresh for reliability
               window.location.href = '/inspections';
-            }} 
+            }}
             style={{
               background: 'rgba(255, 255, 255, 0.2)',
               border: '1px solid rgba(255, 255, 255, 0.3)',
@@ -638,11 +638,11 @@ export default function InspectionDetailNew() {
             ← Back
           </button>
           <div>
-            <h1 style={{ 
-              margin: 0, 
-              fontSize: '20px', 
-              fontWeight: '600', 
-              color: 'white' 
+            <h1 style={{
+              margin: 0,
+              fontSize: '20px',
+              fontWeight: '600',
+              color: 'white'
             }}>
               Inspection {inspection.inspectionNumber}
             </h1>
@@ -672,14 +672,14 @@ export default function InspectionDetailNew() {
         padding: '16px',
         paddingTop: '0'
       }}>
-        <ImageBox 
-          title="Baseline Image" 
-          imageUrl={baselineImage?.publicUrl || inspection.baselineImageUrl} 
+        <ImageBox
+          title="Baseline Image"
+          imageUrl={baselineImage?.publicUrl || inspection.baselineImageUrl}
           timestamp={baselineImage?.uploadedAt || inspection.createdAt}
         />
-        <ImageBox 
-          title="Inspection Image" 
-          imageUrl={inspection.inspectionImageUrl} 
+        <ImageBox
+          title="Inspection Image"
+          imageUrl={inspection.inspectionImageUrl}
           timestamp={inspection.inspectedAt || inspection.createdAt}
         />
       </div>
@@ -767,19 +767,19 @@ export default function InspectionDetailNew() {
               justifyContent: 'space-between',
             }}>
               <div>
-                <div style={{ 
-                  color: annotations.length > 0 ? '#dc2626' : '#92400e', 
-                  fontWeight: '600', 
-                  fontSize: '14px', 
-                  marginBottom: '4px' 
+                <div style={{
+                  color: annotations.length > 0 ? '#dc2626' : '#92400e',
+                  fontWeight: '600',
+                  fontSize: '14px',
+                  marginBottom: '4px'
                 }}>
                   Inspection Image
                 </div>
-                <div style={{ 
-                  color: annotations.length > 0 ? '#b91c1c' : '#a16207', 
-                  fontSize: '13px' 
+                <div style={{
+                  color: annotations.length > 0 ? '#b91c1c' : '#a16207',
+                  fontSize: '13px'
                 }}>
-                  {annotations.length > 0 
+                  {annotations.length > 0
                     ? `⚠️ Warning: Removing this image will delete ${annotations.length} annotation${annotations.length > 1 ? 's' : ''}.`
                     : 'Want to upload a different image? You can remove this one and upload a new one.'
                   }
@@ -938,15 +938,15 @@ export default function InspectionDetailNew() {
               }}>
                 <span style={{ fontSize: '18px' }}>✅</span>
                 <div>
-                  <div style={{ 
-                    fontSize: '14px', 
-                    fontWeight: '600', 
+                  <div style={{
+                    fontSize: '14px',
+                    fontWeight: '600',
                     color: '#059669'
                   }}>
                     Inspection Completed
                   </div>
-                  <div style={{ 
-                    fontSize: '12px', 
+                  <div style={{
+                    fontSize: '12px',
                     color: '#047857'
                   }}>
                     {new Date(inspection.inspectedAt || inspection.createdAt).toLocaleDateString()}
@@ -954,7 +954,7 @@ export default function InspectionDetailNew() {
                 </div>
               </div>
             )}
-            
+
             {/* Maintenance Record Button - Always visible for both statuses */}
             <button
               onClick={() => {
@@ -1008,10 +1008,10 @@ export default function InspectionDetailNew() {
             padding: '16px',
             marginTop: '16px'
           }}>
-            <div 
-              style={{ 
-                display: 'flex', 
-                justifyContent: 'space-between', 
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
                 alignItems: 'center',
                 cursor: 'pointer',
                 userSelect: 'none',
@@ -1022,7 +1022,7 @@ export default function InspectionDetailNew() {
               <h2 style={{ margin: '0', fontSize: '16px', fontWeight: '600' }}>
                 📋 Inspection History
               </h2>
-              <span style={{ 
+              <span style={{
                 transform: historyExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
                 transition: 'transform 0.2s ease',
                 fontSize: '12px'
@@ -1030,9 +1030,9 @@ export default function InspectionDetailNew() {
                 ▼
               </span>
             </div>
-            
+
             {historyExpanded && (
-              <div style={{ 
+              <div style={{
                 height: '400px',
                 overflowY: 'auto',
                 overflowX: 'hidden',
@@ -1063,7 +1063,7 @@ export default function InspectionDetailNew() {
               Annotations ({annotations.length})
             </h2>
 
-            <div style={{ 
+            <div style={{
               height: '450px',
               overflowY: 'auto',
               overflowX: 'hidden',
@@ -1075,15 +1075,15 @@ export default function InspectionDetailNew() {
               gap: '10px',
             }}>
               {annotations.length === 0 ? (
-                <div style={{ 
-                  textAlign: 'center', 
-                  padding: '40px 20px', 
+                <div style={{
+                  textAlign: 'center',
+                  padding: '40px 20px',
                   color: '#6b7280',
                   fontSize: '14px'
                 }}>
                   No annotations yet. Click "Detect Anomalies" or draw manually.
                 </div>
-              ) : 
+              ) :
                 annotations.map((ann) => (
                   <AnnotationCard
                     key={ann.id}
@@ -1102,7 +1102,7 @@ export default function InspectionDetailNew() {
           <AnnotationLegend layout="vertical" />
 
           {/* Inspector Notes */}
-          <NotesSection 
+          <NotesSection
             inspectionId={inspection.id}
             initialNotes={inspection.notes || ''}
             onNotesUpdate={() => loadData()}
@@ -1116,8 +1116,8 @@ export default function InspectionDetailNew() {
             padding: '16px',
             marginTop: '16px'
           }}>
-            <div 
-              style={{ 
+            <div
+              style={{
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center',
@@ -1130,7 +1130,7 @@ export default function InspectionDetailNew() {
               <h2 style={{ margin: '0', fontSize: '16px', fontWeight: '600' }}>
                 💬 Comments
               </h2>
-              <span style={{ 
+              <span style={{
                 transform: commentsExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
                 transition: 'transform 0.2s ease',
                 fontSize: '12px'
@@ -1138,9 +1138,9 @@ export default function InspectionDetailNew() {
                 ▼
               </span>
             </div>
-            
+
             {commentsExpanded && (
-              <div style={{ 
+              <div style={{
                 height: '550px',
                 overflowY: 'auto',
                 overflowX: 'hidden',
@@ -1176,35 +1176,35 @@ export default function InspectionDetailNew() {
             minWidth: '400px',
             boxShadow: '0 10px 25px rgba(0, 0, 0, 0.2)',
           }}>
-            <h3 style={{ 
-              margin: '0 0 16px 0', 
-              fontSize: '20px', 
+            <h3 style={{
+              margin: '0 0 16px 0',
+              fontSize: '20px',
               fontWeight: '600',
               color: '#1f2937'
             }}>
               Configure Anomaly Detection
             </h3>
-            
+
             <div style={{ marginBottom: '20px' }}>
-              <p style={{ 
-                fontSize: '14px', 
-                color: '#6b7280', 
-                marginBottom: '16px' 
+              <p style={{
+                fontSize: '14px',
+                color: '#6b7280',
+                marginBottom: '16px'
               }}>
                 Set the detection threshold.
                 Lower values detect more anomalies, higher values are more selective.
               </p>
-              
-              <label style={{ 
-                display: 'block', 
-                fontSize: '14px', 
-                fontWeight: '600', 
+
+              <label style={{
+                display: 'block',
+                fontSize: '14px',
+                fontWeight: '600',
                 color: '#374151',
                 marginBottom: '8px'
               }}>
                 Threshold Value (0-100)
               </label>
-              
+
               <input
                 type="range"
                 min="0"
@@ -1220,41 +1220,41 @@ export default function InspectionDetailNew() {
                   marginBottom: '12px'
                 }}
               />
-              
-              <div style={{ 
-                display: 'flex', 
+
+              <div style={{
+                display: 'flex',
                 justifyContent: 'space-between',
                 fontSize: '12px',
                 color: '#6b7280',
                 marginBottom: '8px'
               }}>
                 <span>More Sensitive</span>
-                <span style={{ 
-                  fontSize: '16px', 
-                  fontWeight: '700', 
-                  color: '#1f2937' 
+                <span style={{
+                  fontSize: '16px',
+                  fontWeight: '700',
+                  color: '#1f2937'
                 }}>
                   {threshold}%
                 </span>
                 <span>More Selective</span>
               </div>
-              
-              <div style={{ 
-                fontSize: '13px', 
+
+              <div style={{
+                fontSize: '13px',
                 color: '#374151',
                 padding: '8px 12px',
                 backgroundColor: '#f3f4f6',
                 borderRadius: '6px'
               }}>
-                💡 <strong>Recommended:</strong> Start with 50% for balanced detection, 
+                💡 <strong>Recommended:</strong> Start with 50% for balanced detection,
                 adjust based on results.
               </div>
             </div>
-            
-            <div style={{ 
-              display: 'flex', 
-              gap: '12px', 
-              justifyContent: 'flex-end' 
+
+            <div style={{
+              display: 'flex',
+              gap: '12px',
+              justifyContent: 'flex-end'
             }}>
               <button
                 onClick={() => setShowThresholdModal(false)}
@@ -1273,7 +1273,7 @@ export default function InspectionDetailNew() {
               >
                 Cancel
               </button>
-              
+
               <button
                 onClick={handleDetectWithThreshold}
                 disabled={isDetecting}
@@ -1281,8 +1281,8 @@ export default function InspectionDetailNew() {
                   padding: '10px 20px',
                   border: 'none',
                   borderRadius: '8px',
-                  background: isDetecting 
-                    ? '#9ca3b8' 
+                  background: isDetecting
+                    ? '#9ca3b8'
                     : 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
                   color: 'white',
                   fontSize: '14px',
@@ -1326,7 +1326,7 @@ function AnnotationCard({ annotation, onApprove, onReject, onDelete, onUpdateCom
   const [showCommentInput, setShowCommentInput] = useState(false);
   const [commentText, setCommentText] = useState(annotation.comments || '');
   const [isSavingComment, setIsSavingComment] = useState(false);
-  
+
   const CLASS_COLORS: Record<string, string> = {
     'Faulty': '#ef4444',           // RED
     'faulty_loose_joint': '#22c55e', // GREEN  
@@ -1335,7 +1335,7 @@ function AnnotationCard({ annotation, onApprove, onReject, onDelete, onUpdateCom
   };
 
   const color = CLASS_COLORS[annotation.className] || '#6b7280';
-  
+
   const handleSaveComment = async () => {
     setIsSavingComment(true);
     try {
@@ -1377,7 +1377,7 @@ function AnnotationCard({ annotation, onApprove, onReject, onDelete, onUpdateCom
               {annotation.boxNumber}
             </div>
           )}
-          
+
           <div>
             <div style={{ fontWeight: '600', fontSize: '14px', color: color }}>
               {annotation.className}
@@ -1389,7 +1389,7 @@ function AnnotationCard({ annotation, onApprove, onReject, onDelete, onUpdateCom
             </div>
           </div>
         </div>
-        
+
         <div style={{
           fontSize: '11px',
           color: '#6b7280',
@@ -1402,7 +1402,7 @@ function AnnotationCard({ annotation, onApprove, onReject, onDelete, onUpdateCom
       </div>
 
       <div style={{ fontSize: '12px', color: '#6b7280', marginBottom: '8px' }}>
-        BBox: ({Math.round(annotation.bbox.x1)}, {Math.round(annotation.bbox.y1)}) → 
+        BBox: ({Math.round(annotation.bbox.x1)}, {Math.round(annotation.bbox.y1)}) →
         ({Math.round(annotation.bbox.x2)}, {Math.round(annotation.bbox.y2)})
       </div>
 
@@ -1423,11 +1423,11 @@ function AnnotationCard({ annotation, onApprove, onReject, onDelete, onUpdateCom
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
           <span>🕒 Created:</span>
           <span style={{ fontWeight: '600', color: '#374151' }}>
-            {new Date(annotation.createdAt).toLocaleString('en-US', { 
-              month: 'short', 
-              day: 'numeric', 
-              hour: '2-digit', 
-              minute: '2-digit' 
+            {new Date(annotation.createdAt).toLocaleString('en-US', {
+              month: 'short',
+              day: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit'
             })}
           </span>
         </div>
@@ -1440,30 +1440,30 @@ function AnnotationCard({ annotation, onApprove, onReject, onDelete, onUpdateCom
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
               <span>🕒 Modified:</span>
               <span style={{ fontWeight: '600', color: '#374151' }}>
-                {new Date(annotation.modifiedAt).toLocaleString('en-US', { 
-                  month: 'short', 
-                  day: 'numeric', 
-                  hour: '2-digit', 
-                  minute: '2-digit' 
+                {new Date(annotation.modifiedAt).toLocaleString('en-US', {
+                  month: 'short',
+                  day: 'numeric',
+                  hour: '2-digit',
+                  minute: '2-digit'
                 })}
               </span>
             </div>
           </>
         )}
         {annotation.actionType && annotation.actionType !== 'created' && (
-          <div style={{ 
-            marginTop: '6px', 
-            paddingTop: '6px', 
+          <div style={{
+            marginTop: '6px',
+            paddingTop: '6px',
             borderTop: '1px solid #e5e7eb',
             display: 'flex',
             justifyContent: 'space-between'
           }}>
             <span>📋 Action:</span>
-            <span style={{ 
-              fontWeight: '600', 
-              color: annotation.actionType === 'approved' ? '#16a34a' : 
-                     annotation.actionType === 'rejected' ? '#dc2626' : 
-                     annotation.actionType === 'edited' ? '#3b82f6' : '#6b7280',
+            <span style={{
+              fontWeight: '600',
+              color: annotation.actionType === 'approved' ? '#16a34a' :
+                annotation.actionType === 'rejected' ? '#dc2626' :
+                  annotation.actionType === 'edited' ? '#3b82f6' : '#6b7280',
               textTransform: 'capitalize'
             }}>
               {annotation.actionType}
@@ -1664,29 +1664,29 @@ function AnnotationCard({ annotation, onApprove, onReject, onDelete, onUpdateCom
 // ImageBox component for side-by-side comparison
 function ImageBox({ title, imageUrl, timestamp }: { title: string; imageUrl: string | null | undefined; timestamp: string | null | undefined }) {
   return (
-    <div style={{ 
-      background: '#fff', 
-      border: '1px solid #e5e7eb', 
-      borderRadius: 10, 
+    <div style={{
+      background: '#fff',
+      border: '1px solid #e5e7eb',
+      borderRadius: 10,
       padding: 12,
       boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)'
     }}>
-      <div style={{ 
-        display: 'flex', 
-        justifyContent: 'space-between', 
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
         alignItems: 'center',
-        marginBottom: 10 
+        marginBottom: 10
       }}>
-        <div style={{ 
-          fontWeight: 600, 
+        <div style={{
+          fontWeight: 600,
           fontSize: '14px',
           color: '#1f2937'
         }}>
           {title}
         </div>
         {timestamp && (
-          <div style={{ 
-            fontSize: 11, 
+          <div style={{
+            fontSize: 11,
             color: '#6b7280',
             background: '#f3f4f6',
             padding: '3px 6px',
@@ -1696,28 +1696,28 @@ function ImageBox({ title, imageUrl, timestamp }: { title: string; imageUrl: str
           </div>
         )}
       </div>
-      <div style={{ 
-        height: 400, 
-        display: 'flex', 
-        alignItems: 'center', 
-        justifyContent: 'center', 
-        background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', 
+      <div style={{
+        height: 400,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)',
         borderRadius: 8,
         border: '2px solid #334155'
       }}>
         {imageUrl ? (
-          <img 
-            src={imageUrl} 
+          <img
+            src={imageUrl}
             alt={`${title} thermal image`}
-            style={{ 
-              maxHeight: '100%', 
-              maxWidth: '100%', 
+            style={{
+              maxHeight: '100%',
+              maxWidth: '100%',
               objectFit: 'contain',
               borderRadius: '4px'
-            }} 
+            }}
           />
         ) : (
-          <div style={{ 
+          <div style={{
             color: '#94a3b8',
             textAlign: 'center',
             fontSize: '13px',

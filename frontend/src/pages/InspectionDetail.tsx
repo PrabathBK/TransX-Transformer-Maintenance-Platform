@@ -71,7 +71,7 @@ export default function InspectionDetail() {
       await uploadImage({
         transformerId: inspection.transformerId,
         type: 'INSPECTION',
-        uploader: inspection.inspectedBy,
+        uploader: inspection.inspectedBy || 'Unknown',
         file,
         inspectionId: inspection.id
       });
@@ -127,14 +127,14 @@ export default function InspectionDetail() {
   return (
     <div className="page-container">
       <div style={{ maxWidth: 1200, margin: '0 auto' }}>
-        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <h1 style={{ marginTop: 0 }}>
-            {inspection ? `Inspection ${inspection.inspectionNo}` : 'Inspection'}
+            {inspection ? `Inspection ${inspection.inspectionNumber}` : 'Inspection'}
           </h1>
-          <button 
-            onClick={() => nav('/inspections')} 
-            style={{ 
-              borderRadius: 10, 
+          <button
+            onClick={() => nav('/inspections')}
+            style={{
+              borderRadius: 10,
               padding: '8px 16px',
               background: 'linear-gradient(135deg, #1e40af 0%, #3b82f6 100%)',
               color: 'white',
@@ -148,7 +148,7 @@ export default function InspectionDetail() {
           </button>
         </div>
 
-        {loadErr && <div style={{ color:'#b00020', marginBottom: 12 }}>Error: {loadErr}</div>}
+        {loadErr && <div style={{ color: '#b00020', marginBottom: 12 }}>Error: {loadErr}</div>}
 
         {inspection && (
           <>
@@ -165,7 +165,7 @@ export default function InspectionDetail() {
             }}>
               <div>
                 <label style={{ fontSize: 14, color: '#6b7280', fontWeight: 600 }}>Inspection No.</label>
-                <div style={{ fontSize: 16, fontWeight: 600, marginTop: 4 }}>{inspection.inspectionNo}</div>
+                <div style={{ fontSize: 16, fontWeight: 600, marginTop: 4 }}>{inspection.inspectionNumber}</div>
               </div>
               <div>
                 <label style={{ fontSize: 14, color: '#6b7280', fontWeight: 600 }}>Transformer</label>
@@ -182,14 +182,14 @@ export default function InspectionDetail() {
               <div>
                 <label style={{ fontSize: 14, color: '#6b7280', fontWeight: 600 }}>Inspection Date</label>
                 <div style={{ fontSize: 16, marginTop: 4 }}>
-                  {formatDateTime(inspection.inspectionDate, inspection.inspectionTime)}
+                  {formatDateTime(inspection.inspectedAt || inspection.createdAt)}
                 </div>
               </div>
               <div>
                 <label style={{ fontSize: 14, color: '#6b7280', fontWeight: 600 }}>Maintenance Date</label>
                 <div style={{ fontSize: 16, marginTop: 4 }}>
-                  {inspection.maintenanceDate ? 
-                    formatDateTime(inspection.maintenanceDate, inspection.maintenanceTime || undefined) : 
+                  {inspection.maintenanceDate ?
+                    formatDateTime(inspection.maintenanceDate) :
                     'Not scheduled'
                   }
                 </div>
@@ -201,8 +201,8 @@ export default function InspectionDetail() {
               <div>
                 <label style={{ fontSize: 14, color: '#6b7280', fontWeight: 600 }}>Actions</label>
                 <div style={{ marginTop: 4, display: 'flex', gap: 8 }}>
-                  <select 
-                    value={inspection.status} 
+                  <select
+                    value={inspection.status}
                     onChange={(e) => handleStatusUpdate(e.target.value as any)}
                     style={{
                       padding: '4px 8px',
@@ -243,18 +243,18 @@ export default function InspectionDetail() {
               marginBottom: 24
             }}>
               <h2 style={{ margin: '0 0 20px 0', fontSize: 20 }}>Thermal Image Comparison</h2>
-              
+
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
                 <ImageBox title="Baseline" img={baselineImage} />
-                <ImageBox 
-                  title="Inspection Image" 
+                <ImageBox
+                  title="Inspection Image"
                   img={inspectionImage}
                   onUpload={handleUpload}
                   uploading={uploading}
                   uploadErr={uploadErr}
                 />
               </div>
-              
+
               {imgErr && <div style={{ color: '#b00020', marginTop: 12 }}>Error loading images: {imgErr}</div>}
             </div>
 
@@ -267,15 +267,15 @@ export default function InspectionDetail() {
   );
 }
 
-function ImageBox({ 
-  title, 
-  img, 
-  onUpload, 
-  uploading, 
-  uploadErr 
-}: { 
-  title: string; 
-  img: ThermalImage | null; 
+function ImageBox({
+  title,
+  img,
+  onUpload,
+  uploading,
+  uploadErr
+}: {
+  title: string;
+  img: ThermalImage | null;
   onUpload?: (file: File) => void;
   uploading?: boolean;
   uploadErr?: string | null;
@@ -304,12 +304,12 @@ function ImageBox({
       <h3 style={{ margin: '0 0 12px 0', fontSize: 16, fontWeight: 600 }}>{title}</h3>
       {img && (
         <div style={{ textAlign: 'center', marginBottom: 16 }}>
-          <img 
-            src={img.publicUrl} 
+          <img
+            src={img.publicUrl}
             alt={img.originalFilename}
-            style={{ 
-              maxWidth: '100%', 
-              maxHeight: 250, 
+            style={{
+              maxWidth: '100%',
+              maxHeight: 250,
               borderRadius: 6,
               objectFit: 'contain'
             }}

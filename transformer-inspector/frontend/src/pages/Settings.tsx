@@ -1,7 +1,6 @@
 // src/pages/Settings.tsx
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import type { UserPreferences } from '../context/AuthContext';
 
 interface TabConfig {
   id: string;
@@ -16,8 +15,7 @@ const tabs: TabConfig[] = [
 ];
 
 export default function Settings() {
-  const { user, updateUser, updatePreferences, logout } = useAuth();
-  const { theme: currentTheme, setTheme: applyTheme } = useTheme();
+  const { user, updateUser, logout } = useAuth();
   const [activeTab, setActiveTab] = useState('profile');
   const [isSaving, setIsSaving] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
@@ -26,15 +24,6 @@ export default function Settings() {
   const [name, setName] = useState(user?.name || '');
   const [email, setEmail] = useState(user?.email || '');
   const [avatarPreview, setAvatarPreview] = useState(user?.avatar || '');
-
-  // Preferences state - sync with actual theme
-  const [theme, setTheme] = useState<Theme>(currentTheme);
-  const [language, setLanguage] = useState(user?.preferences?.language || 'en');
-  const [timezone, setTimezone] = useState(user?.preferences?.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone);
-
-  // Notification state
-  const [notifications, setNotifications] = useState(user?.preferences?.notifications ?? true);
-  const [emailNotifications, setEmailNotifications] = useState(user?.preferences?.emailNotifications ?? true);
 
   // Security state
   const [currentPassword, setCurrentPassword] = useState('');
@@ -46,25 +35,8 @@ export default function Settings() {
       setName(user.name);
       setEmail(user.email);
       setAvatarPreview(user.avatar || '');
-      if (user.preferences) {
-        setLanguage(user.preferences.language);
-        setTimezone(user.preferences.timezone);
-        setNotifications(user.preferences.notifications);
-        setEmailNotifications(user.preferences.emailNotifications);
-      }
     }
   }, [user]);
-
-  // Sync local theme state with context
-  useEffect(() => {
-    setTheme(currentTheme);
-  }, [currentTheme]);
-
-  // Apply theme immediately when changed
-  const handleThemeChange = (newTheme: Theme) => {
-    setTheme(newTheme);
-    applyTheme(newTheme);
-  };
 
   const showMessage = (type: 'success' | 'error', text: string) => {
     setMessage({ type, text });
@@ -78,25 +50,6 @@ export default function Settings() {
       showMessage('success', 'Profile updated successfully');
     } catch (err) {
       showMessage('error', err instanceof Error ? err.message : 'Failed to update profile');
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  const handleSavePreferences = async () => {
-    setIsSaving(true);
-    try {
-      const prefs: Partial<UserPreferences> = {
-        theme,
-        language,
-        timezone,
-        notifications,
-        emailNotifications,
-      };
-      await updatePreferences(prefs);
-      showMessage('success', 'Preferences saved successfully');
-    } catch (err) {
-      showMessage('error', err instanceof Error ? err.message : 'Failed to save preferences');
     } finally {
       setIsSaving(false);
     }
@@ -240,90 +193,6 @@ export default function Settings() {
               </button>
               <button className="btn-primary" onClick={handleSaveProfile} disabled={isSaving}>
                 {isSaving ? 'Saving...' : 'Save Changes'}
-              </button>
-            </div>
-          </div>
-        );
-
-      case 'preferences':
-        return (
-          <div className="settings-section">
-            <h2 className="section-title">Preferences</h2>
-            <p className="section-description">Customize your TransX experience</p>
-
-            <div className="preference-group">
-              <h3 className="preference-title">🎨 Appearance</h3>
-              <p className="preference-description">Choose your preferred color theme</p>
-              <div className="theme-options">
-                {(['light', 'dark'] as const).map((t) => (
-                  <button
-                    key={t}
-                    className={`theme-option ${theme === t ? 'active' : ''}`}
-                    onClick={() => handleThemeChange(t)}
-                  >
-                    <div className="theme-preview">
-                      {t === 'light' ? (
-                        <div className="theme-preview-light">
-                          <div className="preview-header"></div>
-                          <div className="preview-sidebar"></div>
-                          <div className="preview-content"></div>
-                        </div>
-                      ) : (
-                        <div className="theme-preview-dark">
-                          <div className="preview-header"></div>
-                          <div className="preview-sidebar"></div>
-                          <div className="preview-content"></div>
-                        </div>
-                      )}
-                    </div>
-                    <span className="theme-icon">
-                      {t === 'light' ? '☀️' : '🌙'}
-                    </span>
-                    <span className="theme-label">{t === 'light' ? 'Light Mode' : 'Dark Mode'}</span>
-                    {theme === t && <span className="theme-check">✓</span>}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div className="preference-group">
-              <h3 className="preference-title">🌐 Localization</h3>
-              <div className="form-grid">
-                <div className="form-group">
-                  <label className="form-label">Language</label>
-                  <select
-                    value={language}
-                    onChange={(e) => setLanguage(e.target.value)}
-                    className="settings-select"
-                  >
-                    <option value="en">English</option>
-                    <option value="es">Español</option>
-                    <option value="fr">Français</option>
-                    <option value="de">Deutsch</option>
-                    <option value="si">සිංහල</option>
-                  </select>
-                </div>
-
-                <div className="form-group">
-                  <label className="form-label">Timezone</label>
-                  <select
-                    value={timezone}
-                    onChange={(e) => setTimezone(e.target.value)}
-                    className="settings-select"
-                  >
-                    <option value="Asia/Colombo">Asia/Colombo (GMT+5:30)</option>
-                    <option value="UTC">UTC</option>
-                    <option value="America/New_York">America/New_York (EST)</option>
-                    <option value="Europe/London">Europe/London (GMT)</option>
-                    <option value="Asia/Tokyo">Asia/Tokyo (JST)</option>
-                  </select>
-                </div>
-              </div>
-            </div>
-
-            <div className="section-actions">
-              <button className="btn-primary" onClick={handleSavePreferences} disabled={isSaving}>
-                {isSaving ? 'Saving...' : 'Save Preferences'}
               </button>
             </div>
           </div>

@@ -121,11 +121,30 @@ export default function MaintenanceRecordForm({ record, onSave, onDownloadPDF, i
       'secondKwR', 'secondKwY', 'secondKwB'
     ];
     
+    // Enum fields that should be null instead of empty string
+    const enumFields = [
+      'baselineCondition', 'transformerStatus', 'transformerType'
+    ];
+    
     Object.keys(data).forEach(key => {
       const value = (data as any)[key];
       
-      // Skip undefined, null, and empty strings
-      if (value === undefined || value === null || value === '') {
+      // Skip undefined and null
+      if (value === undefined || value === null) {
+        return;
+      }
+      
+      // For enum fields, skip empty strings (will be null in the backend)
+      if (enumFields.includes(key)) {
+        if (value === '' || value === 'Select...') {
+          return; // Don't include empty enum values
+        }
+        cleaned[key] = value;
+        return;
+      }
+      
+      // Skip other empty strings
+      if (value === '') {
         return;
       }
       

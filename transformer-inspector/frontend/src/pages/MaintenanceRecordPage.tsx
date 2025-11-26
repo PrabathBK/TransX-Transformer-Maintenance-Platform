@@ -112,20 +112,38 @@ export default function MaintenanceRecordPage() {
     } catch (e: any) {
       console.error('Save error:', e);
       
-      // Try to extract detailed error message
+      // Try to extract detailed error message from the API response
       let errorMsg = 'Failed to save maintenance record';
-      if (e?.message) {
+      let fieldError = '';
+      
+      // Check for structured error response from our GlobalExceptionHandler
+      if (e?.response?.data) {
+        const errorData = e.response.data;
+        if (errorData.message) {
+          errorMsg = errorData.message;
+        }
+        if (errorData.details?.field) {
+          fieldError = `\n\nProblem field: ${errorData.details.field}`;
+        }
+        if (errorData.details && typeof errorData.details === 'object') {
+          // Validation errors with multiple fields
+          const fieldErrors = Object.entries(errorData.details)
+            .filter(([key]) => key !== 'field')
+            .map(([field, msg]) => `${field}: ${msg}`)
+            .join('\n');
+          if (fieldErrors) {
+            fieldError = `\n\nField errors:\n${fieldErrors}`;
+          }
+        }
+      } else if (e?.message) {
         errorMsg = e.message;
       }
-      if (e?.response?.data?.message) {
-        errorMsg = e.response.data.message;
-      }
       
-      console.error('Detailed error:', errorMsg);
-      setError(errorMsg);
+      console.error('Detailed error:', errorMsg, fieldError);
+      setError(errorMsg + fieldError);
       
-      // Show more helpful error message
-      alert('Failed to save: ' + errorMsg + '\n\nCheck browser console for details.');
+      // Show user-friendly error message
+      alert('Failed to save: ' + errorMsg + fieldError);
     } finally {
       setSaving(false);
     }

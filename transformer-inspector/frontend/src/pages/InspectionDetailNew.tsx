@@ -691,7 +691,7 @@ export default function InspectionDetailNew() {
       )}
 
       {/* Main Content */}
-      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '24px', alignItems: 'stretch' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '24px', alignItems: 'start' }}>
         {/* Left: Annotation Canvas */}
         <div style={{ display: 'flex', flexDirection: 'column' }}>
           <AnnotationToolbar
@@ -923,7 +923,7 @@ export default function InspectionDetailNew() {
                     transition: 'all 0.2s'
                   }}
                 >
-                  {isExportingFeedback ? 'Exporting...' : 'Export for Training'}
+                  {isExportingFeedback ? 'Exporting...' : 'Finetune'}
                 </button>
               )}
             </div>
@@ -970,9 +970,7 @@ export default function InspectionDetailNew() {
         <div style={{ 
           display: 'flex', 
           flexDirection: 'column', 
-          gap: '12px',
-          minHeight: '100%',
-          alignSelf: 'stretch'
+          gap: '12px'
         }}>
           {/* Fault Types Legend - Compact at top */}
           <div style={{ flexShrink: 0 }}>
@@ -996,8 +994,7 @@ export default function InspectionDetailNew() {
             padding: '16px',
             display: 'flex',
             flexDirection: 'column',
-            flex: 1,
-            minHeight: '300px',
+            maxHeight: '400px',
             overflow: 'hidden'
           }}>
             <h2 style={{ 

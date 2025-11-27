@@ -691,9 +691,9 @@ export default function InspectionDetailNew() {
       )}
 
       {/* Main Content */}
-      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '24px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '24px', alignItems: 'stretch' }}>
         {/* Left: Annotation Canvas */}
-        <div>
+        <div style={{ display: 'flex', flexDirection: 'column' }}>
           <AnnotationToolbar
             mode={mode}
             onModeChange={setMode}
@@ -968,78 +968,105 @@ export default function InspectionDetailNew() {
           <CommentsSection inspectionId={inspection.id} />
         </div>
 
-        {/* Right: Annotations List */}
-        <div>
+        {/* Right: Sidebar Panel */}
+        <div style={{ 
+          display: 'flex', 
+          flexDirection: 'column', 
+          gap: '12px',
+          minHeight: '100%',
+          alignSelf: 'stretch'
+        }}>
+          {/* Fault Types Legend - Compact at top */}
+          <div style={{ flexShrink: 0 }}>
+            <AnnotationLegend layout="vertical" />
+          </div>
+
+          {/* Inspector Notes - Fixed compact card */}
+          <div style={{ flexShrink: 0 }}>
+            <NotesSection 
+              inspectionId={inspection.id}
+              initialNotes={inspection.notes || ''}
+              onNotesUpdate={() => loadData()}
+            />
+          </div>
+
+          {/* Annotations List - Fills remaining space with scroll */}
           <div style={{
             background: 'white',
             borderRadius: '12px',
             boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-            padding: '20px',
+            padding: '16px',
+            display: 'flex',
+            flexDirection: 'column',
+            flex: 1,
+            minHeight: '300px',
+            overflow: 'hidden'
           }}>
-            <h2 style={{ margin: '0 0 16px 0', fontSize: '18px', fontWeight: '600' }}>
+            <h2 style={{ 
+              margin: '0 0 12px 0', 
+              fontSize: '16px', 
+              fontWeight: '600',
+              color: '#1f2937',
+              flexShrink: 0
+            }}>
               Annotations ({annotations.length})
             </h2>
 
-            {annotations.length === 0 && (
+            {annotations.length === 0 ? (
               <div style={{ 
+                flex: 1,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
                 textAlign: 'center', 
-                padding: '40px 20px', 
+                padding: '24px 16px', 
                 color: '#6b7280',
-                fontSize: '14px'
+                fontSize: '13px',
+                background: '#f9fafb',
+                borderRadius: '8px'
               }}>
                 No annotations yet. Click "Detect Anomalies" or draw manually.
               </div>
-            )}
-
-            {/* Scrollable Annotations Container */}
-            <div style={{ 
-              maxHeight: '600px', 
-              overflowY: 'auto', 
-              overflowX: 'hidden',
-              paddingRight: '8px',
-              // Custom scrollbar styling
-              scrollbarWidth: 'thin',
-              scrollbarColor: '#cbd5e1 #f1f5f9'
-            }}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                {annotations.map((ann) => (
-                  <AnnotationCard
-                    key={ann.id}
-                    annotation={ann}
-                    onApprove={() => handleApprove(ann.id)}
-                    onReject={() => handleReject(ann.id)}
-                    onDelete={() => handleAnnotationDelete(ann.id)}
-                    onUpdateComment={handleUpdateComment}
-                  />
-                ))}
+            ) : (
+              /* Scrollable Annotations Container */
+              <div style={{ 
+                flex: 1,
+                overflowY: 'auto', 
+                overflowX: 'hidden',
+                paddingRight: '4px',
+                scrollbarWidth: 'thin',
+                scrollbarColor: '#cbd5e1 #f1f5f9'
+              }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  {annotations.map((ann) => (
+                    <AnnotationCard
+                      key={ann.id}
+                      annotation={ann}
+                      onApprove={() => handleApprove(ann.id)}
+                      onReject={() => handleReject(ann.id)}
+                      onDelete={() => handleAnnotationDelete(ann.id)}
+                      onUpdateComment={handleUpdateComment}
+                    />
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
           </div>
 
-          {/* Fault Types Legend */}
-          <AnnotationLegend layout="vertical" />
-
-          {/* Inspector Notes */}
-          <NotesSection 
-            inspectionId={inspection.id}
-            initialNotes={inspection.notes || ''}
-            onNotesUpdate={() => loadData()}
-          />
-
+          {/* Inspection Completed Status */}
           {inspection.status === 'COMPLETED' && (
             <div style={{
-              background: 'white',
+              flexShrink: 0,
+              background: 'linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%)',
               borderRadius: '12px',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-              padding: '20px',
-              marginTop: '16px',
+              padding: '16px',
               textAlign: 'center',
-              border: '2px solid #10b981'
+              border: '1px solid #10b981'
             }}>
-              <h3 style={{ margin: '0 0 8px 0', fontSize: '16px', fontWeight: '600', color: '#059669' }}>
+              <h3 style={{ margin: '0 0 6px 0', fontSize: '14px', fontWeight: '600', color: '#059669' }}>
                 ✅ Inspection Completed
               </h3>
-              <p style={{ fontSize: '14px', color: '#6b7280', marginBottom: '12px' }}>
+              <p style={{ fontSize: '12px', color: '#6b7280', marginBottom: '10px' }}>
                 This inspection has been marked as complete.
               </p>
               <button
@@ -1048,15 +1075,15 @@ export default function InspectionDetailNew() {
                   background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
                   color: 'white',
                   border: 'none',
-                  borderRadius: '8px',
-                  padding: '10px 20px',
-                  fontSize: '14px',
+                  borderRadius: '6px',
+                  padding: '8px 16px',
+                  fontSize: '13px',
                   fontWeight: '600',
                   cursor: 'pointer',
-                  boxShadow: '0 2px 8px rgba(59, 130, 246, 0.2)'
+                  boxShadow: '0 2px 6px rgba(59, 130, 246, 0.2)'
                 }}
               >
-                🏠 View on Transformer Page
+                🏠 View Transformer
               </button>
             </div>
           )}
@@ -1240,6 +1267,7 @@ function AnnotationCard({ annotation, onApprove, onReject, onDelete, onUpdateCom
   const [showCommentInput, setShowCommentInput] = useState(false);
   const [commentText, setCommentText] = useState(annotation.comments || '');
   const [isSavingComment, setIsSavingComment] = useState(false);
+  const [showDetails, setShowDetails] = useState(false);
   
   const CLASS_COLORS: Record<string, string> = {
     'Faulty': '#ef4444',           // RED
@@ -1264,140 +1292,141 @@ function AnnotationCard({ annotation, onApprove, onReject, onDelete, onUpdateCom
 
   return (
     <div style={{
-      border: `2px solid ${color}`,
+      border: `1px solid ${color}40`,
+      borderLeft: `3px solid ${color}`,
       borderRadius: '8px',
-      padding: '12px',
-      background: `${color}11`,
+      padding: '10px 12px',
+      background: 'white',
+      transition: 'all 0.2s ease',
+      boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
     }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '8px' }}>
+      {/* Compact Header */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           {/* Box Number Badge */}
           {annotation.boxNumber && (
             <div style={{
-              width: '24px',
-              height: '24px',
+              width: '20px',
+              height: '20px',
               borderRadius: '50%',
               background: color,
               color: 'white',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              fontSize: '12px',
+              fontSize: '10px',
               fontWeight: 'bold',
-              flexShrink: 0,
-              border: '2px solid white',
-              boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+              flexShrink: 0
             }}>
               {annotation.boxNumber}
             </div>
           )}
           
-          <div>
-            <div style={{ fontWeight: '600', fontSize: '14px', color: color }}>
-              {annotation.className}
-            </div>
-            <div style={{ fontSize: '12px', color: '#6b7280', marginTop: '2px' }}>
-              {annotation.source === 'ai' ? '🤖 AI Detection' : '👤 Manual'}
-              {' · '}
-              {Math.round(annotation.confidence * 100)}% confidence
-            </div>
+          <div style={{ fontWeight: '600', fontSize: '12px', color: color }}>
+            {annotation.className.replace(/_/g, ' ')}
           </div>
         </div>
         
-        <div style={{
-          fontSize: '11px',
-          color: '#6b7280',
-          background: 'white',
-          padding: '2px 6px',
-          borderRadius: '4px'
-        }}>
-          v{annotation.version}
-        </div>
-      </div>
-
-      <div style={{ fontSize: '12px', color: '#6b7280', marginBottom: '8px' }}>
-        BBox: ({Math.round(annotation.bbox.x1)}, {Math.round(annotation.bbox.y1)}) → 
-        ({Math.round(annotation.bbox.x2)}, {Math.round(annotation.bbox.y2)})
-      </div>
-
-      {/* Metadata Information */}
-      <div style={{
-        fontSize: '11px',
-        color: '#6b7280',
-        background: '#f9fafb',
-        padding: '8px',
-        borderRadius: '4px',
-        marginBottom: '12px',
-        lineHeight: '1.6'
-      }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-          <span>👤 Created by:</span>
-          <span style={{ fontWeight: '600', color: '#374151' }}>{annotation.createdBy || 'System'}</span>
-        </div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-          <span>🕒 Created:</span>
-          <span style={{ fontWeight: '600', color: '#374151' }}>
-            {new Date(annotation.createdAt).toLocaleString('en-US', { 
-              month: 'short', 
-              day: 'numeric', 
-              hour: '2-digit', 
-              minute: '2-digit' 
-            })}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <span style={{ fontSize: '10px', color: '#9ca3af' }}>
+            {annotation.source === 'ai' ? '🤖' : '👤'} {Math.round(annotation.confidence * 100)}%
           </span>
+          <button
+            onClick={() => setShowDetails(!showDetails)}
+            style={{
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              fontSize: '12px',
+              color: '#9ca3af',
+              padding: '2px'
+            }}
+          >
+            {showDetails ? '▲' : '▼'}
+          </button>
         </div>
-        {annotation.modifiedBy && annotation.modifiedAt && (
-          <>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-              <span>✏️ Modified by:</span>
-              <span style={{ fontWeight: '600', color: '#374151' }}>{annotation.modifiedBy}</span>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <span>🕒 Modified:</span>
-              <span style={{ fontWeight: '600', color: '#374151' }}>
-                {new Date(annotation.modifiedAt).toLocaleString('en-US', { 
-                  month: 'short', 
-                  day: 'numeric', 
-                  hour: '2-digit', 
-                  minute: '2-digit' 
-                })}
-              </span>
-            </div>
-          </>
-        )}
+      </div>
+
+      {/* Status Badge Row */}
+      <div style={{ display: 'flex', gap: '6px', alignItems: 'center', marginBottom: '8px' }}>
         {annotation.actionType && annotation.actionType !== 'created' && (
-          <div style={{ 
-            marginTop: '6px', 
-            paddingTop: '6px', 
-            borderTop: '1px solid #e5e7eb',
-            display: 'flex',
-            justifyContent: 'space-between'
+          <span style={{ 
+            fontSize: '10px', 
+            padding: '2px 6px',
+            borderRadius: '4px',
+            fontWeight: '600',
+            background: annotation.actionType === 'approved' ? '#dcfce7' : 
+                       annotation.actionType === 'rejected' ? '#fee2e2' : '#dbeafe',
+            color: annotation.actionType === 'approved' ? '#16a34a' : 
+                   annotation.actionType === 'rejected' ? '#dc2626' : '#3b82f6'
           }}>
-            <span>📋 Action:</span>
-            <span style={{ 
-              fontWeight: '600', 
-              color: annotation.actionType === 'approved' ? '#16a34a' : 
-                     annotation.actionType === 'rejected' ? '#dc2626' : 
-                     annotation.actionType === 'edited' ? '#3b82f6' : '#6b7280',
-              textTransform: 'capitalize'
-            }}>
-              {annotation.actionType}
+            {annotation.actionType === 'approved' ? '✓ Approved' : 
+             annotation.actionType === 'rejected' ? '✗ Rejected' : 
+             `✎ ${annotation.actionType}`}
+          </span>
+        )}
+        <span style={{ fontSize: '10px', color: '#9ca3af' }}>v{annotation.version}</span>
+      </div>
+
+      {/* Expandable Details */}
+      {showDetails && (
+        <div style={{
+          fontSize: '10px',
+          color: '#6b7280',
+          background: '#f9fafb',
+          padding: '8px',
+          borderRadius: '4px',
+          marginBottom: '8px',
+          lineHeight: '1.5'
+        }}>
+          <div style={{ marginBottom: '4px' }}>
+            📍 ({Math.round(annotation.bbox.x1)}, {Math.round(annotation.bbox.y1)}) → 
+            ({Math.round(annotation.bbox.x2)}, {Math.round(annotation.bbox.y2)})
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+            <span>By: {annotation.createdBy || 'System'}</span>
+            <span>
+              {new Date(annotation.createdAt).toLocaleString('en-US', { 
+                month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' 
+              })}
             </span>
           </div>
-        )}
-      </div>
+          {annotation.modifiedBy && (
+            <div style={{ marginTop: '4px', paddingTop: '4px', borderTop: '1px solid #e5e7eb' }}>
+              Modified by {annotation.modifiedBy}
+            </div>
+          )}
+        </div>
+      )}
 
+      {/* Comment Preview (always visible if exists) */}
+      {annotation.comments && !showCommentInput && (
+        <div style={{
+          background: '#fefce8',
+          padding: '6px 8px',
+          borderRadius: '4px',
+          marginBottom: '8px',
+          fontSize: '11px',
+          color: '#713f12',
+          lineHeight: '1.4'
+        }}>
+          📝 {annotation.comments.length > 60 ? annotation.comments.slice(0, 60) + '...' : annotation.comments}
+        </div>
+      )}
+
+      {/* Action Buttons - Compact */}
       {annotation.source === 'ai' && annotation.actionType === 'created' && (
-        <div style={{ display: 'flex', gap: '8px' }}>
+        <div style={{ display: 'flex', gap: '6px', marginBottom: '6px' }}>
           <button
             onClick={onApprove}
             style={{
               flex: 1,
-              padding: '6px',
+              padding: '5px 8px',
               border: 'none',
-              borderRadius: '6px',
+              borderRadius: '5px',
               background: '#22c55e',
               color: 'white',
-              fontSize: '12px',
+              fontSize: '11px',
               fontWeight: '600',
               cursor: 'pointer'
             }}
@@ -1408,12 +1437,12 @@ function AnnotationCard({ annotation, onApprove, onReject, onDelete, onUpdateCom
             onClick={onReject}
             style={{
               flex: 1,
-              padding: '6px',
+              padding: '5px 8px',
               border: 'none',
-              borderRadius: '6px',
+              borderRadius: '5px',
               background: '#ef4444',
               color: 'white',
-              fontSize: '12px',
+              fontSize: '11px',
               fontWeight: '600',
               cursor: 'pointer'
             }}
@@ -1428,149 +1457,98 @@ function AnnotationCard({ annotation, onApprove, onReject, onDelete, onUpdateCom
           onClick={onDelete}
           style={{
             width: '100%',
-            padding: '6px',
+            padding: '5px 8px',
             border: 'none',
-            borderRadius: '6px',
-            background: '#ef4444',
-            color: 'white',
-            fontSize: '12px',
+            borderRadius: '5px',
+            background: '#fee2e2',
+            color: '#dc2626',
+            fontSize: '11px',
             fontWeight: '600',
-            cursor: 'pointer'
+            cursor: 'pointer',
+            marginBottom: '6px'
           }}
         >
           🗑️ Delete
         </button>
       )}
 
-      {annotation.actionType === 'approved' && (
-        <div style={{
-          marginTop: '8px',
-          padding: '6px',
-          background: '#dcfce7',
-          color: '#16a34a',
-          borderRadius: '4px',
-          fontSize: '12px',
-          fontWeight: '600',
-          textAlign: 'center'
-        }}>
-          ✓ Approved
-        </div>
-      )}
-
-      {annotation.actionType === 'rejected' && (
-        <div style={{
-          marginTop: '8px',
-          padding: '6px',
-          background: '#fee2e2',
-          color: '#dc2626',
-          borderRadius: '4px',
-          fontSize: '12px',
-          fontWeight: '600',
-          textAlign: 'center'
-        }}>
-          ✗ Rejected
-        </div>
-      )}
-
-      {/* Comments Section */}
-      <div style={{ marginTop: '12px', paddingTop: '12px', borderTop: '1px solid #e5e7eb' }}>
-        {annotation.comments && !showCommentInput && (
-          <div style={{
-            background: '#f9fafb',
-            padding: '8px',
-            borderRadius: '4px',
-            marginBottom: '8px'
-          }}>
-            <div style={{ fontSize: '11px', color: '#6b7280', marginBottom: '4px', fontWeight: '600' }}>
-              📝 Note:
-            </div>
-            <div style={{ fontSize: '12px', color: '#374151', lineHeight: '1.5' }}>
-              {annotation.comments}
-            </div>
-          </div>
-        )}
-
-        {showCommentInput ? (
-          <div>
-            <textarea
-              value={commentText}
-              onChange={(e) => setCommentText(e.target.value)}
-              placeholder="Add a note about this annotation..."
-              style={{
-                width: '100%',
-                minHeight: '60px',
-                padding: '8px',
-                border: '1px solid #d1d5db',
-                borderRadius: '4px',
-                fontSize: '12px',
-                fontFamily: 'inherit',
-                resize: 'vertical',
-                marginBottom: '8px'
-              }}
-            />
-            <div style={{ display: 'flex', gap: '6px' }}>
-              <button
-                onClick={handleSaveComment}
-                disabled={isSavingComment}
-                style={{
-                  flex: 1,
-                  padding: '6px',
-                  border: 'none',
-                  borderRadius: '4px',
-                  background: isSavingComment ? '#9ca3af' : '#3b82f6',
-                  color: 'white',
-                  fontSize: '11px',
-                  fontWeight: '600',
-                  cursor: isSavingComment ? 'not-allowed' : 'pointer'
-                }}
-              >
-                {isSavingComment ? '💾 Saving...' : '💾 Save Note'}
-              </button>
-              <button
-                onClick={() => {
-                  setShowCommentInput(false);
-                  setCommentText(annotation.comments || '');
-                }}
-                disabled={isSavingComment}
-                style={{
-                  flex: 1,
-                  padding: '6px',
-                  border: '1px solid #d1d5db',
-                  borderRadius: '4px',
-                  background: 'white',
-                  color: '#6b7280',
-                  fontSize: '11px',
-                  fontWeight: '600',
-                  cursor: isSavingComment ? 'not-allowed' : 'pointer'
-                }}
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        ) : (
-          <button
-            onClick={() => setShowCommentInput(true)}
+      {/* Comment Input - Compact */}
+      {showCommentInput ? (
+        <div style={{ paddingTop: '6px', borderTop: '1px solid #f3f4f6' }}>
+          <textarea
+            value={commentText}
+            onChange={(e) => setCommentText(e.target.value)}
+            placeholder="Add note..."
             style={{
               width: '100%',
+              minHeight: '45px',
               padding: '6px',
-              border: '1px solid #d1d5db',
+              border: '1px solid #e5e7eb',
               borderRadius: '4px',
-              background: 'white',
-              color: '#6b7280',
               fontSize: '11px',
-              fontWeight: '600',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '4px'
+              fontFamily: 'inherit',
+              resize: 'vertical',
+              marginBottom: '6px'
             }}
-          >
-            📝 {annotation.comments ? 'Edit Note' : 'Add Note'}
-          </button>
-        )}
-      </div>
+          />
+          <div style={{ display: 'flex', gap: '4px' }}>
+            <button
+              onClick={handleSaveComment}
+              disabled={isSavingComment}
+              style={{
+                flex: 1,
+                padding: '4px',
+                border: 'none',
+                borderRadius: '4px',
+                background: isSavingComment ? '#9ca3af' : '#3b82f6',
+                color: 'white',
+                fontSize: '10px',
+                fontWeight: '600',
+                cursor: isSavingComment ? 'not-allowed' : 'pointer'
+              }}
+            >
+              {isSavingComment ? 'Saving...' : 'Save'}
+            </button>
+            <button
+              onClick={() => {
+                setShowCommentInput(false);
+                setCommentText(annotation.comments || '');
+              }}
+              disabled={isSavingComment}
+              style={{
+                flex: 1,
+                padding: '4px',
+                border: '1px solid #e5e7eb',
+                borderRadius: '4px',
+                background: 'white',
+                color: '#6b7280',
+                fontSize: '10px',
+                fontWeight: '600',
+                cursor: isSavingComment ? 'not-allowed' : 'pointer'
+              }}
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      ) : (
+        <button
+          onClick={() => setShowCommentInput(true)}
+          style={{
+            width: '100%',
+            padding: '4px',
+            border: '1px solid #e5e7eb',
+            borderRadius: '4px',
+            background: '#f9fafb',
+            color: '#6b7280',
+            fontSize: '10px',
+            fontWeight: '500',
+            cursor: 'pointer'
+          }}
+        >
+          📝 {annotation.comments ? 'Edit Note' : 'Add Note'}
+        </button>
+      )}
     </div>
   );
 }

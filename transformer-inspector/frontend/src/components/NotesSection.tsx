@@ -46,27 +46,26 @@ export default function NotesSection({ inspectionId, initialNotes, onNotesUpdate
 
   return (
     <div style={{
-      background: 'white',
+      background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)',
       borderRadius: '12px',
-      boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-      padding: '20px',
-      marginTop: '16px',
-      border: '1px solid #e5e7eb'
+      boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+      padding: '14px 16px',
+      border: '1px solid #e2e8f0'
     }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
-        <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '600', color: '#374151' }}>
-          📝 Notes
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: isEditing ? '10px' : (notes ? '8px' : '0') }}>
+        <h3 style={{ margin: 0, fontSize: '14px', fontWeight: '600', color: '#475569', display: 'flex', alignItems: 'center', gap: '6px' }}>
+          📝 Inspector Notes
         </h3>
         {!isEditing && (
           <button
             onClick={() => setIsEditing(true)}
             style={{
-              padding: '6px 12px',
+              padding: '4px 10px',
               borderRadius: '6px',
-              border: '1px solid #d1d5db',
+              border: '1px solid #cbd5e1',
               background: 'white',
-              color: '#374151',
-              fontSize: '13px',
+              color: '#64748b',
+              fontSize: '12px',
               fontWeight: '500',
               cursor: 'pointer',
               display: 'flex',
@@ -88,22 +87,24 @@ export default function NotesSection({ inspectionId, initialNotes, onNotesUpdate
             placeholder="Add inspection notes..."
             style={{
               width: '100%',
-              minHeight: '100px',
-              padding: '12px',
-              border: '1px solid #d1d5db',
-              borderRadius: '6px',
-              fontSize: '14px',
+              minHeight: '80px',
+              maxHeight: '120px',
+              padding: '10px',
+              border: '1px solid #cbd5e1',
+              borderRadius: '8px',
+              fontSize: '13px',
               lineHeight: '1.5',
               resize: 'vertical',
-              fontFamily: 'inherit'
+              fontFamily: 'inherit',
+              background: 'white'
             }}
           />
           
           {saveError && (
             <div style={{ 
-              marginTop: '8px', 
+              marginTop: '6px', 
               color: '#dc2626', 
-              fontSize: '13px',
+              fontSize: '12px',
               display: 'flex',
               alignItems: 'center',
               gap: '4px'
@@ -115,19 +116,19 @@ export default function NotesSection({ inspectionId, initialNotes, onNotesUpdate
           <div style={{ 
             display: 'flex', 
             gap: '8px', 
-            marginTop: '12px',
+            marginTop: '10px',
             justifyContent: 'flex-end'
           }}>
             <button
               onClick={handleCancel}
               disabled={isSaving}
               style={{
-                padding: '8px 16px',
+                padding: '6px 12px',
                 borderRadius: '6px',
-                border: '1px solid #d1d5db',
+                border: '1px solid #cbd5e1',
                 background: 'white',
-                color: '#374151',
-                fontSize: '14px',
+                color: '#64748b',
+                fontSize: '12px',
                 fontWeight: '500',
                 cursor: isSaving ? 'not-allowed' : 'pointer'
               }}
@@ -138,17 +139,17 @@ export default function NotesSection({ inspectionId, initialNotes, onNotesUpdate
               onClick={handleSave}
               disabled={isSaving}
               style={{
-                padding: '8px 16px',
+                padding: '6px 12px',
                 borderRadius: '6px',
                 border: 'none',
                 background: isSaving ? '#9ca3af' : 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
                 color: 'white',
-                fontSize: '14px',
+                fontSize: '12px',
                 fontWeight: '600',
                 cursor: isSaving ? 'not-allowed' : 'pointer',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '6px'
+                gap: '4px'
               }}
             >
               {isSaving ? '💾 Saving...' : '💾 Save'}
@@ -159,27 +160,45 @@ export default function NotesSection({ inspectionId, initialNotes, onNotesUpdate
         <div>
           {saveSuccess && (
             <div style={{ 
-              marginBottom: '12px', 
+              marginBottom: '8px', 
               color: '#059669', 
-              fontSize: '13px',
+              fontSize: '12px',
               display: 'flex',
               alignItems: 'center',
               gap: '4px'
             }}>
-              ✅ Notes saved successfully!
+              ✅ Notes saved!
             </div>
           )}
           
-          <div style={{ 
-            fontSize: '14px', 
-            color: notes ? '#374151' : '#9ca3af', 
-            lineHeight: '1.6',
-            whiteSpace: 'pre-wrap',
-            minHeight: '40px',
-            padding: '8px 0'
-          }}>
-            {notes || 'No notes added yet. Click "Edit" to add inspection notes.'}
-          </div>
+          {notes && (
+            <div style={{ 
+              fontSize: '13px', 
+              color: '#475569', 
+              lineHeight: '1.5',
+              whiteSpace: 'pre-wrap',
+              maxHeight: '80px',
+              overflowY: 'auto',
+              padding: '8px 10px',
+              background: 'white',
+              borderRadius: '6px',
+              border: '1px solid #e2e8f0'
+            }}>
+              {notes}
+            </div>
+          )}
+          
+          {!notes && (
+            <div style={{ 
+              fontSize: '12px', 
+              color: '#94a3b8', 
+              fontStyle: 'italic',
+              textAlign: 'center',
+              padding: '4px 0'
+            }}>
+              No notes yet
+            </div>
+          )}
         </div>
       )}
     </div>

@@ -117,14 +117,23 @@ export default function Layout() {
           <div className="sidebar-user-info">
             <div className="sidebar-user-avatar">
               {user.avatar ? (
-                <img src={user.avatar} alt={user.name} />
+                <img 
+                  src={user.avatar} 
+                  alt={user.name} 
+                  referrerPolicy="no-referrer"
+                  onError={(e) => {
+                    // Fallback to initials if image fails to load
+                    e.currentTarget.style.display = 'none';
+                    e.currentTarget.parentElement!.innerHTML = `<span>${getInitials(user.name)}</span>`;
+                  }}
+                />
               ) : (
                 <span>{getInitials(user.name)}</span>
               )}
             </div>
             <div className="sidebar-user-details">
-              <span className="sidebar-user-name">{user.name}</span>
-              <span className="sidebar-user-email">{user.email}</span>
+              <span className="sidebar-user-name" title={user.name}>{user.name}</span>
+              <span className="sidebar-user-email" title={user.email}>{user.email}</span>
             </div>
           </div>
         )}
@@ -171,7 +180,7 @@ export default function Layout() {
                 >
                   <div className="user-avatar">
                     {user.avatar ? (
-                      <img src={user.avatar} alt={user.name} />
+                      <img src={user.avatar} alt={user.name} referrerPolicy="no-referrer" />
                     ) : (
                       <span className="avatar-initials">{getInitials(user.name)}</span>
                     )}
@@ -193,7 +202,7 @@ export default function Layout() {
                     <div className="dropdown-header">
                       <div className="dropdown-avatar">
                         {user.avatar ? (
-                          <img src={user.avatar} alt={user.name} />
+                          <img src={user.avatar} alt={user.name} referrerPolicy="no-referrer" />
                         ) : (
                           <span>{getInitials(user.name)}</span>
                         )}

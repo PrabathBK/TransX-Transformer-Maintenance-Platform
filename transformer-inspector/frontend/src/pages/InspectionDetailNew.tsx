@@ -128,13 +128,13 @@ export default function InspectionDetailNew() {
     
     // Validate that inspection exists and has an image uploaded
     if (!inspection || !inspection.inspectionImageId) {
-      alert('⚠️ Please upload an inspection image before detecting anomalies.');
+      alert('Please upload an inspection image before detecting anomalies.');
       return;
     }
     
     // Check if baseline image exists
     if (!baselineImage && !inspection.baselineImageUrl) {
-      alert('⚠️ No baseline image found for comparison. Please upload a baseline image for this transformer first.');
+      alert('No baseline image found for comparison. Please upload a baseline image for this transformer first.');
       return;
     }
     
@@ -383,7 +383,7 @@ export default function InspectionDetailNew() {
     
     const hasAnnotations = annotations.length > 0;
     const confirmMessage = hasAnnotations 
-      ? `⚠️ Are you sure you want to remove the uploaded image?\n\nThis will permanently delete:\n• The current inspection image\n• All ${annotations.length} annotation${annotations.length > 1 ? 's' : ''}\n\nThis action cannot be undone.`
+      ? `Are you sure you want to remove the uploaded image?\n\nThis will permanently delete:\n• The current inspection image\n• All ${annotations.length} annotation${annotations.length > 1 ? 's' : ''}\n\nThis action cannot be undone.`
       : 'Are you sure you want to remove the uploaded image? You can upload a new one afterwards.';
     
     if (!window.confirm(confirmMessage)) {
@@ -717,7 +717,7 @@ export default function InspectionDetailNew() {
               textAlign: 'center',
             }}>
               <div style={{ marginBottom: '16px', color: '#374151', fontWeight: '600', fontSize: '16px' }}>
-                📸 Upload Thermal Image
+                Upload Thermal Image
               </div>
               <div style={{ marginBottom: '16px', color: '#6b7280', fontSize: '14px' }}>
                 Upload an inspection image to start annotation and detection
@@ -726,7 +726,7 @@ export default function InspectionDetailNew() {
               {selectedFile && (
                 <div style={{ marginTop: '16px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
                   <span style={{ fontSize: '14px', color: '#374151', fontWeight: '500' }}>
-                    📎 {selectedFile.name}
+                    {selectedFile.name}
                   </span>
                   <button
                     onClick={() => handleImageUpload(selectedFile)}
@@ -780,7 +780,7 @@ export default function InspectionDetailNew() {
                   fontSize: '13px' 
                 }}>
                   {annotations.length > 0 
-                    ? `⚠️ Warning: Removing this image will delete ${annotations.length} annotation${annotations.length > 1 ? 's' : ''}.`
+                    ? `Warning: Removing this image will delete ${annotations.length} annotation${annotations.length > 1 ? 's' : ''}.`
                     : 'Want to upload a different image? You can remove this one and upload a new one.'
                   }
                 </div>
@@ -804,12 +804,10 @@ export default function InspectionDetailNew() {
               >
                 {removingImage ? (
                   <>
-                    <span style={{ fontSize: '12px' }}>⏳</span>
                     Removing...
                   </>
                 ) : (
                   <>
-                    <span style={{ fontSize: '12px' }}>🗑️</span>
                     Remove Image
                   </>
                 )}
@@ -876,7 +874,7 @@ export default function InspectionDetailNew() {
                     transition: 'all 0.2s'
                   }}
                 >
-                  {isSavingImage ? '⏳ Saving...' : !isCanvasReady ? '⏳ Loading...' : '💾 Save Image'}
+                  {isSavingImage ? 'Saving...' : !isCanvasReady ? 'Loading...' : 'Save Image'}
                 </button>
               )}
 
@@ -901,7 +899,7 @@ export default function InspectionDetailNew() {
                   transition: 'all 0.2s'
                 }}
               >
-                {isCompleting ? '⏳ Processing...' : '✅ Done'}
+                {isCompleting ? 'Processing...' : 'Mark Complete'}
               </button>
 
               {/* Export Feedback Button */}
@@ -925,7 +923,7 @@ export default function InspectionDetailNew() {
                     transition: 'all 0.2s'
                   }}
                 >
-                  {isExportingFeedback ? '⏳ Exporting...' : '🤖 Finetune'}
+                  {isExportingFeedback ? 'Exporting...' : 'Export for Training'}
                 </button>
               )}
             </div>
@@ -960,7 +958,7 @@ export default function InspectionDetailNew() {
                 gap: '8px'
               }}
             >
-              📋 Maintenance Report
+              Maintenance Report
             </button>
           </div>
 
@@ -1064,7 +1062,7 @@ export default function InspectionDetailNew() {
               border: '1px solid #10b981'
             }}>
               <h3 style={{ margin: '0 0 6px 0', fontSize: '14px', fontWeight: '600', color: '#059669' }}>
-                ✅ Inspection Completed
+                Inspection Completed
               </h3>
               <p style={{ fontSize: '12px', color: '#6b7280', marginBottom: '10px' }}>
                 This inspection has been marked as complete.
@@ -1083,7 +1081,7 @@ export default function InspectionDetailNew() {
                   boxShadow: '0 2px 6px rgba(59, 130, 246, 0.2)'
                 }}
               >
-                🏠 View Transformer
+                View Transformer
               </button>
             </div>
           )}
@@ -1181,7 +1179,7 @@ export default function InspectionDetailNew() {
                 backgroundColor: '#f3f4f6',
                 borderRadius: '6px'
               }}>
-                💡 <strong>Recommended:</strong> Start with 50% for balanced detection, 
+                <strong>Tip:</strong> Start with 50% for balanced detection, 
                 adjust based on results.
               </div>
             </div>
@@ -1231,12 +1229,10 @@ export default function InspectionDetailNew() {
               >
                 {isDetecting ? (
                   <>
-                    <span style={{ fontSize: '12px' }}>⏳</span>
                     Detecting...
                   </>
                 ) : (
                   <>
-                    <span style={{ fontSize: '12px' }}></span>
                     Start Detection
                   </>
                 )}
@@ -1329,7 +1325,7 @@ function AnnotationCard({ annotation, onApprove, onReject, onDelete, onUpdateCom
         
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
           <span style={{ fontSize: '10px', color: '#9ca3af' }}>
-            {annotation.source === 'ai' ? '🤖' : '👤'} {Math.round(annotation.confidence * 100)}%
+            {annotation.source === 'ai' ? 'AI' : 'Manual'} • {Math.round(annotation.confidence * 100)}%
           </span>
           <button
             onClick={() => setShowDetails(!showDetails)}
@@ -1380,7 +1376,7 @@ function AnnotationCard({ annotation, onApprove, onReject, onDelete, onUpdateCom
           lineHeight: '1.5'
         }}>
           <div style={{ marginBottom: '4px' }}>
-            📍 ({Math.round(annotation.bbox.x1)}, {Math.round(annotation.bbox.y1)}) → 
+            Coords: ({Math.round(annotation.bbox.x1)}, {Math.round(annotation.bbox.y1)}) → 
             ({Math.round(annotation.bbox.x2)}, {Math.round(annotation.bbox.y2)})
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between' }}>
@@ -1410,7 +1406,7 @@ function AnnotationCard({ annotation, onApprove, onReject, onDelete, onUpdateCom
           color: '#713f12',
           lineHeight: '1.4'
         }}>
-          📝 {annotation.comments.length > 60 ? annotation.comments.slice(0, 60) + '...' : annotation.comments}
+          {annotation.comments.length > 60 ? annotation.comments.slice(0, 60) + '...' : annotation.comments}
         </div>
       )}
 
@@ -1468,7 +1464,7 @@ function AnnotationCard({ annotation, onApprove, onReject, onDelete, onUpdateCom
             marginBottom: '6px'
           }}
         >
-          🗑️ Delete
+          Delete
         </button>
       )}
 
@@ -1546,7 +1542,7 @@ function AnnotationCard({ annotation, onApprove, onReject, onDelete, onUpdateCom
             cursor: 'pointer'
           }}
         >
-          📝 {annotation.comments ? 'Edit Note' : 'Add Note'}
+          {annotation.comments ? 'Edit Note' : 'Add Note'}
         </button>
       )}
     </div>
@@ -1615,7 +1611,13 @@ function ImageBox({ title, imageUrl, timestamp }: { title: string; imageUrl: str
             fontSize: '14px',
             fontWeight: '500'
           }}>
-            <div style={{ fontSize: '32px', marginBottom: '8px' }}>📷</div>
+            <div style={{ fontSize: '24px', marginBottom: '8px', color: '#64748b' }}>
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                <polyline points="21 15 16 10 5 21"></polyline>
+              </svg>
+            </div>
             <div>No {title.toLowerCase()} image</div>
           </div>
         )}

@@ -34,7 +34,7 @@ export default function AnnotationLegend({
         alignItems: 'center',
         gap: '6px'
       }}>
-        🎨 Fault Types
+        Fault Types
       </h4>
       
       <div style={{

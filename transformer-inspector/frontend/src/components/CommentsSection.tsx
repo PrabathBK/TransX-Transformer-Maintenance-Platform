@@ -107,7 +107,10 @@ export default function CommentsSection({ inspectionId }: CommentsSectionProps) 
         alignItems: 'center',
         gap: '8px'
       }}>
-        💬 Comments ({comments.length})
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
+        </svg>
+        Comments ({comments.length})
       </h3>
 
       {/* Add New Comment Form */}
@@ -154,7 +157,8 @@ export default function CommentsSection({ inspectionId }: CommentsSectionProps) 
             alignItems: 'center',
             gap: '4px'
           }}>
-            ❌ {submitError}
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            {submitError}
           </div>
         )}
         
@@ -176,7 +180,11 @@ export default function CommentsSection({ inspectionId }: CommentsSectionProps) 
               gap: '6px'
             }}
           >
-            {isSubmitting ? '💾 Adding...' : '💬 Add Comment'}
+            {isSubmitting ? (
+              <><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ animation: 'spin 1s linear infinite' }}><line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="4.93" y1="4.93" x2="7.76" y2="7.76"/><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"/><line x1="2" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22" y2="12"/></svg> Adding...</>
+            ) : (
+              <><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg> Add Comment</>
+            )}
           </button>
         </div>
       </form>
@@ -203,7 +211,10 @@ export default function CommentsSection({ inspectionId }: CommentsSectionProps) 
             border: '1px solid #fecaca',
             borderRadius: '6px'
           }}>
-            ❌ {loadError}
+            <span style={{ display: 'inline-flex', alignItems: 'center', marginRight: '6px', verticalAlign: 'middle' }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </span>
+            {loadError}
           </div>
         )}
         
@@ -244,9 +255,13 @@ export default function CommentsSection({ inspectionId }: CommentsSectionProps) 
                 <span style={{
                   fontWeight: '600',
                   color: '#1f2937',
-                  fontSize: '14px'
+                  fontSize: '14px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px'
                 }}>
-                  👤 {comment.author}
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                  {comment.author}
                 </span>
                 <span style={{
                   color: '#6b7280',

@@ -54,7 +54,7 @@ export default function NotesSection({ inspectionId, initialNotes, onNotesUpdate
     }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: isEditing ? '10px' : (notes ? '8px' : '0') }}>
         <h3 style={{ margin: 0, fontSize: '14px', fontWeight: '600', color: '#475569', display: 'flex', alignItems: 'center', gap: '6px' }}>
-          📝 Inspector Notes
+          Inspector Notes
         </h3>
         {!isEditing && (
           <button
@@ -74,7 +74,7 @@ export default function NotesSection({ inspectionId, initialNotes, onNotesUpdate
               transition: 'all 0.2s'
             }}
           >
-            ✏️ Edit
+            Edit
           </button>
         )}
       </div>
@@ -109,7 +109,7 @@ export default function NotesSection({ inspectionId, initialNotes, onNotesUpdate
               alignItems: 'center',
               gap: '4px'
             }}>
-              ❌ {saveError}
+              {saveError}
             </div>
           )}
           
@@ -152,7 +152,7 @@ export default function NotesSection({ inspectionId, initialNotes, onNotesUpdate
                 gap: '4px'
               }}
             >
-              {isSaving ? '💾 Saving...' : '💾 Save'}
+              {isSaving ? 'Saving...' : 'Save'}
             </button>
           </div>
         </div>
@@ -167,7 +167,7 @@ export default function NotesSection({ inspectionId, initialNotes, onNotesUpdate
               alignItems: 'center',
               gap: '4px'
             }}>
-              ✅ Notes saved!
+              Notes saved successfully
             </div>
           )}
           

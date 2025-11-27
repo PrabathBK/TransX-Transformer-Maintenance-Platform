@@ -131,8 +131,8 @@ function ToastItem({ toast, onRemove }: { toast: Toast; onRemove: (id: string) =
   const icons: Record<ToastType, string> = {
     success: '✓',
     error: '✕',
-    warning: '⚠',
-    info: 'ℹ',
+    warning: '!',
+    info: 'i',
   };
 
   return (

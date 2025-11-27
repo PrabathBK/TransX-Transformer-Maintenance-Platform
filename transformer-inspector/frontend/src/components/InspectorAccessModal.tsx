@@ -102,7 +102,12 @@ const InspectorAccessModal: React.FC<InspectorAccessModalProps> = ({
             alignItems: 'center',
             gap: '8px'
           }}>
-            <span style={{ fontSize: '24px' }}>👤</span>
+            <span style={{ display: 'flex', alignItems: 'center' }}>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                <circle cx="12" cy="7" r="4"/>
+              </svg>
+            </span>
             Inspector Access Required
           </h2>
           <p style={{ 
@@ -153,13 +158,19 @@ const InspectorAccessModal: React.FC<InspectorAccessModalProps> = ({
             fontWeight: '500'
           }}>
             {validationResponse.accessLevel === 'READ_ONLY' && (
-              <span style={{ marginRight: '8px' }}>🔒</span>
+              <span style={{ marginRight: '8px', display: 'inline-flex', alignItems: 'center' }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+              </span>
             )}
             {validationResponse.accessGranted && validationResponse.accessLevel === 'READ_WRITE' && (
-              <span style={{ marginRight: '8px' }}>✅</span>
+              <span style={{ marginRight: '8px', display: 'inline-flex', alignItems: 'center' }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="20 6 9 17 4 12"/></svg>
+              </span>
             )}
             {!validationResponse.accessGranted && (
-              <span style={{ marginRight: '8px' }}>❌</span>
+              <span style={{ marginRight: '8px', display: 'inline-flex', alignItems: 'center' }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </span>
             )}
             {validationResponse.message}
           </div>
@@ -176,7 +187,13 @@ const InspectorAccessModal: React.FC<InspectorAccessModalProps> = ({
             fontSize: '14px',
             fontWeight: '500'
           }}>
-            ❌ {error}
+            <span style={{ display: 'inline-flex', alignItems: 'center', marginRight: '6px', verticalAlign: 'middle' }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <line x1="18" y1="6" x2="6" y2="18"/>
+                <line x1="6" y1="6" x2="18" y2="18"/>
+              </svg>
+            </span>
+            {error}
           </div>
         )}
 

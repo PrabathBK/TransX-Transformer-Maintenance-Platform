@@ -691,9 +691,9 @@ export default function InspectionDetailNew() {
       )}
 
       {/* Main Content */}
-      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '24px', alignItems: 'start' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '24px', alignItems: 'stretch' }}>
         {/* Left: Annotation Canvas */}
-        <div style={{ display: 'flex', flexDirection: 'column' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
           <AnnotationToolbar
             mode={mode}
             onModeChange={setMode}
@@ -970,7 +970,8 @@ export default function InspectionDetailNew() {
         <div style={{ 
           display: 'flex', 
           flexDirection: 'column', 
-          gap: '12px'
+          gap: '12px',
+          height: '100%'
         }}>
           {/* Fault Types Legend - Compact at top */}
           <div style={{ flexShrink: 0 }}>
@@ -994,7 +995,8 @@ export default function InspectionDetailNew() {
             padding: '16px',
             display: 'flex',
             flexDirection: 'column',
-            maxHeight: '400px',
+            flex: 1,
+            minHeight: '200px',
             overflow: 'hidden'
           }}>
             <h2 style={{ 

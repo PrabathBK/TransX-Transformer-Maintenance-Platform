@@ -96,11 +96,12 @@ export default function CommentsSection({ inspectionId }: CommentsSectionProps) 
       boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
       padding: '20px',
       marginTop: '16px',
-      marginBottom: '0',
       border: '1px solid #e5e7eb',
-      maxHeight: '400px',
+      flex: 1,
+      minHeight: 0,
       display: 'flex',
-      flexDirection: 'column'
+      flexDirection: 'column',
+      overflow: 'hidden'
     }}>
       <h3 style={{ 
         margin: '0 0 16px 0', 

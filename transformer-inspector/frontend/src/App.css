@@ -1660,10 +1660,14 @@ input:focus, select:focus, textarea:focus {
   background: rgba(255, 255, 255, 0.1);
   border-radius: 12px;
   margin-bottom: 0.75rem;
+  width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
 }
 
 .sidebar-user-avatar {
   width: 40px;
+  min-width: 40px;
   height: 40px;
   border-radius: 10px;
   overflow: hidden;
@@ -1674,18 +1678,23 @@ input:focus, select:focus, textarea:focus {
   color: white;
   font-weight: 700;
   font-size: 0.9rem;
+  flex-shrink: 0;
 }
 
 .sidebar-user-avatar img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  display: block;
+  border-radius: 10px;
 }
 
 .sidebar-user-details {
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  flex: 1;
+  min-width: 0;
 }
 
 .sidebar-user-name {
@@ -1695,14 +1704,16 @@ input:focus, select:focus, textarea:focus {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  max-width: 100%;
 }
 
 .sidebar-user-email {
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   color: rgba(255, 255, 255, 0.7);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  max-width: 100%;
 }
 
 /* ========================================

@@ -336,4 +336,49 @@ public class MaintenanceRecordService {
         maintenanceRecordRepo.delete(record);
         log.info("Deleted maintenance record: {}", record.getRecordNumber());
     }
+    
+    /**
+     * Sync anomalies from current annotations
+     * This updates the maintenance record with the latest annotations from the inspection
+     */
+    public MaintenanceRecord syncAnomalies(UUID recordId) {
+        MaintenanceRecord record = maintenanceRecordRepo.findById(recordId)
+                .orElseThrow(() -> new RuntimeException("Maintenance record not found with id: " + recordId));
+        
+        if (record.getStatus() == MaintenanceRecord.Status.FINALIZED) {
+            throw new RuntimeException("Cannot sync anomalies for finalized maintenance record");
+        }
+        
+        UUID inspectionId = record.getInspection().getId();
+        
+        // Get current active annotations
+        List<Annotation> annotations = annotationRepo.findActiveByInspectionId(inspectionId);
+        
+        // Clear existing anomalies
+        record.getAnomalies().clear();
+        
+        // Create new anomaly snapshots from current annotations
+        for (Annotation annotation : annotations) {
+            MaintenanceRecordAnomaly anomaly = new MaintenanceRecordAnomaly();
+            anomaly.setBoxNumber(annotation.getBoxNumber());
+            anomaly.setClassId(annotation.getClassId());
+            anomaly.setClassName(annotation.getClassName());
+            anomaly.setConfidence(annotation.getConfidence());
+            anomaly.setBboxX1(annotation.getBboxX1());
+            anomaly.setBboxY1(annotation.getBboxY1());
+            anomaly.setBboxX2(annotation.getBboxX2());
+            anomaly.setBboxY2(annotation.getBboxY2());
+            anomaly.setSource(annotation.getSource().name());
+            
+            record.addAnomaly(anomaly);
+        }
+        
+        // Update anomaly count
+        record.setAnomalyCount(annotations.size());
+        
+        record = maintenanceRecordRepo.save(record);
+        log.info("Synced {} anomalies for maintenance record: {}", annotations.size(), record.getRecordNumber());
+        
+        return record;
+    }
 }

@@ -7,6 +7,7 @@ import {
   getMaintenanceRecordByInspection,
   createMaintenanceRecord,
   updateMaintenanceRecord,
+  syncAnomalies,
   type MaintenanceRecord,
   type UpdateMaintenanceRecordRequest
 } from '../api/maintenanceRecords';
@@ -34,20 +35,24 @@ export default function MaintenanceRecordPage() {
 
       if (recordId) {
         // Load existing record by ID
-        const recordData = await getMaintenanceRecord(recordId);
-        setRecord(recordData);
+        // First sync anomalies to get latest annotations
+        const syncedRecord = await syncAnomalies(recordId);
+        setRecord(syncedRecord);
         
         // Load associated inspection
-        const inspectionData = await getInspection(recordData.inspectionId);
+        const inspectionData = await getInspection(syncedRecord.inspectionId);
         setInspection(inspectionData);
       } else if (inspectionId) {
         // Try to load existing record for this inspection
         try {
           const recordData = await getMaintenanceRecordByInspection(inspectionId);
-          setRecord(recordData);
+          
+          // Sync anomalies to get latest annotations
+          const syncedRecord = await syncAnomalies(recordData.id);
+          setRecord(syncedRecord);
           
           // Redirect to record URL
-          nav(`/maintenance-records/${recordData.id}`, { replace: true });
+          nav(`/maintenance-records/${syncedRecord.id}`, { replace: true });
         } catch (e: any) {
           // No record exists, create one
           // Check for 404 status or "not found" message
@@ -671,7 +676,7 @@ export default function MaintenanceRecordPage() {
         </tr>
       </thead>
       <tbody>
-        ${record.anomalies.map((anomaly, idx) => `
+        ${[...record.anomalies].sort((a, b) => (a.boxNumber || 0) - (b.boxNumber || 0)).map((anomaly, idx) => `
         <tr>
           <td>${anomaly.boxNumber || idx + 1}</td>
           <td>${anomaly.className}</td>
@@ -867,7 +872,7 @@ export default function MaintenanceRecordPage() {
                 </tr>
               </thead>
               <tbody>
-                {record.anomalies.map((anomaly, idx) => (
+                {[...record.anomalies].sort((a, b) => (a.boxNumber || 0) - (b.boxNumber || 0)).map((anomaly, idx) => (
                   <tr key={anomaly.id} style={{ borderBottom: '1px solid #dee2e6' }}>
                     <td style={{ padding: '12px' }}>{anomaly.boxNumber || idx + 1}</td>
                     <td style={{ padding: '12px' }}>

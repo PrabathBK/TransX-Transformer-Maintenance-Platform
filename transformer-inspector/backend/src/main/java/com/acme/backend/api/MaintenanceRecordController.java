@@ -274,6 +274,22 @@ public class MaintenanceRecordController {
         }
     }
     
+    /**
+     * Sync anomalies with current annotations from the inspection
+     * POST /api/maintenance-records/{id}/sync-anomalies
+     */
+    @PostMapping("/{id}/sync-anomalies")
+    public ResponseEntity<MaintenanceRecordDTO> syncAnomalies(@PathVariable UUID id) {
+        try {
+            log.info("Syncing anomalies for maintenance record: {}", id);
+            MaintenanceRecord synced = maintenanceRecordService.syncAnomalies(id);
+            return ResponseEntity.ok(toDTO(synced));
+        } catch (Exception e) {
+            log.error("Error syncing anomalies: {}", e.getMessage(), e);
+            throw new RuntimeException("Failed to sync anomalies: " + e.getMessage());
+        }
+    }
+    
     // DTO Conversion Helper
     private MaintenanceRecordDTO toDTO(MaintenanceRecord record) {
         List<MaintenanceRecordAnomalyDTO> anomalies = record.getAnomalies().stream()

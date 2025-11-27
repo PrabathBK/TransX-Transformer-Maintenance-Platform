@@ -272,3 +272,13 @@ export async function deleteMaintenanceRecord(id: string) {
     method: 'DELETE',
   });
 }
+
+/**
+ * Sync anomalies with current annotations from the inspection
+ * This updates the maintenance record with the latest annotations
+ */
+export async function syncAnomalies(id: string) {
+  return api<MaintenanceRecord>(`/api/maintenance-records/${id}/sync-anomalies`, {
+    method: 'POST',
+  });
+}

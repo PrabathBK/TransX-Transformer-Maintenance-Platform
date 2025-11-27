@@ -19,28 +19,29 @@ export default function AnnotationLegend({
   
   return (
     <div style={{
-      background: 'white',
-      borderRadius: '8px',
-      padding: compact ? '12px' : '16px',
-      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
-      border: '1px solid #e5e7eb'
+      background: 'linear-gradient(135deg, #fefce8 0%, #fef3c7 100%)',
+      borderRadius: '10px',
+      padding: '12px 14px',
+      boxShadow: '0 1px 4px rgba(0, 0, 0, 0.06)',
+      border: '1px solid #fde68a'
     }}>
       <h4 style={{ 
-        margin: '0 0 12px 0', 
-        fontSize: compact ? '13px' : '14px', 
+        margin: '0 0 10px 0', 
+        fontSize: '13px', 
         fontWeight: '600', 
-        color: '#374151',
-        display: compact ? 'none' : 'block'
+        color: '#92400e',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '6px'
       }}>
-        Fault Types
+        🎨 Fault Types
       </h4>
       
       <div style={{
-        display: 'flex',
-        flexDirection: isVertical ? 'column' : 'row',
-        gap: isVertical ? '8px' : '16px',
-        alignItems: isVertical ? 'stretch' : 'center',
-        flexWrap: isVertical ? 'nowrap' : 'wrap'
+        display: 'grid',
+        gridTemplateColumns: isVertical ? '1fr 1fr' : 'repeat(4, auto)',
+        gap: '8px 12px',
+        alignItems: 'center'
       }}>
         {DETECTION_CLASSES.map((cls) => (
           <div 
@@ -48,23 +49,27 @@ export default function AnnotationLegend({
             style={{ 
               display: 'flex', 
               alignItems: 'center', 
-              gap: '8px',
-              padding: compact ? '4px' : '6px 0'
+              gap: '6px',
+              padding: '4px 8px',
+              background: 'white',
+              borderRadius: '6px',
+              border: '1px solid #f3f4f6'
             }}
           >
             <div style={{
-              width: compact ? '10px' : '14px',
-              height: compact ? '10px' : '14px',
+              width: '10px',
+              height: '10px',
               background: cls.color,
-              borderRadius: '2px',
-              border: '1px solid rgba(0,0,0,0.1)',
+              borderRadius: '3px',
+              boxShadow: `0 0 0 2px ${cls.color}22`,
               flexShrink: 0
             }} />
             <span style={{ 
               color: '#374151', 
-              fontSize: compact ? '12px' : '13px', 
+              fontSize: '11px', 
               fontWeight: '500',
-              lineHeight: 1.2
+              lineHeight: 1.2,
+              whiteSpace: 'nowrap'
             }}>
               {cls.label}
             </span>

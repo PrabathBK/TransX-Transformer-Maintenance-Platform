@@ -308,33 +308,44 @@ transformer-inspector/
 │   │   │   ├── InspectionController.java
 │   │   │   ├── InspectionCommentController.java
 │   │   │   ├── AnnotationController.java
-│   │   │   └── ThermalImageController.java
+│   │   │   ├── ThermalImageController.java
+│   │   │   ├── AuthController.java                    # NEW: JWT auth endpoints
+│   │   │   └── MaintenanceRecordController.java       # NEW: Phase 4 record sheets
 │   │   ├── api/dto/                       # Data Transfer Objects
 │   │   │   ├── CreateTransformerReq.java, TransformerDTO.java
 │   │   │   ├── CreateInspectionReq.java, InspectionDTO.java
 │   │   │   ├── CreateAnnotationReq.java, AnnotationDTO.java
 │   │   │   ├── InspectionCommentDTO.java
 │   │   │   ├── DetectionResponse.java
-│   │   │   └── ThermalImageDTO.java
+│   │   │   ├── ThermalImageDTO.java
+│   │   │   ├── AuthRequestDTO.java                    # NEW: Login/register DTOs
+│   │   │   └── MaintenanceRecordDTO.java              # NEW: Phase 4 record DTOs
 │   │   ├── config/                        # Configuration Classes
 │   │   │   ├── CorsConfig.java
 │   │   │   ├── DataSeeder.java (with sample images)
-│   │   │   └── StaticFileConfig.java
+│   │   │   ├── StaticFileConfig.java
+│   │   │   └── SecurityConfig.java                    # NEW: JWT security config
 │   │   ├── domain/                        # Entity Models
 │   │   │   ├── Inspection.java (with status workflow)
 │   │   │   ├── Annotation.java (with fault classifications)
 │   │   │   ├── InspectionComment.java (multi-user comments)
 │   │   │   ├── Transformer.java
-│   │   │   └── ThermalImage.java
+│   │   │   ├── ThermalImage.java
+│   │   │   ├── User.java                              # NEW: User entity for auth
+│   │   │   └── MaintenanceRecord.java                 # NEW: Phase 4 record entity
 │   │   ├── repo/                          # JPA Repositories
 │   │   │   ├── InspectionRepo.java, TransformerRepo.java
 │   │   │   ├── AnnotationRepo.java, InspectionCommentRepo.java
-│   │   │   └── ThermalImageRepo.java
+│   │   │   ├── ThermalImageRepo.java
+│   │   │   ├── UserRepository.java                    # NEW: User data access
+│   │   │   └── MaintenanceRecordRepository.java       # NEW: Record queries
 │   │   ├── service/                       # Business Logic
 │   │   │   ├── InspectionService.java (with ML integration)
 │   │   │   ├── InspectionCommentService.java
 │   │   │   ├── MLServiceClient.java
-│   │   │   └── FileStorageService.java
+│   │   │   ├── FileStorageService.java
+│   │   │   ├── AuthService.java                       # NEW: User authentication
+│   │   │   └── MaintenanceRecordService.java          # NEW: Record generation
 │   │   └── storage/                       # File Storage Service
 │   │       └── FileStorageService.java
 │   ├── src/main/resources/
@@ -346,7 +357,9 @@ transformer-inspector/
 │   │   ├── api/                           # API Client Layer
 │   │   │   ├── client.ts, transformers.ts, inspections.ts
 │   │   │   ├── annotations.ts, inspectionComments.ts
-│   │   │   └── images.ts
+│   │   │   ├── images.ts
+│   │   │   ├── auth.ts                                # NEW: Auth API calls
+│   │   │   └── maintenanceRecords.ts                  # NEW: Record API calls
 │   │   ├── components/                    # UI Components
 │   │   │   ├── ErrorBoundary.tsx, Layout.tsx, FileDrop.tsx
 │   │   │   ├── AnnotationCanvas.tsx (Konva.js canvas)
@@ -354,14 +367,20 @@ transformer-inspector/
 │   │   │   ├── AnnotationLegend.tsx, AnnotationCard.tsx
 │   │   │   ├── CommentsSection.tsx (real-time comments)
 │   │   │   ├── NotesSection.tsx
-│   │   │   └── Input.tsx, Select.tsx, Table.tsx, Modal.tsx
+│   │   │   ├── Input.tsx, Select.tsx, Table.tsx, Modal.tsx
+│   │   │   ├── AuthGuard.tsx                          # NEW: Route protection
+│   │   │   └── MaintenanceRecordForm.tsx              # NEW: Editable record form
 │   │   ├── pages/                         # Page Components
 │   │   │   ├── Dashboard.tsx, TransformersList.tsx
 │   │   │   ├── TransformerDetail.tsx, TransformerForm.tsx
 │   │   │   ├── InspectionList.tsx
 │   │   │   ├── InspectionDetailNew.tsx (full annotation interface)
 │   │   │   ├── ImagesList.tsx, ImageUpload.tsx
-│   │   │   └── InspectionDetail.tsx (legacy view)
+│   │   │   ├── InspectionDetail.tsx (legacy view)
+│   │   │   ├── LoginPage.tsx                          # NEW: Sign-in interface
+│   │   │   └── MaintenanceRecordPage.tsx              # NEW: Phase 4 record view
+│   │   ├── context/                       # React Context
+│   │   │   └── AuthContext.tsx                        # NEW: User session state
 │   │   ├── App.tsx, main.tsx
 │   │   └── vite-env.d.ts
 │   ├── package.json (with Konva.js dependencies)
@@ -371,16 +390,33 @@ transformer-inspector/
 │   ├── app.py                            # Flask application with YOLOv8
 │   ├── requirements.txt                  # Python dependencies
 │   ├── setup.sh                          # Setup script
-│   └── README.md                         # ML service documentation
+│   ├── README.md                         # ML service documentation
+│   ├── targeted_dataset_creator.py       # Fine-tuning Pipeline
+│   ├── feedback_data/                    # NEW: User Feedback Storage
+│   │   └── feedback_*.json               # NEW: Generated feedback files
+│   └── auto_feedback_*/                  # NEW: Generated training datasets
+│       ├── images/                       # NEW: Training images
+│       ├── labels/                       # NEW: YOLO format labels
+│       └── dataset.yaml                  # NEW: Training config
 │
 ├── Faulty_Detection/                     # ML Model Training
 │   ├── train_yolo_fixed.py              # Training script
+│   ├── train_yolov8p2.py                # NEW: Enhanced training script
 │   ├── yolov8p2_single_inference.py     # Inference testing
+│   ├── similarity_yolo_system.py        # NEW: Baseline comparison
 │   ├── yolov8n.pt, yolov8p2.pt         # Model files
-│   └── samples/                          # Training data
+│   ├── samples/                          # Training data
+│   └── runs/                             # NEW: Training output logs
+│       └── detect/                       # NEW: YOLO training artifacts
 │
 └── Database-MYSQL/
-    └── en3350_db.sql            # Latest schema
+    ├── en3350_db.sql                     # Latest schema
+    └── latest/                           # NEW: Version-controlled schemas
+        ├── en3350_db.sql                 # NEW: Current schema
+        └── migrations/                   # NEW: Schema change tracking
+            ├── V1__initial.sql           # NEW: Initial schema
+            ├── V2__add_auth.sql          # NEW: User/auth tables
+            └── V3__add_records.sql       # NEW: Maintenance record tables
 ```
 
 ## Quick Start

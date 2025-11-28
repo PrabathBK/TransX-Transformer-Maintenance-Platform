@@ -194,11 +194,12 @@ All annotation-related requests are **JSON-based** and persisted in the
 #### ⚙️ Schema Extract (MySQL 8.0)
 
 ```sql
--- Table structure for table `annotations`
+-- Enhanced Table structure for table `annotations` (Phase 3 updates)
 CREATE TABLE `annotations` (
   `id` binary(16) NOT NULL,
   `inspection_id` binary(16) NOT NULL,
   `version` int DEFAULT '1',
+  `box_number` int DEFAULT NULL,                    -- NEW: Sequential numbering per inspection
   `bbox_x1` int NOT NULL,
   `bbox_y1` int NOT NULL,
   `bbox_x2` int NOT NULL,
@@ -208,17 +209,20 @@ CREATE TABLE `annotations` (
   `confidence` decimal(5,3) DEFAULT NULL,
   `source` enum('ai','human') NOT NULL,
   `action_type` enum('created','edited','deleted','approved','rejected') DEFAULT 'created',
+  `comments` text DEFAULT NULL,                     -- NEW: User comments on annotations
   `created_by` varchar(100) DEFAULT NULL,
   `modified_by` varchar(100) DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  `modified_at` timestamp NULL DEFAULT NULL,
+  `modified_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `is_active` tinyint(1) DEFAULT '1',
   PRIMARY KEY (`id`),
   KEY `idx_inspection_id` (`inspection_id`),
+  KEY `idx_box_number` (`inspection_id`, `box_number`),  -- NEW: Box numbering index
+  KEY `idx_active_annotations` (`inspection_id`, `is_active`),
   CONSTRAINT `annotations_ibfk_1` FOREIGN KEY (`inspection_id`) REFERENCES `inspections` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Table structure for table `annotation_history`
+-- Table structure for table `annotation_history` (unchanged, core Phase 3)
 CREATE TABLE `annotation_history` (
   `id` binary(16) NOT NULL,
   `annotation_id` binary(16) NOT NULL,
@@ -229,10 +233,11 @@ CREATE TABLE `annotation_history` (
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   KEY `idx_annotation_id` (`annotation_id`),
+  KEY `idx_inspection_action` (`inspection_id`, `action_type`),
   CONSTRAINT `annotation_history_ibfk_1` FOREIGN KEY (`annotation_id`) REFERENCES `annotations` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Table structure for table `box_numbering_sequence`
+-- Table structure for table `box_numbering_sequence` (unchanged, core Phase 3)
 CREATE TABLE `box_numbering_sequence` (
   `inspection_id` binary(16) NOT NULL,
   `next_box_number` int NOT NULL DEFAULT '1',
@@ -241,7 +246,7 @@ CREATE TABLE `box_numbering_sequence` (
   CONSTRAINT `box_numbering_sequence_ibfk_1` FOREIGN KEY (`inspection_id`) REFERENCES `inspections` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Table structure for table `inspection_access_log`
+-- Table structure for table `inspection_access_log` (unchanged, core Phase 3)
 CREATE TABLE `inspection_access_log` (
   `id` binary(16) NOT NULL,
   `inspection_id` binary(16) NOT NULL,
@@ -251,8 +256,104 @@ CREATE TABLE `inspection_access_log` (
   `session_end` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `idx_inspection_id` (`inspection_id`),
+  KEY `idx_user_access` (`user_name`, `access_type`),
   CONSTRAINT `inspection_access_log_ibfk_1` FOREIGN KEY (`inspection_id`) REFERENCES `inspections` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- NEW: Table structure for table `inspection_feedback_log` (Phase 3 - ML feedback tracking)
+CREATE TABLE `inspection_feedback_log` (
+  `id` binary(16) NOT NULL,
+  `inspection_id` binary(16) NOT NULL,
+  `feedback_file_path` varchar(500) DEFAULT NULL,
+  `total_detections` int DEFAULT '0',
+  `approved_count` int DEFAULT '0',
+  `rejected_count` int DEFAULT '0',
+  `manual_additions` int DEFAULT '0',
+  `exported_by` varchar(100) DEFAULT NULL,
+  `exported_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `ml_training_triggered` tinyint(1) DEFAULT '0',
+  `dataset_path` varchar(500) DEFAULT NULL,          -- Path to generated training dataset
+  PRIMARY KEY (`id`),
+  KEY `idx_inspection_id` (`inspection_id`),
+  KEY `idx_exported_at` (`exported_at`),
+  CONSTRAINT `inspection_feedback_log_ibfk_1` FOREIGN KEY (`inspection_id`) REFERENCES `inspections` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- NEW: Table structure for table `users` (Phase 4 - Authentication)
+CREATE TABLE `users` (
+  `id` binary(16) NOT NULL,
+  `email` varchar(255) NOT NULL,
+  `password_hash` varchar(255) NOT NULL,
+  `first_name` varchar(100) DEFAULT NULL,
+  `last_name` varchar(100) DEFAULT NULL,
+  `role` enum('USER','ENGINEER','ADMIN') DEFAULT 'USER',
+  `is_active` tinyint(1) DEFAULT '1',
+  `last_login_at` timestamp NULL DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_email` (`email`),
+  KEY `idx_role_active` (`role`, `is_active`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- NEW: Table structure for table `maintenance_records` (Phase 4 - Record sheets)
+CREATE TABLE `maintenance_records` (
+  `id` binary(16) NOT NULL,
+  `inspection_id` binary(16) NOT NULL,
+  `transformer_id` binary(16) NOT NULL,
+  `record_number` varchar(50) NOT NULL,
+  `inspector_name` varchar(255) DEFAULT NULL,
+  `inspector_notes` text DEFAULT NULL,
+  `corrective_actions` text DEFAULT NULL,
+  `recommendations` text DEFAULT NULL,
+  `maintenance_status` enum('PENDING','IN_PROGRESS','COMPLETED','REQUIRES_FOLLOWUP') DEFAULT 'PENDING',
+  `severity_level` enum('LOW','MEDIUM','HIGH','CRITICAL') DEFAULT 'MEDIUM',
+  `next_inspection_date` date DEFAULT NULL,
+  `parts_required` text DEFAULT NULL,              -- Required replacement parts
+  `estimated_cost` decimal(10,2) DEFAULT NULL,     -- Cost estimate for maintenance
+  `work_order_number` varchar(100) DEFAULT NULL,   -- External work order reference
+  `created_by` binary(16) DEFAULT NULL,
+  `approved_by` binary(16) DEFAULT NULL,           -- Engineer approval
+  `approved_at` timestamp NULL DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_record_number` (`record_number`),
+  KEY `idx_inspection_id` (`inspection_id`),
+  KEY `idx_transformer_id` (`transformer_id`),
+  KEY `idx_created_by` (`created_by`),
+  KEY `idx_approved_by` (`approved_by`),
+  KEY `idx_maintenance_status` (`maintenance_status`),
+  CONSTRAINT `maintenance_records_ibfk_1` FOREIGN KEY (`inspection_id`) REFERENCES `inspections` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `maintenance_records_ibfk_2` FOREIGN KEY (`transformer_id`) REFERENCES `transformers` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `maintenance_records_ibfk_3` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `maintenance_records_ibfk_4` FOREIGN KEY (`approved_by`) REFERENCES `users` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- NEW: View for active annotations (Phase 3 - Performance optimization)
+CREATE VIEW `inspection_boxes_current` AS
+SELECT 
+  a.*,
+  CONCAT('Box #', a.box_number, ' - ', a.class_name) as display_label
+FROM `annotations` a 
+WHERE a.is_active = 1 
+ORDER BY a.inspection_id, a.box_number;
+
+-- NEW: View for maintenance record summary (Phase 4)
+CREATE VIEW `maintenance_records_summary` AS
+SELECT 
+  mr.*,
+  t.code as transformer_code,
+  t.location as transformer_location,
+  i.status as inspection_status,
+  i.inspected_at,
+  CONCAT(u1.first_name, ' ', u1.last_name) as created_by_name,
+  CONCAT(u2.first_name, ' ', u2.last_name) as approved_by_name
+FROM `maintenance_records` mr
+JOIN `transformers` t ON mr.transformer_id = t.id
+JOIN `inspections` i ON mr.inspection_id = i.id
+LEFT JOIN `users` u1 ON mr.created_by = u1.id
+LEFT JOIN `users` u2 ON mr.approved_by = u2.id;
 ```
 
 

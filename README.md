@@ -470,7 +470,7 @@ cd TransX-Transformer-Maintenance-Platform
 
    # File Storage Configuration
    app.server.public-base-url=http://localhost:8080
-   app.storage.root=uploads
+   app.storage.root=PATH_TO_YOUR_"upload"_FOLDER 
 
    # ML Service Configuration (YOLOv8 Detection)
    app.ml-service.url=http://localhost:5001

@@ -119,8 +119,8 @@ A full-stack application for managing electrical transformers with AI-powered th
 | **TransformerController.java** | CRUD operations for transformer metadata (ID, location, capacity). | `POST /api/transformers` • `GET /api/transformers` • `PUT /api/transformers/{id}` • `DELETE /api/transformers/{id}` |
 | **ApiExceptionHandler.java** | Global exception handler for consistent REST error responses. | *(Handles `DataIntegrityViolationException` → returns `409 Conflict`)* |
 | **HealthController.java** | Quick backend status check for integration and CI/CD probes. | `GET /api/health` |
-| **AuthController.java** | Sign-in workflow (JWT-ready) for email/password UI. | `POST /api/auth/login` • `POST /api/auth/register` • `POST /api/auth/refresh` |
-| **MaintenanceRecordController.java** | Maintenance record sheets linked to inspections/transformers (Phase 4). | `POST /api/maintenance-records` • `GET /api/maintenance-records/{id}` • `GET /api/maintenance-records/inspection/{inspectionId}` • `GET /api/maintenance-records/transformer/{transformerId}` • `PUT /api/maintenance-records/{id}` |
+| **AuthController.java** | JWT authentication and user management for sign-in workflow. | `POST /api/auth/login` • `POST /api/auth/register` • `POST /api/auth/refresh` • `GET /api/auth/me` |
+| **MaintenanceRecordController.java** | Generate and manage maintenance record sheets linked to inspections (Phase 4). | `POST /api/maintenance-records` • `GET /api/maintenance-records/{id}` • `GET /api/maintenance-records/inspection/{inspectionId}` • `GET /api/maintenance-records/transformer/{transformerId}` • `PUT /api/maintenance-records/{id}` |
 
 > Note: Static file serving for uploads is configured via web config, mapping `GET /files/**` to the uploads directory.
 All controllers belong to the package  
@@ -169,17 +169,15 @@ All annotation-related requests are **JSON-based** and persisted in the
 
 ---
 
-**Python ML Service Endpoints (for Integration)**  
-These endpoints are implemented in **`ml-service/app.py`** and provide detection, feedback handling, and class management for YOLOv8 integration.
+## 🧠 ML Service Endpoints (Flask - Port 5001)
 
-| Method | Endpoint | Description |
-|---------|-----------|-------------|
-| **GET** | `/api/health` | Returns ML service health status and readiness. Used by the backend for periodic integration checks. |
-| **POST** | `/api/detect` | Accepts uploaded thermal image(s) and performs YOLOv8 inference. Responds with bounding boxes, class IDs, confidence scores, and fault type predictions. |
-| **GET** | `/api/classes` | Returns the list of supported transformer fault classes and their numeric IDs for frontend labeling. |
-| **POST** | `/api/feedback/upload` | Receives feedback export JSON (from `/api/annotations/feedback/export`), saves it under `ml-service/feedback_data/feedback_<inspection_id>.json`, and triggers YOLOv8 dataset creation and fine-tuning. |
-
----
+| Endpoint | Purpose | Request/Response |
+|----------|---------|------------------|
+| `POST /api/detect` | YOLOv8 anomaly detection on thermal images | Request: `{image_path, confidence_threshold}` • Response: `{detections: [{bbox, class_id, confidence}]}` |
+| `POST /api/feedback` | Store user feedback for model fine-tuning | Request: `{inspection_id, original_detections, final_annotations, metadata}` |
+| `POST /api/finetune` | Trigger targeted model fine-tuning with feedback data | Request: `{feedback_path}` • Response: `{status, dataset_path, training_logs}` |
+| `GET /api/classes` | Get fault class definitions and color mappings | Response: `{0: "faulty", 1: "faulty_loose_joint", 2: "faulty_point_overload", 3: "potential_faulty"}` |
+| `GET /api/health` | ML service health check | Response: `{status: "healthy", model_loaded: true}` |
 
 **Database Dump for Record Storage**
 

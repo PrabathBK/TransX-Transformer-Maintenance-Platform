@@ -97,14 +97,44 @@ A full-stack application for managing electrical transformers with AI-powered th
 ![Anomaly Detection Result](assests/detection05.jpg)
 
 
-### Phase 3: Interactive Annotation & Feedback System  
+### Phase 3: Interactive Annotation & Feedback
+- **Human-in-the-Loop Annotation Tools**  
+  - Adjust existing AI markers: resize, reposition  
+  - Delete incorrect detections  
+  - Add new markers (bounding boxes; polygon-ready UI components)  
+  - Modes: view, edit, draw with zoom/pan and high-res image support
+- **Auto-Save Actions (No Manual Save)**  
+  - Every action (`ADD`, `EDIT`, `DELETE`, `APPROVE`, `REJECT`, `COMMENT`) triggers immediate API persistence and UI refresh  
+  - Versioning via annotation history; soft-delete retains audit trail
+- **Metadata & Persistence**  
+  - All actions include: user ID, timestamp, image ID, transformer ID, action type, optional comments  
+  - Annotations reload automatically on revisit; numbered boxes per inspection
+- **Feedback Export & Model Improvement**  
+  - Export logs with original AI detections + final user-modified annotations (JSON/CSV)  
+  - Frontend download plus POST to ML service; saved under `ml-service/feedback_data/`  
+  - Targeted dataset generation and quick finetune loop; updated weights used for future detections
+- **Reliability & UX Enhancements**  
+  - Threshold modal (0–100 scaled to 0–1) with validation and sensible defaults  
+  - Robust navigation after completion using `window.location.href`  
+  - Error toasts and disabled states for long ops; confirmation prompts for destructive actions
 
-**Annotation Creation & Editing**
-
-- When a user draws or edits a bounding box on the annotation canvas (**AnnotationCanvas.tsx**), the coordinates, class label, and optional note are captured.  
-- Each action (`ADD`, `EDIT`, `DELETE`, `APPROVE`, `REJECT`) is automatically sent to the backend no manual “Save” button is required.  
-  Every modification triggers an API call that immediately updates the database.
-
+### Phase 4: Maintenance Record Sheet & Collaboration
+- **Auto-Generated Maintenance Record Form**  
+  - Per inspection: includes transformer metadata (ID, location, capacity), timestamps, and embedded thumbnail of the thermal image with anomaly markers  
+  - Lists detected/annotated anomalies with type, location, confidence, and notes
+- **Editable Engineer Input Field**  
+  - Authorized users add notes, comments, corrective actions, and status updates  
+  - Form-ready inputs with clear separation of system-generated vs editable fields
+- **Save & Retrieve Completed Records**  
+  - Records saved with transformer + inspection linkage and timestamps  
+  - Simple history viewer: view past maintenance records per transformer; filterable and exportable
+- **Collaboration & Workflow**  
+  - Multi-user comments and annotations retained for auditability  
+  - Status workflow: PENDING → IN_PROGRESS → COMPLETED with reliable redirect to transformer page
+- **Additional UI/Access Features**  
+  - Sign-in screen and auth-ready flow (email/password; Google Sign-In placeholder)  
+  - Color legend and accessible controls; progress indicators for detection/export  
+  - Consistent classId/className mapping across FE/BE/ML for training compatibility
 ---
 
 ### ⚙️ Backend API Controllers

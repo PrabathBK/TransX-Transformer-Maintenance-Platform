@@ -359,13 +359,26 @@ LEFT JOIN `users` u2 ON mr.approved_by = u2.id;
 
 
 
-### Phase 4: Inspection Management & Collaboration
-- **Inspection Lifecycle** - Complete workflow from creation to completion
-- **Multi-User Comments** - Real-time commenting system with author tracking
-- **Notes System** - Inspection-specific notes and observations  
-- **Status Tracking** - PENDING → IN_PROGRESS → COMPLETED workflow
-- **Image Management** - Upload, remove, and re-upload inspection images before detection
-- **Transformer Filtering** - Filter inspections by specific transformer
+### Phase 4: Maintenance Record Sheet Generation & Workflow Management
+- **Auto-Generated Maintenance Record Forms**
+  - Per inspection: includes transformer metadata (ID, location, capacity), timestamps, and embedded thumbnail of thermal image with anomaly markers
+  - Lists detected/annotated anomalies with type, location, confidence, and engineer notes
+- **Editable Engineer Input Fields**  
+  - Authorized users add notes, comments, corrective actions, recommendations, and maintenance status updates
+  - Form-ready inputs with clear separation of system-generated vs editable fields; printable PDF-ready layout
+- **Save & Retrieve Completed Records**
+  - Records saved with transformer + inspection linkage, timestamps, and unique record numbers
+  - Simple history viewer: view past maintenance records per transformer; filterable by date range and status
+- **Authentication System**
+  - Sign-in workflow with email/password (JWT-ready architecture)
+  - User roles: USER, ENGINEER, ADMIN with appropriate access controls
+  - Google Sign-In placeholder for future OAuth integration
+- **Inspection Lifecycle - Complete workflow from creation to completion**
+- **Multi-User Comments - Real-time commenting system with author tracking**
+- **Notes System - Inspection-specific notes and observations**  
+- **Status Tracking - PENDING → IN_PROGRESS → COMPLETED workflow**
+- **Image Management - Upload, remove, and re-upload inspection images before detection**
+- **Transformer Filtering - Filter inspections by specific transformer**
 
 ### Additional Features
 - **Type-Safe APIs** - Full TypeScript support with defensive UI patterns
@@ -384,6 +397,15 @@ LEFT JOIN `users` u2 ON mr.approved_by = u2.id;
 | **File Storage** | Local disk storage with HTTP serving and organized structure |
 | **AI/ML** | YOLOv8p2 trained model for thermal anomaly detection |
 | **CORS** | Configured for development environment |
+
+### Component Updates:
+| Component | Technology |
+|-----------|------------|
+| **Authentication** | JWT-ready architecture, bcrypt password hashing |
+| **Record Generation** | PDF-ready HTML forms, maintenance sheet templates |
+| **User Management** | Role-based access (USER/ENGINEER/ADMIN) |
+| **File Storage** | UUID-organized directories with metadata tracking |
+
 
 ## Prerequisites
 

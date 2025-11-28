@@ -772,7 +772,7 @@ cd transformer-inspector/frontend && npm install && npm run dev
    - Upload new image → Previous annotations are cleared
    - Verify warning message about annotation loss
 
-### 6. AI-Powered Anomaly Detection Testing (Phase 2)
+### 6. AI-Powered Anomaly Detection Testing 
 
 **Trigger Detection:**
 1. **Set Detection Threshold**:
@@ -793,7 +793,7 @@ cd transformer-inspector/frontend && npm install && npm run dev
 2. **Confidence Scores**: Check each detection shows confidence percentage
 3. **Baseline Comparison**: If baseline exists, verify similarity check performed
 
-### 7. Interactive Annotation System Testing (Phase 3)
+### 7. Interactive Annotation System Testing 
 
 **Annotation Tools:**
 1. **Mode Switching**:
@@ -831,7 +831,7 @@ cd transformer-inspector/frontend && npm install && npm run dev
 2. **Box Selection**: Click on annotations to select/highlight
 3. **Keyboard Shortcuts**: Test Delete key to remove selected annotation
 
-### 8. Comments & Collaboration Testing (Phase 3)
+### 8. Comments & Collaboration Testing 
 
 **Add Comments:**
 1. **Inspection-Level Comments**:
@@ -867,7 +867,7 @@ cd transformer-inspector/frontend && npm install && npm run dev
    - Check `auto_feedback_*/` directories contain training images and labels
    - Verify YOLO format labels generated correctly
 
-### 10. Maintenance Record Generation Testing (Phase 4)
+### 10. Maintenance Record Generation Testing 
 
 **Complete Inspection Workflow:**
 1. **Finalize Inspection**:
@@ -911,7 +911,7 @@ cd transformer-inspector/frontend && npm install && npm run dev
    - Search and filter across all transformers
    - Export records to PDF (if implemented)
 
-### 11. Authentication & User Management Testing (Phase 4)
+### 11. Authentication & User Management Testing 
 
 **Role-Based Access:**
 1. **User Roles**:
@@ -1011,7 +1011,7 @@ FROM maintenance_records ORDER BY created_at DESC LIMIT 5;
 
 ### API Endpoints
 
-#### Authentication (Phase 4)
+#### Authentication 
 - `POST /api/auth/login` - User sign-in with email/password
 - `POST /api/auth/register` - Create new user account
 - `POST /api/auth/refresh` - Refresh JWT token
@@ -1025,7 +1025,7 @@ FROM maintenance_records ORDER BY created_at DESC LIMIT 5;
 - `PUT /api/transformers/{id}` - Update transformer
 - `DELETE /api/transformers/{id}` - Delete transformer
 
-#### Inspection Management (Phase 2-4)
+#### Inspection Management 
 - `GET /api/inspections` - List inspections with filtering (`?transformerId=uuid&status=COMPLETED`)
 - `POST /api/inspections` - Create new inspection
 - `GET /api/inspections/{id}` - Get inspection details
@@ -1037,7 +1037,7 @@ FROM maintenance_records ORDER BY created_at DESC LIMIT 5;
 - `POST /api/inspections/{id}/detect-anomalies` - Trigger YOLOv8 detection with threshold
 - `POST /api/inspections/{id}/upload-annotated-image` - Save canvas overlay with annotations
 
-#### Interactive Annotation Management (Phase 3)
+#### Interactive Annotation Management 
 - `GET /api/annotations` - Get annotations for inspection (`?inspectionId={uuid}`)
 - `POST /api/annotations` - Create new manual annotation
 - `POST /api/annotations/batch` - Create multiple annotations
@@ -1047,7 +1047,7 @@ FROM maintenance_records ORDER BY created_at DESC LIMIT 5;
 - `POST /api/annotations/{id}/reject` - Reject AI detection with reason
 - `GET /api/annotations/feedback/export` - Export feedback for ML fine-tuning (`?inspectionId={uuid}`)
 
-#### Annotation History & Audit Trail (Phase 3)
+#### Annotation History & Audit Trail 
 - `POST /api/inspections/{inspectionId}/history/access` - Log user access
 - `GET /api/inspections/{inspectionId}/history` - Get annotation change history
 - `GET /api/inspections/{inspectionId}/history/summary` - Get audit summary
@@ -1059,7 +1059,7 @@ FROM maintenance_records ORDER BY created_at DESC LIMIT 5;
 - `PUT /api/inspection-comments/{id}` - Update comment
 - `DELETE /api/inspection-comments/{id}` - Delete comment
 
-#### Maintenance Records (Phase 4)
+#### Maintenance Records 
 - `GET /api/maintenance-records` - List all maintenance records
 - `POST /api/maintenance-records` - Create maintenance record from inspection
 - `GET /api/maintenance-records/{id}` - Get specific maintenance record
@@ -1134,7 +1134,7 @@ app.ml-service.timeout=${ML_TIMEOUT:60000}
 # CORS (Development)
 app.cors.allowed-origins=${CORS_ORIGINS:http://localhost:5173,http://localhost:3000}
 
-# JWT Authentication (Phase 4)
+# JWT Authentication 
 app.jwt.secret=${JWT_SECRET:your_jwt_secret_key}
 app.jwt.expiration=${JWT_EXPIRATION:86400000}
 ```

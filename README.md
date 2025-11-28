@@ -4,6 +4,34 @@
 
 A full-stack application for managing electrical transformers with AI-powered thermal image analysis, annotation system, and comprehensive inspection workflow. Built with React, TypeScript, Spring Boot, MySQL, and YOLOv8 machine learning.
 
+##  Table of Contents
+
+- [Features](#-features)
+- [Technology Stack](#-technology-stack)
+- [Prerequisites](#-prerequisites)
+- [Quick Start](#-quick-start)
+  - [1. Clone Repository](#1-clone-repository)
+  - [2. Database Setup](#2-database-setup)
+  - [3. ML Service Setup](#3-ml-service-setup)
+  - [4. Backend Configuration](#4-backend-configuration)
+  - [5. Frontend Setup](#5-frontend-setup)
+  - [Quick Multi-Service Startup](#quick-multi-service-startup)
+- [Project Structure](#-project-structure)
+- [Testing the Complete System](#-testing-the-complete-system)
+- [Application URLs & API Reference](#-application-urls--api-reference)
+  - [Frontend URLs](#frontend-urls)
+  - [Backend API Endpoints](#-backend-api-endpoints-spring-boot---port-8080)
+  - [ML Service Endpoints](#-ml-service-endpoints-flask---port-5001)
+- [File Storage Structure](#-file-storage-structure)
+- [Development & Advanced Usage](#-development--advanced-usage)
+  - [Development Workflow](#development-workflow)
+  - [Adding New Features](#adding-new-features)
+  - [Testing](#testing)
+  - [Deployment](#deployment)
+- [Troubleshooting](#-troubleshooting)
+- [Contributing](#-contributing)
+- [License](#-license)
+
 ## Features
 
 ### Phase 1: Transformer & Image Management

@@ -149,6 +149,10 @@ A full-stack application for managing electrical transformers with AI-powered th
 | **TransformerController.java** | CRUD operations for transformer metadata (ID, location, capacity). | `POST /api/transformers` • `GET /api/transformers` • `PUT /api/transformers/{id}` • `DELETE /api/transformers/{id}` |
 | **ApiExceptionHandler.java** | Global exception handler for consistent REST error responses. | *(Handles `DataIntegrityViolationException` → returns `409 Conflict`)* |
 | **HealthController.java** | Quick backend status check for integration and CI/CD probes. | `GET /api/health` |
+| **AuthController.java** | Sign-in workflow (JWT-ready) for email/password UI. | `POST /api/auth/login` • `POST /api/auth/register` • `POST /api/auth/refresh` |
+| **MaintenanceRecordController.java** | Maintenance record sheets linked to inspections/transformers (Phase 4). | `POST /api/maintenance-records` • `GET /api/maintenance-records/{id}` • `GET /api/maintenance-records/inspection/{inspectionId}` • `GET /api/maintenance-records/transformer/{transformerId}` • `PUT /api/maintenance-records/{id}` |
+
+> Note: Static file serving for uploads is configured via web config, mapping `GET /files/**` to the uploads directory.
 
 All controllers belong to the package  
 `com.acme.backend.api` and communicate with their corresponding service classes in  

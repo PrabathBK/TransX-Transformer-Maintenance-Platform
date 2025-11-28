@@ -682,32 +682,316 @@ cd transformer-inspector/frontend && npm install && npm run dev
 ## Testing the Complete System
 
 ### 1. Access the Application
-- Open browser to **http://localhost:5173**
-- Navigate to **Transformers** → Select any transformer
-- Click **"View Inspections"** → **"Create New Inspection"**
+1. **Open browser to** **http://localhost:5173**
 
-### 2. Test Anomaly Detection Workflow
-1. **Upload Inspection Image** - Try different sizes (640×640, 3077×1920, etc.)
-2. **Remove/Re-upload** - Use "Remove Image" button to test image management
-3. **Detect Anomalies** - Click "Detect Anomalies" to trigger YOLOv8 analysis
-4. **Review Results** - See detected faults with confidence scores
-5. **Approve/Reject** - Validate each detection with approve/reject buttons
+2. **Create Account** (First Time Users):
+   - Open browser → Navigate to main application page
+   - Click "Create account" link at bottom of sign-in form
+   - Enter full name, email address, and password
+   - Confirm password and agree to terms
+   - Click "Create Account" button
+   - System creates user with default role 'USER'
 
-### 3. Test Annotation System
-1. **Manual Annotation** - Switch to "Draw" mode and create bounding boxes
-2. **Edit Annotations** - Switch to "Edit" mode to resize/move annotations  
-3. **Zoom & Pan** - Test canvas navigation with large images
-4. **Save & Complete** - Save annotated image and complete inspection
+3. **Sign In** (Returning Users):
+   - Open browser → Navigate to main application page
+   - Enter email address (e.g., `example@gmail.com`) and password
+   - Optional: Check "Remember me for 30 days" checkbox
+   - Click "Sign In" button
+   - System redirects to Dashboard upon successful authentication
 
-### 4. Test Comment System
-1. **Add Comments** - Write inspection notes and observations
-2. **Multi-User** - Test with different author names
-3. **Real-time Updates** - Comments appear immediately
+4. **Google Sign-In** (Future Enhancement):
+   - Placeholder displayed: "Google Sign-in not configured"
+   - Requires `VITE_GOOGLE_CLIENT_ID` configuration in frontend `.env` file
 
-### 5. Verify Data Persistence
-- Check that annotations, comments, and status changes persist
-- Verify transformer-specific inspection filtering works
-- Test inspection completion workflow
+### 3. Dashboard Navigation & Overview
+
+**After successful sign-in:**
+1. **Dashboard Access**: Click "Dashboard" in left sidebar → View system overview
+2. **Transformer Statistics**: Review counts for total transformers, healthy/warning/critical status
+3. **Recent Activity**: Monitor recent uploads, system status, and additions
+4. **Alert Summary**: Check critical issues, monitoring requirements, and maintenance schedules
+5. **User Profile**: Click profile avatar (top-right) → View logged-in user details
+6. **Logout**: Click "Log out" button in left sidebar bottom
+
+### 4. Transformer Management Testing
+
+**Navigate to Transformers:**
+1. **Access Transformers**: Click "Transformers" in left sidebar
+2. **View Transformer List**: See all transformers with codes, locations, capacity, and status indicators
+3. **Search Functionality**: Use search bar → "Search by transformer code or location" → Click "Search"
+4. **Add New Transformer**:
+   - Click "+ Add Transformer" button
+   - Fill transformer details (code, location, capacity, region, pole number, type)
+   - Click "Save" button
+   - Verify transformer appears in list
+
+**Individual Transformer Management:**
+1. **View Transformer Details**: Click eye icon (👁) on any transformer row
+2. **Edit Transformer**: 
+   - Click "Back to list" → Click edit icon on transformer
+   - Modify transformer code, location, or capacity
+   - Update location details in text area
+   - Click "Save" button
+3. **Baseline Image Upload**:
+   - In transformer details → Click "Upload Image" section
+   - Select "Baseline" from dropdown
+   - Choose weather condition (Sunny/Cloudy/Rainy)
+   - Enter admin name
+   - Click "Choose File" → Select thermal image
+   - Click "Upload" button
+4. **Thermal Image Comparison**:
+   - Verify baseline image appears in left panel with timestamp
+   - Check "Latest Inspection" panel shows recent inspection image
+5. **Delete Transformer**: Click delete icon (🗑) → Confirm deletion
+
+### 5. Inspection Management & Workflow Testing
+
+**Navigate to Inspections:**
+1. **Access Inspections**: Click "Inspections" in left sidebar
+2. **View All Inspections**: Review inspection list with statuses (COMPLETED, IN_PROGRESS, PENDING)
+3. **Filter by Transformer**: Use transformer filter dropdown → Select specific transformer
+
+**Create New Inspection:**
+1. **From Transformer Details**:
+   - Click "Transformers" → Select transformer → Click eye icon
+   - Scroll down to "Inspections for this Transformer"
+   - Click "+ New Inspection" button
+2. **From Inspections Page**:
+   - Click "Inspections" → Click "Create New Inspection"
+   - Select transformer from dropdown
+   - Click "Create Inspection"
+
+**Inspection Image Management:**
+1. **Upload Inspection Image**:
+   - In inspection detail page → Click "Upload Image" button
+   - Select thermal image file
+   - Verify image appears in canvas area
+   - Check image auto-scales for large files (640×640 to 3077×1920+)
+2. **Remove/Replace Image**:
+   - Click "Remove Image" button → Confirm deletion
+   - Upload new image → Previous annotations are cleared
+   - Verify warning message about annotation loss
+
+### 6. AI-Powered Anomaly Detection Testing (Phase 2)
+
+**Trigger Detection:**
+1. **Set Detection Threshold**:
+   - Click "Detect Anomalies" button
+   - Set confidence threshold (0-100%) in modal
+   - Click "Start Detection" button
+2. **Verify ML Service Integration**:
+   - Check detection progress indicator
+   - Verify YOLOv8 model processes image (1-3 seconds typical)
+   - Confirm bounding boxes appear with fault classifications:
+     - 🔴 **Faulty (Class 0)** - Loose joints or point overloads
+     - 🟢 **Faulty Loose Joint (Class 1)** - Localized loose joints
+     - 🔵 **Faulty Point Overload (Class 2)** - Specific point overloads  
+     - 🟡 **Potential Faulty (Class 3)** - Yellowish joints or wire overloads
+
+**Review Detection Results:**
+1. **Annotation Legend**: Verify color-coded legend shows class names and counts
+2. **Confidence Scores**: Check each detection shows confidence percentage
+3. **Baseline Comparison**: If baseline exists, verify similarity check performed
+
+### 7. Interactive Annotation System Testing (Phase 3)
+
+**Annotation Tools:**
+1. **Mode Switching**:
+   - Click "View" mode → Read-only canvas navigation
+   - Click "Draw" mode → Create new bounding boxes by dragging
+   - Click "Edit" mode → Select and modify existing annotations
+2. **Manual Annotation Creation**:
+   - Switch to "Draw" mode
+   - Click and drag on image → Create bounding box
+   - Select fault class from dropdown
+   - Add optional comment
+   - Verify box appears immediately (auto-save)
+3. **Edit Existing Annotations**:
+   - Switch to "Edit" mode
+   - Click on annotation → Resize handles appear
+   - Drag corners/edges to resize
+   - Move entire box by dragging
+   - Verify changes save automatically
+
+**Approve/Reject AI Detections:**
+1. **Individual Approval**:
+   - Click green checkmark (✓) on AI detection
+   - Verify annotation marked as "Approved"
+   - Check action logged in annotation history
+2. **Individual Rejection**:
+   - Click red X (✗) on AI detection  
+   - Add rejection reason in modal
+   - Verify annotation marked as "Rejected" and becomes inactive
+3. **Bulk Operations**:
+   - Test approving multiple detections
+   - Verify each action triggers separate API call
+
+**Canvas Navigation:**
+1. **Zoom & Pan**: Use mouse wheel to zoom, click-drag to pan large images
+2. **Box Selection**: Click on annotations to select/highlight
+3. **Keyboard Shortcuts**: Test Delete key to remove selected annotation
+
+### 8. Comments & Collaboration Testing (Phase 3)
+
+**Add Comments:**
+1. **Inspection-Level Comments**:
+   - Scroll to "Comments" section
+   - Enter comment text in input field
+   - Click "Add Comment" button
+   - Verify comment appears with author name and timestamp
+2. **Annotation-Specific Comments**:
+   - Click on annotation box → Select from dropdown
+   - Add comment in annotation card
+   - Click "Update Comment" button
+   - Verify comment saves to specific annotation
+
+**Multi-User Testing:**
+1. **Different Authors**: Test with different user names
+2. **Real-Time Updates**: Add comments and verify immediate appearance
+3. **Comment History**: Check all comments persist on page reload
+
+### 9. Feedback Export & ML Improvement Testing 
+
+**Export Feedback Data:**
+1. **Generate Feedback**:
+   - Complete annotation review (approve/reject/edit detections)
+   - Click "Export Feedback" button
+   - Verify JSON and CSV files download locally
+   - Check feedback summary shows total detections, approvals, rejections
+2. **ML Service Integration**:
+   - Verify feedback POST to ML service (`/api/feedback/upload`)
+   - Check `ml-service/feedback_data/` folder contains new feedback file
+   - Confirm targeted dataset generation triggered
+3. **Fine-Tuning Pipeline**:
+   - Monitor ML service logs for dataset creation
+   - Check `auto_feedback_*/` directories contain training images and labels
+   - Verify YOLO format labels generated correctly
+
+### 10. Maintenance Record Generation Testing (Phase 4)
+
+**Complete Inspection Workflow:**
+1. **Finalize Inspection**:
+   - Complete annotation review and comments
+   - Click "Save Annotated Image" → Canvas captured as overlay
+   - Click "Complete Inspection" button
+   - Verify status changes to "COMPLETED"
+   - System navigates back to transformer details page
+
+**Auto-Generated Maintenance Records:**
+1. **Access Records**:
+   - From completed inspection → Click "View Maintenance Record"
+   - Or navigate via "Maintenance Records" menu (if available)
+2. **Review Generated Content**:
+   - Transformer metadata (ID, location, capacity) populated
+   - Inspection timestamp and inspector details
+   - Embedded thermal image with anomaly markers
+   - List of detected/annotated faults with confidence scores
+
+**Engineer Input Fields:**
+1. **Editable Sections**:
+   - Add inspector notes in text area
+   - Enter corrective actions required
+   - Add recommendations for future maintenance
+   - Set maintenance status (PENDING/IN_PROGRESS/COMPLETED)
+   - Specify severity level (LOW/MEDIUM/HIGH/CRITICAL)
+2. **Additional Fields**:
+   - Enter required parts list
+   - Add cost estimates
+   - Set next inspection date
+   - Reference work order numbers
+3. **Save Changes**: Click "Save Record" → Verify all inputs persist
+
+**Record History & Retrieval:**
+1. **Per-Transformer History**:
+   - Access transformer details
+   - View "Maintenance History" section
+   - Filter records by date range or status
+2. **System-Wide Records**:
+   - Navigate to "Maintenance Records" (if global menu exists)
+   - Search and filter across all transformers
+   - Export records to PDF (if implemented)
+
+### 11. Authentication & User Management Testing (Phase 4)
+
+**Role-Based Access:**
+1. **User Roles**:
+   - Test with USER role → Basic inspection access
+   - Test with ENGINEER role → Full annotation and record access
+   - Test with ADMIN role → User management capabilities
+2. **Session Management**:
+   - Verify "Remember me" checkbox extends session
+   - Test session timeout and re-authentication
+   - Check "Last login" tracking in user profile
+
+**Account Management:**
+1. **Profile Updates**: Access user settings → Update name/email
+2. **Password Changes**: Change password → Verify new credentials work
+3. **Account Security**: Test failed login attempts and lockout (if implemented)
+
+### 12. Error Handling & Edge Cases
+
+**Network & Service Issues:**
+1. **ML Service Down**: Stop ML service → Test detection gracefully fails
+2. **Database Connection**: Test with invalid DB credentials
+3. **Large File Uploads**: Upload 5MB+ images → Check timeout handling
+4. **Invalid File Types**: Try uploading non-image files → Verify rejection
+
+**Data Validation:**
+1. **Required Fields**: Try creating transformer without code → Check validation
+2. **Duplicate Data**: Create transformer with existing code → Test conflict handling  
+3. **Invalid Coordinates**: Manual annotation outside image bounds → Check constraints
+
+**UI Responsiveness:**
+1. **Long Operations**: Test detection on large images → Verify progress indicators
+2. **Canvas Performance**: Load high-resolution images → Check zoom/pan smoothness
+3. **Concurrent Users**: Multiple browsers → Test annotation conflicts
+
+### 13. API Health Checks & Verification
+
+**Service Status:**
+```bash
+# Backend health
+curl http://localhost:8080/api/health
+# Expected: {"status": "UP", "timestamp": "..."}
+
+# ML service health  
+curl http://localhost:5001/api/health
+# Expected: {"status": "healthy", "model_loaded": true}
+```
+
+**Database Verification:**
+```sql
+USE en3350_db;
+
+-- Check user accounts
+SELECT email, role, is_active, created_at FROM users;
+
+-- Verify inspection data
+SELECT id, status, inspected_at FROM inspections ORDER BY created_at DESC LIMIT 5;
+
+-- Check annotation counts  
+SELECT inspection_id, COUNT(*) as annotation_count, 
+       SUM(CASE WHEN is_active = 1 THEN 1 ELSE 0 END) as active_count
+FROM annotations GROUP BY inspection_id;
+
+-- Review maintenance records
+SELECT record_number, maintenance_status, created_at 
+FROM maintenance_records ORDER BY created_at DESC LIMIT 5;
+```
+
+### 14. Performance & Scalability Testing
+
+**Load Testing:**
+1. **Multiple Transformers**: Create 20+ transformers → Check list performance
+2. **Large Inspections**: Upload 50+ annotations per inspection → Verify canvas performance  
+3. **Concurrent Detection**: Trigger detection on multiple inspections simultaneously
+4. **Database Queries**: Check response times for filtered inspection lists
+
+**Storage Testing:**
+1. **File Organization**: Verify UUID directories created correctly in `uploads/`
+2. **Disk Usage**: Monitor storage growth with multiple image uploads
+3. **Cleanup**: Test annotation deletion → Check orphaned file cleanup
+
 
 ## Application URLs & API Reference
 
